@@ -16,6 +16,7 @@ import {
 } from '../core/index.js'
 import { renderMathText } from '../core/math.js'
 import { loadForTopic } from '../core/framework.js'
+import { mountMascot, mascotSay, mascotOnAnswer, mascotOnSessionStart, mascotOnSessionEnd, mascotSetActive, mascotGreetOnce } from './mascot.js'
 
 const $root = document.getElementById('root')
 const KEY = (subject) => `openstudy.state.${subject}`
@@ -311,6 +312,7 @@ function useBankText(text, name) {
   migrateState(app.state)
   app.phase = 'ready'
   render()
+  mascotGreetOnce()
 
   // 后台跟本地服务器对一次账：服务器上的记录更全就换成服务器的
   pullRemote(app.bank.subject).then((remote) => {
@@ -345,6 +347,8 @@ async function tryAutoLoad() {
 
 // ---------- 渲染 ----------
 function render() {
+  mountMascot()
+  mascotSetActive(app.phase === 'practice')
   renderSubjects()
   renderTabs()
   if (app.view === 'framework') return renderFramework()
@@ -468,6 +472,7 @@ function startSession(n) {
   app.index = 0
   app.answers = []
   app.phase = 'practice'
+  mascotOnSessionStart()
   nextQuestion()
 }
 
@@ -479,6 +484,7 @@ function startEndless() {
   app.index = 0
   app.answers = []
   app.phase = 'practice'
+  mascotOnSessionStart()
   drawNextEndless()
 }
 
@@ -709,6 +715,7 @@ function doSubmit() {
   const g = grade(q, input)
   c.graded = g
   recordAnswer(g, q.type !== 'text')
+  mascotOnAnswer(g.correct === true)
   render()
 }
 
@@ -729,6 +736,7 @@ function finish() {
   app.state = state
   app.report = report
   app.phase = 'done'
+  mascotOnSessionEnd(report.asked ? Math.round((report.correct / report.asked) * 100) : null)
   saveState({
     mode: 'paper',
     scored: report.scored,

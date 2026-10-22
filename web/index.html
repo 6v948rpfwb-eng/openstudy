@@ -141,6 +141,32 @@ sup, sub { font-size: .72em; line-height: 0; }
           border-radius: 10px; padding: 7px 16px; font-size: 14px; font-family: inherit; cursor: pointer; }
   .subj.on { background: var(--accent); border-color: var(--accent); color: #fff; }
   .subj:not(.on):hover { border-color: var(--accent); color: var(--accent); }
+  /* ---- 大肥鱼（页角看护人） ---- */
+  .mascot { position: fixed; right: 18px; bottom: 14px; width: 104px; height: 88px;
+            z-index: 50; cursor: pointer; user-select: none;
+            filter: drop-shadow(0 4px 8px rgba(47,111,78,.18)); }
+  .mascot svg { display: block; width: 100%; height: 100%; }
+  .m-fish { fill: #9fd3e8; } .m-tail { fill: #7fc4dd; } .m-tail2 { fill: #8fcde4; }
+  .m-fin { fill: #7fc4dd; } .m-fin2 { fill: #c3e6f2; }
+  .m-eye { fill: #fff; } .m-pupil { fill: #2b3a42; } .m-cheek { fill: #f5b9b0; opacity: .75; }
+  .m-mouth { fill: none; stroke: #2b3a42; stroke-width: 2.4; stroke-linecap: round; }
+  .m-mouth { display: none; }
+  .mood-idle .m-mouth-idle, .mood-happy .m-mouth-happy,
+  .mood-sad .m-mouth-sad, .mood-think .m-mouth-think { display: block; }
+  .mood-happy .m-body { transform: scaleY(1.03); transform-origin: 56px 50px; }
+  .mood-sad .m-body { transform: translateY(2px); transform-origin: 56px 50px; }
+  .m-bubble { position: absolute; right: 96px; bottom: 44px; max-width: 220px;
+              background: #fff; border: 1px solid var(--line); color: var(--ink);
+              border-radius: 12px; padding: 8px 11px; font-size: 13px; line-height: 1.5;
+              opacity: 0; transform: translateY(4px) scale(.96); transition: opacity .16s, transform .16s;
+              pointer-events: none; white-space: normal; }
+  .m-bubble::after { content: ''; position: absolute; right: -6px; bottom: 12px;
+                     width: 10px; height: 10px; background: #fff;
+                     border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
+                     transform: rotate(-45deg); }
+  .mascot.talking .m-bubble { opacity: 1; transform: translateY(0) scale(1); }
+  .mascot.talking { animation: mbob 1.6s ease-in-out infinite; }
+  @keyframes mbob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 </style>
 </head>
 <body>
