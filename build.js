@@ -13,14 +13,14 @@
  *   "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/primary-runtime/dependencies/node/bin/node" build.js
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join, resolve, isAbsolute } from 'node:path'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
 // 顺序很重要：被依赖的放前面
-const CORE_ORDER = ['util.js', 'irt.js', 'grade.js', 'bank.js', 'select.js', 'state.js', 'math.js']
+const CORE_ORDER = ['util.js', 'irt.js', 'grade.js', 'bank.js', 'select.js', 'state.js', 'math.js', 'framework.js']
 
 function stripModuleSyntax(src, filename) {
   const lines = src.split('\n')
@@ -100,7 +100,24 @@ if (process.argv.includes('--inline-figures')) {
 }
 const bankConst = `const __EMBEDDED_BANK__ = ${JSON.stringify(sampleBank)};`
 
-const bundle = `(function(){\n"use strict";\n${bankConst}\n${parts.join('\n\n')}\n})();`
+// 方法论数据：把 tools/topics-*.json 里 schema 为 openstudy.topics/2 的全部塞进去。
+// 这样单文件产物里「方法论」标签页不用联网也能看。
+const fwDocs = {}
+const toolsDir = join(here, 'tools')
+if (existsSync(toolsDir)) {
+  for (const f of readdirSync(toolsDir)) {
+    if (!/^topics-.*\.json$/.test(f)) continue
+    try {
+      const d = JSON.parse(readFileSync(join(toolsDir, f), 'utf8'))
+      if (typeof d.schema === 'string' && d.schema.startsWith('openstudy.topics/2')) fwDocs[d.subject || f] = d
+    } catch (e) {
+      console.warn(`跳过 ${f}：${e.message}`)
+    }
+  }
+}
+const fwConst = `const __FRAMEWORK_DOCS__ = ${JSON.stringify(fwDocs)};`
+
+const bundle = `(function(){\n"use strict";\n${bankConst}\n${fwConst}\n${parts.join('\n\n')}\n})();`
 
 const html = readFileSync(join(here, 'web', 'index.html'), 'utf8')
 const marker = '<script type="module" src="./app.js"></script>'
@@ -114,4 +131,4 @@ writeFileSync(outPath, outHtml, 'utf8')
 const kb = (Buffer.byteLength(outHtml) / 1024).toFixed(1)
 let bankCount = '?'
 try { bankCount = JSON.parse(sampleBank).questions.length } catch {}
-console.log(`已生成 ${outPath}（${kb} KB，内嵌 ${bankCount} 道题，来自 ${bankPath}）`)
+console.log(`已生成 ${outPath}（${kb} KB，内嵌 ${bankCount} 道题，来自 ${bankPath}；方法论 ${Object.keys(fwDocs).length} 个学科）`)

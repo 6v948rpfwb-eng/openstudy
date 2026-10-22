@@ -15,6 +15,7 @@ import {
   describeTheta, predictPass,
 } from '../core/index.js'
 import { renderMathText } from '../core/math.js'
+import { loadForTopic } from '../core/framework.js'
 
 const $root = document.getElementById('root')
 const KEY = (subject) => `openstudy.state.${subject}`
@@ -34,6 +35,120 @@ const app = {
 }
 
 const isEndless = () => app.mode === 'endless'
+
+// ---------- 方法论视图（四组 + 三张表） ----------
+// 双击单文件时，build.js 把 tools/topics-*.json 内联成常量 __FRAMEWORK_DOCS__；
+// 用 http 打开 index.html 时没有这个常量，标签页自动隐藏，练习功能不受影响。
+const FW_DOCS = (typeof __FRAMEWORK_DOCS__ !== 'undefined') ? __FRAMEWORK_DOCS__ : {}
+const FW_SUBJECTS = Object.keys(FW_DOCS)
+const FST_CLASS = (s) => (s === '✅' ? 'ok' : s === '🟡' ? 'mid' : s === '🔴' ? 'bad' : 'none')
+const fwEsc = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))
+
+app.view = 'practice'                                  // practice | framework
+app.fw = { subject: FW_SUBJECTS[0] || '', group: 'all', only: 'all' }
+// 支持 #framework 深链：直接双击打不开某个标签时，地址栏加 #framework 就能落在方法论页
+if (FW_SUBJECTS.length && typeof location !== 'undefined' && location.hash === '#framework') app.view = 'framework'
+// 地址栏改 hash 时原地切换（file:// 下改 hash 不会重新加载页面）
+if (FW_SUBJECTS.length && typeof window !== 'undefined') {
+  window.addEventListener('hashchange', () => {
+    const v = location.hash === '#framework' ? 'framework' : 'practice'
+    if (v !== app.view) { app.view = v; render() }
+  })
+}
+
+function renderTabs() {
+  const bar = document.getElementById('tabs')
+  if (!bar) return
+  if (!FW_SUBJECTS.length) { bar.innerHTML = ''; return }
+  bar.innerHTML = `
+    <button class="tab ${app.view === 'practice' ? 'on' : ''}" data-v="practice">练习</button>
+    <button class="tab ${app.view === 'framework' ? 'on' : ''}" data-v="framework">方法论</button>`
+  bar.querySelectorAll('.tab').forEach((b) => {
+    b.onclick = () => {
+      app.view = b.dataset.v
+      try { history.replaceState(null, '', app.view === 'framework' ? '#framework' : location.pathname) } catch (e) {}
+      render()
+    }
+  })
+}
+
+function renderFramework() {
+  const doc = FW_DOCS[app.fw.subject]
+  if (!doc) { $root.innerHTML = '<div class="card">没有方法论数据</div>'; return }
+
+  const topics = Object.entries(doc.topics)
+  const byGroup = {}
+  let tested = 0
+  for (const [, t] of topics) {
+    byGroup[t.group] = (byGroup[t.group] || 0) + 1
+    if (t.state) tested++
+  }
+
+  const subjectChips = FW_SUBJECTS.length > 1
+    ? `<div class="fchips">${FW_SUBJECTS.map((k) => `<button class="fchip ${k === app.fw.subject ? 'on' : ''}" data-sub="${k}">${fwEsc(FW_DOCS[k].title || k)}</button>`).join('')}</div>`
+    : ''
+
+  const groups = Object.entries(doc.groups).map(([g, info]) => `
+    <details class="gcard">
+      <summary><span class="gbadge b${g}">${g}</span>${fwEsc(info.label)}
+        <span class="muted">${byGroup[g] || 0} 个考点</span></summary>
+      <div class="muted" style="margin-top:8px">动作序列（表 2）</div>
+      <ol>${info.steps.map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ol>
+      <div class="muted" style="margin-top:8px">必查项（表 3）</div>
+      <ul>${info.checks.map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ul>
+    </details>`).join('')
+
+  const GROUPS = [['all', '全部组'], ['A', 'A 条件→方程→边界'], ['B', 'B 证据→判断'], ['C', 'C 触发→精确复现'], ['D', 'D 骨架→成文']]
+  const ONLYS = [['all', '全部状态'], ['tested', '只看已测'], ['bad', '只看未掌握']]
+  const chips = (items, cur, kind) => items.map(([k, label]) =>
+    `<button class="fchip ${cur === k ? 'on' : ''}" data-${kind}="${k}">${label}</button>`).join('')
+
+  const rows = topics.filter(([, t]) => {
+    if (app.fw.group !== 'all' && t.group !== app.fw.group) return false
+    if (app.fw.only === 'tested' && !t.state) return false
+    if (app.fw.only === 'bad' && t.state !== '🔴') return false
+    return true
+  }).map(([id, t]) => {
+    const view = loadForTopic(doc, id)
+    const steps = view ? view.steps : []
+    const checks = view ? view.checks : []
+    return `
+      <details class="fwcard">
+        <summary><span class="gbadge b${t.group}">${t.group}</span>${fwEsc(t.name)}
+          <span class="fst ${FST_CLASS(t.state)}">${t.state || '未测'}</span>
+          ${t.errorType ? `<span class="tag">${fwEsc(t.errorType)}</span>` : ''}
+          <span class="muted">${fwEsc(t.alias || id)}</span></summary>
+        ${t.cues && t.cues.length ? `<div class="cues">${t.cues.map((c) => `<span class="cue">${fwEsc(c)}</span>`).join('')}</div>` : ''}
+        <div class="muted" style="margin-top:8px">动作序列</div>
+        <ol>${steps.map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ol>
+        <div class="muted" style="margin-top:8px">必查项</div>
+        <ul>${checks.map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ul>
+      </details>`
+  }).join('')
+
+  $root.innerHTML = `
+    <div class="card">
+      <div><strong>${fwEsc(doc.title || app.fw.subject)} · 四组方法论与三张表</strong></div>
+      <div class="muted" style="margin-top:4px">考点 ${topics.length} · 已测 ${tested} · 判据形状 / 动作序列 / 检验方式 三者相同才同组</div>
+      <div class="muted" style="margin-top:4px">A 条件→方程→边界 · B 证据→判断 · C 触发→精确复现 · D 骨架→成文</div>
+      ${subjectChips}
+    </div>
+    ${groups}
+    <div class="fchips">${chips(GROUPS, app.fw.group, 'group')}</div>
+    <div class="fchips">${chips(ONLYS, app.fw.only, 'only')}</div>
+    ${rows || '<div class="card muted">没有符合条件的考点</div>'}
+    <p class="muted" style="margin-top:16px">点标题展开动作序列与必查项；必查项里带具体错题坑的，是从你的真实错题补的。</p>`
+
+  $root.querySelectorAll('[data-sub]').forEach((b) => {
+    b.onclick = () => { app.fw.subject = b.dataset.sub; render() }
+  })
+  $root.querySelectorAll('[data-group]').forEach((b) => {
+    b.onclick = () => { app.fw.group = b.dataset.group; render() }
+  })
+  $root.querySelectorAll('[data-only]').forEach((b) => {
+    b.onclick = () => { app.fw.only = b.dataset.only; render() }
+  })
+}
 
 // ---------- 存档 ----------
 function saveState(attempt) {
@@ -141,6 +256,8 @@ async function tryAutoLoad() {
 
 // ---------- 渲染 ----------
 function render() {
+  renderTabs()
+  if (app.view === 'framework') return renderFramework()
   if (app.phase === 'load') return renderLoad()
   if (app.phase === 'ready') return renderReady()
   if (app.phase === 'practice') return renderPractice()
