@@ -44,7 +44,8 @@ function loadState(subject) {
     const raw = localStorage.getItem(KEY(subject))
     if (!raw) return null
     const s = JSON.parse(raw)
-    return s?.version === 1 ? s : null
+    // 不在这里判版本：旧存档由 migrateState 补齐字段，见 useBankText
+    return s && typeof s === 'object' ? s : null
   } catch { return null }
 }
 
@@ -64,17 +65,19 @@ function useBankText(text, name) {
 }
 
 async function tryAutoLoad() {
-  // 先试从 ../data 读（用 http 打开时可行）
+  // 单文件构建产物：题库已在构建时选定并内联，直接用。
+  // 不能先去 fetch —— 用 http 打开时 ../data/example.bank.json 也在，
+  // 会把真题顶掉、换成 9 道示例题（2026-10-22 修）。
+  if (typeof __EMBEDDED_BANK__ !== 'undefined' && __EMBEDDED_BANK__) {
+    useBankText(__EMBEDDED_BANK__, '内置题库')
+    return true
+  }
+
+  // 开发模式（web/index.html，无内联）：从 ../data 读示例题库
   try {
     const r = await fetch('../data/example.bank.json')
     if (r.ok) { useBankText(await r.text(), 'example.bank.json'); return true }
-  } catch { /* 双击打开时 file:// 会拦 fetch，正常 */ }
-
-  // 兜底：用 build 时内联进来的示例题库（单文件版专供）
-  if (typeof __EMBEDDED_BANK__ !== 'undefined' && __EMBEDDED_BANK__) {
-    useBankText(__EMBEDDED_BANK__, '内置示例题库')
-    return true
-  }
+  } catch { /* file:// 下 fetch 被拦，正常 */ }
   return false
 }
 
