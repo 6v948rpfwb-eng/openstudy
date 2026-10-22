@@ -14,7 +14,9 @@ if [ -f .env.local ]; then . ./.env.local; fi
 
 PORT="${OPENSTUDY_PORT:-8770}"
 BASE="http://127.0.0.1:${PORT}"
-URL="${BASE}/openstudy-data/openstudy-physics.html"
+# 参数：学科代号（physics / chemistry），默认 physics
+SUBJECT="${1:-physics}"
+URL="${BASE}/openstudy-data/openstudy-${SUBJECT}.html"
 
 NODE="${OPENSTUDY_NODE:-/Applications/DeepSeek Harness.app/Contents/Resources/runtime/primary-runtime/dependencies/node/bin/node}"
 if [ ! -x "$NODE" ]; then

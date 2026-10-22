@@ -73,6 +73,8 @@ function renderTabs() {
 }
 
 function renderFramework() {
+  // 默认看本页题库所属学科的方法论（物理页先给物理，化学页先给化学）
+  if (app.bank && FW_DOCS[app.bank.subject] && app.bank.subject !== app.fw.subject) app.fw.subject = app.bank.subject
   const doc = FW_DOCS[app.fw.subject]
   if (!doc) { $root.innerHTML = '<div class="card">没有方法论数据</div>'; return }
 
