@@ -1,0 +1,3 @@
+- insert:
+    - id: openstudy
+      name: '@local/dsh-openstudy'

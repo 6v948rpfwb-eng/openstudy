@@ -1,0 +1,16 @@
+{
+  "name": "@local/dsh-openstudy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "开卷：可验证的练习引擎（DSH 插件外壳）",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json"
+  },
+  "meta": {
+    "title": "开卷",
+    "description": "按难度摊匀组卷、可验证判分、间隔重复排程的分学科练习引擎。"
+  },
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
+}

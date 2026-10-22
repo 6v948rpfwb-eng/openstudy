@@ -1,0 +1,104 @@
+{
+  "subject": "demo",
+  "title": "示例题库（不是真实题目，只用来验证引擎能不能跑）",
+  "version": 1,
+  "topics": {
+    "D-01": { "name": "算术（示例）", "desc": "只用来看格式长什么样" },
+    "D-02": { "name": "单位（示例）", "desc": "只用来看格式长什么样" },
+    "D-03": { "name": "选择（示例）", "desc": "只用来看选择题长什么样" }
+  },
+  "questions": [
+    {
+      "id": "demo-001",
+      "topic": "D-01",
+      "type": "numeric",
+      "difficulty": 0.10,
+      "stem": "【示例】3 + 4 = ?",
+      "answer": { "value": 7 },
+      "solution": "3 + 4 = 7",
+      "source": "示例数据-非真题"
+    },
+    {
+      "id": "demo-002",
+      "topic": "D-01",
+      "type": "numeric",
+      "difficulty": 0.25,
+      "stem": "【示例】12 × 12 = ?",
+      "answer": { "value": 144 },
+      "solution": "12 × 12 = 144",
+      "source": "示例数据-非真题"
+    },
+    {
+      "id": "demo-003",
+      "topic": "D-01",
+      "type": "numeric",
+      "difficulty": 0.40,
+      "stem": "【示例】一列数 2, 4, 8, 16, ... 的第 6 项是多少？",
+      "answer": { "value": 64 },
+      "solution": "每项乘 2：2,4,8,16,32,64，第 6 项是 64",
+      "source": "示例数据-非真题"
+    },
+    {
+      "id": "demo-004",
+      "topic": "D-02",
+      "type": "numeric",
+      "difficulty": 0.30,
+      "stem": "【示例】1500 米等于多少千米？",
+      "answer": { "value": 1.5 },
+      "solution": "1500 ÷ 1000 = 1.5",
+      "source": "示例数据-非真题"
+    },
+    {
+      "id": "demo-005",
+      "topic": "D-02",
+      "type": "numeric",
+      "difficulty": 0.55,
+      "stem": "【示例】2 小时 30 分等于多少秒？",
+      "answer": { "value": 9000 },
+      "solution": "2×3600 + 30×60 = 7200 + 1800 = 9000",
+      "source": "示例数据-非真题"
+    },
+    {
+      "id": "demo-006",
+      "topic": "D-02",
+      "type": "numeric",
+      "difficulty": 0.70,
+      "stem": "【示例】把 0.00032 写成科学计数法的指数部分（即 10 的几次方）",
+      "answer": { "value": -4 },
+      "solution": "0.00032 = 3.2 × 10^(-4)，指数是 -4",
+      "source": "示例数据-非真题"
+    },
+    {
+      "id": "demo-007",
+      "topic": "D-03",
+      "type": "choice",
+      "difficulty": 0.20,
+      "stem": "【示例】下列哪个是质数？",
+      "choices": ["9", "15", "17", "21"],
+      "answer": { "value": 2 },
+      "solution": "17 只能被 1 和 17 整除；9=3×3，15=3×5，21=3×7",
+      "source": "示例数据-非真题"
+    },
+    {
+      "id": "demo-008",
+      "topic": "D-03",
+      "type": "choice",
+      "difficulty": 0.50,
+      "stem": "【示例】下列哪两个数互质？",
+      "choices": ["6 和 9", "8 和 12", "14 和 15", "10 和 25"],
+      "answer": { "value": 2 },
+      "solution": "14=2×7，15=3×5，没有公共质因数，故互质",
+      "source": "示例数据-非真题"
+    },
+    {
+      "id": "demo-009",
+      "topic": "D-03",
+      "type": "text",
+      "difficulty": 0.85,
+      "stem": "【示例】用一句话说明为什么 0 不能作除数。",
+      "answer": { "reference": "因为除法是乘法的逆运算：若 a ÷ 0 = b，则必须 0 × b = a。但 0 乘任何数都是 0，所以当 a ≠ 0 时找不到 b；当 a = 0 时 b 可以是任何数。两种情况下答案都不唯一，所以 0 不能作除数。" },
+      "solution": "见参考答案",
+      "source": "示例数据-非真题"
+    }
+  ]
+}

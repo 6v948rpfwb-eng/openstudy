@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>开卷 · 练习引擎</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root {
+    --bg: #fbf9f5;
+    --card: #ffffff;
+    --ink: #2b2b2b;
+    --sub: #7a736c;
+    --line: #e6e0d6;
+    --accent: #2f6f4e;
+    --accent-soft: #e7f1ea;
+    --wrong: #a8443a;
+    --wrong-soft: #f8e9e6;
+    --warn: #b4762a;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.65 -apple-system, "PingFang SC", "Hiragino Sans GB", sans-serif;
+    padding: 18px 16px 60px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 19px; margin: 0 0 2px; letter-spacing: .5px; }
+  .sub { color: var(--sub); font-size: 13px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 14px;
+  }
+  .btn {
+    appearance: none; border: none; cursor: pointer;
+    background: var(--accent); color: #fff;
+    border-radius: 10px; padding: 10px 18px;
+    font-size: 15px; font-family: inherit;
+  }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  .btn.plain { background: transparent; color: var(--sub); border: 1px solid var(--line); }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .stat { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 10px; }
+  .stat div { font-size: 13px; color: var(--sub); }
+  .stat b { display: block; font-size: 20px; color: var(--ink); font-weight: 600; }
+  .stem { font-size: 17px; line-height: 1.7; margin: 0 0 14px; white-space: pre-wrap; }
+  input[type=text] {
+    width: 100%; padding: 11px 13px; font-size: 16px; font-family: inherit;
+    border: 1px solid var(--line); border-radius: 10px; background: #fdfcfa; color: var(--ink);
+  }
+  input[type=text]:focus { outline: 2px solid var(--accent-soft); outline-offset: 1px; }
+  .choice {
+    display: block; width: 100%; text-align: left; margin: 8px 0;
+    padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px;
+    background: #fdfcfa; cursor: pointer; font: inherit; color: inherit;
+  }
+  .choice.picked { border-color: var(--accent); background: var(--accent-soft); }
+  .choice.right { border-color: var(--accent); background: var(--accent-soft); }
+  .choice.wrong { border-color: var(--wrong); background: var(--wrong-soft); }
+  .feedback { border-radius: 10px; padding: 12px 14px; margin-top: 14px; font-size: 14px; }
+  .feedback.ok { background: var(--accent-soft); }
+  .feedback.no { background: var(--wrong-soft); }
+  .feedback .sol { color: var(--sub); margin-top: 8px; white-space: pre-wrap; }
+  .tag {
+    display: inline-block; font-size: 12px; padding: 2px 8px;
+    border-radius: 20px; background: #f0ece4; color: var(--sub); margin-right: 6px;
+  }
+  .tag.due { background: #fbf0dd; color: var(--warn); }
+  .progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 12px; }
+  .progress i { display: block; height: 100%; background: var(--accent); transition: width .25s; }
+  .muted { color: var(--sub); font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+  th { color: var(--sub); font-weight: 500; }
+  .drop {
+    border: 1.5px dashed var(--line); border-radius: 12px; padding: 26px 16px;
+    text-align: center; color: var(--sub); font-size: 14px;
+  }
+  .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  code { background: #f0ece4; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+</style>
+</head>
+<body>
+  <h1>开卷</h1>
+  <div class="sub">可验证的练习引擎 —— 学科是数据，引擎是代码</div>
+  <div id="root"></div>
+
+  <script>
+(function(){
+"use strict";
+const __EMBEDDED_BANK__ = "{\n  \"subject\": \"demo\",\n  \"title\": \"示例题库（不是真实题目，只用来验证引擎能不能跑）\",\n  \"version\": 1,\n  \"topics\": {\n    \"D-01\": { \"name\": \"算术（示例）\", \"desc\": \"只用来看格式长什么样\" },\n    \"D-02\": { \"name\": \"单位（示例）\", \"desc\": \"只用来看格式长什么样\" },\n    \"D-03\": { \"name\": \"选择（示例）\", \"desc\": \"只用来看选择题长什么样\" }\n  },\n  \"questions\": [\n    {\n      \"id\": \"demo-001\",\n      \"topic\": \"D-01\",\n      \"type\": \"numeric\",\n      \"difficulty\": 0.10,\n      \"stem\": \"【示例】3 + 4 = ?\",\n      \"answer\": { \"value\": 7 },\n      \"solution\": \"3 + 4 = 7\",\n      \"source\": \"示例数据-非真题\"\n    },\n    {\n      \"id\": \"demo-002\",\n      \"topic\": \"D-01\",\n      \"type\": \"numeric\",\n      \"difficulty\": 0.25,\n      \"stem\": \"【示例】12 × 12 = ?\",\n      \"answer\": { \"value\": 144 },\n      \"solution\": \"12 × 12 = 144\",\n      \"source\": \"示例数据-非真题\"\n    },\n    {\n      \"id\": \"demo-003\",\n      \"topic\": \"D-01\",\n      \"type\": \"numeric\",\n      \"difficulty\": 0.40,\n      \"stem\": \"【示例】一列数 2, 4, 8, 16, ... 的第 6 项是多少？\",\n      \"answer\": { \"value\": 64 },\n      \"solution\": \"每项乘 2：2,4,8,16,32,64，第 6 项是 64\",\n      \"source\": \"示例数据-非真题\"\n    },\n    {\n      \"id\": \"demo-004\",\n      \"topic\": \"D-02\",\n      \"type\": \"numeric\",\n      \"difficulty\": 0.30,\n      \"stem\": \"【示例】1500 米等于多少千米？\",\n      \"answer\": { \"value\": 1.5 },\n      \"solution\": \"1500 ÷ 1000 = 1.5\",\n      \"source\": \"示例数据-非真题\"\n    },\n    {\n      \"id\": \"demo-005\",\n      \"topic\": \"D-02\",\n      \"type\": \"numeric\",\n      \"difficulty\": 0.55,\n      \"stem\": \"【示例】2 小时 30 分等于多少秒？\",\n      \"answer\": { \"value\": 9000 },\n      \"solution\": \"2×3600 + 30×60 = 7200 + 1800 = 9000\",\n      \"source\": \"示例数据-非真题\"\n    },\n    {\n      \"id\": \"demo-006\",\n      \"topic\": \"D-02\",\n      \"type\": \"numeric\",\n      \"difficulty\": 0.70,\n      \"stem\": \"【示例】把 0.00032 写成科学计数法的指数部分（即 10 的几次方）\",\n      \"answer\": { \"value\": -4 },\n      \"solution\": \"0.00032 = 3.2 × 10^(-4)，指数是 -4\",\n      \"source\": \"示例数据-非真题\"\n    },\n    {\n      \"id\": \"demo-007\",\n      \"topic\": \"D-03\",\n      \"type\": \"choice\",\n      \"difficulty\": 0.20,\n      \"stem\": \"【示例】下列哪个是质数？\",\n      \"choices\": [\"9\", \"15\", \"17\", \"21\"],\n      \"answer\": { \"value\": 2 },\n      \"solution\": \"17 只能被 1 和 17 整除；9=3×3，15=3×5，21=3×7\",\n      \"source\": \"示例数据-非真题\"\n    },\n    {\n      \"id\": \"demo-008\",\n      \"topic\": \"D-03\",\n      \"type\": \"choice\",\n      \"difficulty\": 0.50,\n      \"stem\": \"【示例】下列哪两个数互质？\",\n      \"choices\": [\"6 和 9\", \"8 和 12\", \"14 和 15\", \"10 和 25\"],\n      \"answer\": { \"value\": 2 },\n      \"solution\": \"14=2×7，15=3×5，没有公共质因数，故互质\",\n      \"source\": \"示例数据-非真题\"\n    },\n    {\n      \"id\": \"demo-009\",\n      \"topic\": \"D-03\",\n      \"type\": \"text\",\n      \"difficulty\": 0.85,\n      \"stem\": \"【示例】用一句话说明为什么 0 不能作除数。\",\n      \"answer\": { \"reference\": \"因为除法是乘法的逆运算：若 a ÷ 0 = b，则必须 0 × b = a。但 0 乘任何数都是 0，所以当 a ≠ 0 时找不到 b；当 a = 0 时 b 可以是任何数。两种情况下答案都不唯一，所以 0 不能作除数。\" },\n      \"solution\": \"见参考答案\",\n      \"source\": \"示例数据-非真题\"\n    }\n  ]\n}\n";
+// ===== core/util.js =====
+/** util.js —— 几个到处要用的小函数，单独放一处避免重复定义 */
+
+const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x))
+
+/** 保留 3 位小数，只为了显示好看 */
+const round = (x) => Math.round(x * 1000) / 1000
+
+/** 把一个数组切成 k 段，尽量均分 */
+function splitEvenly(arr, k) {
+  const out = []
+  const size = arr.length / k
+  for (let i = 0; i < k; i++) {
+    const from = Math.floor(i * size)
+    const to = Math.max(from + 1, Math.floor((i + 1) * size))
+    const seg = arr.slice(from, to)
+    if (seg.length) out.push(seg)
+  }
+  return out
+}
+
+const DAY = 86400000
+
+
+// ===== core/irt.js =====
+/**
+ * irt.js —— 能力与难度的统一刻度
+ *
+ * 全部放在 [0,1] 上：
+ *   b  = 题目难度（0 最简单，1 最难）
+ *   θ  = 学生当前能力（0 什么都不会，1 全对）
+ *
+ * 预测通过率用 one-parameter logistic（1PL）：
+ *
+ *   p = 1 / (1 + exp(-a * (θ - b)))
+ *
+ * a 是"区分度"，越大曲线越陡。默认 a = 4。
+ *
+ * 为什么用 logistic 而不是别的：它有两个性质正好合用
+ *   1) p(θ=b) = 0.5，即"能力和难度相等时五成把握"——这给了难度一个可解释的刻度
+ *   2) θ 比 b 高 0.25（a=4 时）→ p = 1/(1+e^-1) = 0.731
+ *      θ 比 b 低 0.25        → p = 1/(1+e^1)  = 0.269
+ *   所以 0.25 的刻度差 ≈ 七成 / 三成把握，是个很好用的手感。
+ */
+
+const DEFAULT_DISCRIMINATION = 4
+
+/** sigmoid */
+function sigmoid(x) {
+  // 分两支算，避免 exp 溢出
+  if (x >= 0) {
+    const e = Math.exp(-x)
+    return 1 / (1 + e)
+  }
+  const e = Math.exp(x)
+  return e / (1 + e)
+}
+
+/** 预测通过率 */
+function predictPass(theta, difficulty, a = DEFAULT_DISCRIMINATION) {
+  return sigmoid(a * (theta - difficulty))
+}
+
+/**
+ * 答完一题后更新 θ（一次梯度上升，对数似然的导数）
+ *
+ *   答对  → θ 上升，上升量为 lr * (1 - p)
+ *   答错  → θ 下降，下降量为 lr * p
+ *
+ * 直觉：p 已经很接近 1 的题答对了，说明本来就该对，几乎不动 θ；
+ *       p 很低的题答对了，说明能力被低估了，θ 大幅上调。
+ */
+function updateTheta(theta, difficulty, correct, { lr = 0.12, a = DEFAULT_DISCRIMINATION } = {}) {
+  const p = predictPass(theta, difficulty, a)
+  const next = correct ? theta + lr * (1 - p) : theta - lr * p
+  return Math.min(1, Math.max(0, next))
+}
+
+/**
+ * 一次答很多题后批量更新 θ。
+ * 返回 { theta, trace }，trace 是每步的 (b, correct, p, thetaAfter)，方便复盘。
+ */
+function updateThetaBatch(theta, answers, opts = {}) {
+  let t = theta
+  const trace = []
+  for (const { difficulty, correct } of answers) {
+    const p = predictPass(t, difficulty, opts.a ?? DEFAULT_DISCRIMINATION)
+    t = updateTheta(t, difficulty, correct, opts)
+    trace.push({ difficulty, correct, p, theta: t })
+  }
+  return { theta: t, trace }
+}
+
+/** 把 θ 翻译成人话，用于界面上显示 */
+function describeTheta(theta) {
+  if (theta < 0.15) return '入门'
+  if (theta < 0.30) return '基础'
+  if (theta < 0.45) return '中下'
+  if (theta < 0.60) return '中等'
+  if (theta < 0.72) return '中上'
+  if (theta < 0.85) return '较强'
+  return '很强'
+}
+
+
+// ===== core/grade.js =====
+/**
+ * grade.js —— 判分
+ *
+ * 核心原则：**只判能被程序判的东西**。
+ *
+ * 判分分三级：
+ *   A. numeric  数值答案 —— 完全自动，带容差与有效数字
+ *   B. choice   单选/多选 —— 完全自动
+ *   C. text     主观题（证明、实验设计、论述） —— **不自动判分**
+ *
+ * C 类不是偷懒，是诚实：程序判不了步骤对不对，
+ * 硬判会把错误结果写进能力估计，比不判更糟。
+ * 对 C 类我们只做两件事：给出参考答案、让学生自己勾"对/半对/错"。
+ */
+
+const NUM_RE = /[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?/g
+
+/** 从一段文本里抽出所有数字（用于"填空里只填数字"的场景） */
+function extractNumbers(text) {
+  const m = String(text ?? '').match(NUM_RE)
+  return m ? m.map(Number) : []
+}
+
+/**
+ * 解析学生输入为数字。
+ * 认这些形式：6 / 6.0 / -3.2 / 1.5e-3 / 6m/s（带单位也能抽出 6）
+ * 抽不出唯一数字就返回 null。
+ */
+function parseNumber(input) {
+  if (typeof input === 'number' && Number.isFinite(input)) return input
+  const nums = extractNumbers(input)
+  if (nums.length === 0) return null
+  // 只有一个数字才算"数值题"
+  if (nums.length === 1) return nums[0]
+  return nums
+}
+
+/**
+ * 判数值答案。
+ *
+ * answer 可以是：
+ *   { value: 6 }
+ *   { value: 6, tol: 0.01 }             绝对容差
+ *   { value: 6, relTol: 0.02 }          相对容差（默认用它）
+ *   { value: [6, 8] }                   多空，按顺序比
+ *
+ * 默认相对容差 1%，因为学生可能用 9.8 或 10 当 g，
+ * 也可能把 1/3 写成 0.333。硬比字符串一定误判。
+ */
+function gradeNumeric(input, answer, { defaultRelTol = 0.01 } = {}) {
+  const expected = Array.isArray(answer.value) ? answer.value : [answer.value]
+  let got = parseNumber(input)
+
+  if (got === null) {
+    return { correct: false, reason: '没能从你的输入里读出数字' }
+  }
+  const gotList = Array.isArray(got) ? got : [got]
+
+  if (gotList.length !== expected.length) {
+    return {
+      correct: false,
+      reason: expected.length > 1
+        ? `这题要填 ${expected.length} 个空，你填了 ${gotList.length} 个`
+        : `这题只要 1 个数，你填了 ${gotList.length} 个`,
+    }
+  }
+
+  const details = expected.map((exp, i) => {
+    const e = Number(exp)
+    const g = gotList[i]
+    const relTol = answer.relTol ?? defaultRelTol
+    const tol = answer.tol ?? Math.abs(e) * relTol
+    const diff = Math.abs(g - e)
+    return { expected: e, got: g, diff, tol, ok: diff <= tol + 1e-12 }
+  })
+
+  const bad = details.find((d) => !d.ok)
+  if (bad) {
+    return {
+      correct: false,
+      reason: `期望 ${bad.expected}，你给的 ${bad.got} 差了 ${bad.diff.toPrecision(3)}（允许±${bad.tol.toPrecision(3)}）`,
+      details,
+    }
+  }
+  return { correct: true, details }
+}
+
+/** 判选择题。answer.value 是正确下标（数组）。input 是学生选的数组。 */
+function gradeChoice(input, answer) {
+  const expected = (Array.isArray(answer.value) ? answer.value : [answer.value])
+    .map(Number).sort((x, y) => x - y)
+  const got = (Array.isArray(input) ? input : [input])
+    .map(Number).sort((x, y) => x - y)
+
+  const same = expected.length === got.length && expected.every((v, i) => v === got[i])
+  return {
+    correct: same,
+    reason: same ? '' : `正确选项是 ${expected.map((i) => i + 1).join('、')}，你选了 ${got.map((i) => i + 1).join('、') || '空'}`,
+  }
+}
+
+/**
+ * 主观题：不判分，只报告"需要人看"。
+ * selfGrade 由学生自己给：'full' | 'half' | 'none'
+ */
+function gradeText(selfGrade) {
+  if (selfGrade === 'full') return { correct: true, partial: 1, manual: true }
+  if (selfGrade === 'half') return { correct: false, partial: 0.5, manual: true }
+  if (selfGrade === 'none') return { correct: false, partial: 0, manual: true }
+  return { correct: null, partial: null, manual: true, reason: '主观题需要你自己判定' }
+}
+
+/** 统一入口 */
+function grade(question, input, opts = {}) {
+  switch (question.type) {
+    case 'numeric':
+      return gradeNumeric(input, question.answer, opts)
+    case 'choice':
+      return gradeChoice(input, question.answer)
+    case 'text':
+      return gradeText(input)
+    default:
+      throw new Error(`未知题型：${question.type}`)
+  }
+}
+
+
+// ===== core/bank.js =====
+/**
+ * bank.js —— 题库的格式与校验
+ *
+ * 一条原则：**学科是数据，不是代码**。
+ * 想让引擎多支持一门学科，只加一个 JSON 文件，不改一行代码。
+ */
+
+/** 题库文件应该是这个形状 */
+const BANK_SCHEMA_HINT = {
+  subject: 'physics',                 // 学科代号，必填
+  title: '高中物理',                   // 显示名
+  version: 1,
+  topics: {
+    'P-01': { name: '匀变速直线运动', desc: '速度、位移、加速度' },
+  },
+  questions: [
+    {
+      id: 'q001',
+      topic: 'P-01',
+      type: 'numeric',                // numeric | choice | text
+      difficulty: 0.45,               // [0,1]，越大越难
+      stem: '题干（支持换行）',
+      answer: { value: 6, relTol: 0.01 },
+      solution: '参考答案 / 解题步骤',
+      source: '2024年浙江卷第12题',    // **必填**，见 validateBank
+    },
+  ],
+}
+
+class BankError extends Error {}
+
+/**
+ * 校验题库。返回 { ok, errors, warnings, bank }
+ *
+ * errors   → 必须修，否则不加载
+ * warnings → 能跑，但会有问题（比如某个考点只有 1 道题，组卷时会重复）
+ */
+function validateBank(raw) {
+  const errors = []
+  const warnings = []
+
+  if (!raw || typeof raw !== 'object') {
+    return { ok: false, errors: ['题库不是一个对象'], warnings, bank: null }
+  }
+  if (!raw.subject) errors.push('缺少 subject（学科代号）')
+  if (!raw.topics || typeof raw.topics !== 'object') errors.push('缺少 topics（考点表）')
+  if (!Array.isArray(raw.questions) || raw.questions.length === 0) {
+    errors.push('questions 必须是非空数组')
+  }
+
+  const seen = new Set()
+  const topicCount = new Map()
+
+  for (const [i, q] of (raw.questions ?? []).entries()) {
+    const at = `questions[${i}]${q?.id ? `(${q.id})` : ''}`
+
+    if (!q || typeof q !== 'object') { errors.push(`${at}: 不是对象`); continue }
+    if (!q.id) errors.push(`${at}: 缺少 id`)
+    else if (seen.has(q.id)) errors.push(`${at}: id 重复`)
+    else seen.add(q.id)
+
+    if (!q.topic) errors.push(`${at}: 缺少 topic`)
+    else if (raw.topics && !raw.topics[q.topic]) errors.push(`${at}: topic "${q.topic}" 不在 topics 表里`)
+    else topicCount.set(q.topic, (topicCount.get(q.topic) ?? 0) + 1)
+
+    if (typeof q.difficulty !== 'number' || q.difficulty < 0 || q.difficulty > 1) {
+      errors.push(`${at}: difficulty 必须是 [0,1] 之间的数，现在是 ${q.difficulty}`)
+    }
+
+    if (!q.stem) errors.push(`${at}: 缺少 stem（题干）`)
+
+    // 来源必须写。这是硬规则：没有来源的题不许进题库。
+    if (!q.source) {
+      errors.push(`${at}: 缺少 source。每道题必须写明出处（如「2024年浙江卷第12题」），防止来路不明的题混进题库`)
+    }
+
+    switch (q.type) {
+      case 'numeric':
+        if (!q.answer || q.answer.value === undefined) errors.push(`${at}: numeric 题必须有 answer.value`)
+        else if (Array.isArray(q.answer.value) && q.answer.value.some((v) => !Number.isFinite(Number(v)))) {
+          errors.push(`${at}: answer.value 里有非数字`)
+        } else if (!Array.isArray(q.answer.value) && !Number.isFinite(Number(q.answer.value))) {
+          errors.push(`${at}: answer.value 不是数字`)
+        }
+        break
+      case 'choice':
+        if (!Array.isArray(q.choices) || q.choices.length < 2) errors.push(`${at}: choice 题必须有至少 2 个 choices`)
+        if (!q.answer || q.answer.value === undefined) errors.push(`${at}: choice 题必须有 answer.value（正确下标，从 0 起）`)
+        else {
+          const idx = Array.isArray(q.answer.value) ? q.answer.value : [q.answer.value]
+          for (const k of idx) {
+            if (!Number.isInteger(Number(k)) || Number(k) < 0 || Number(k) >= (q.choices?.length ?? 0)) {
+              errors.push(`${at}: 正确下标 ${k} 超出 choices 范围`)
+            }
+          }
+        }
+        break
+      case 'text':
+        if (!q.answer || !q.answer.reference) {
+          warnings.push(`${at}: text 题建议在 answer.reference 里写参考答案，方便自评`)
+        }
+        break
+      default:
+        errors.push(`${at}: 未知 type "${q.type}"，只能是 numeric / choice / text`)
+    }
+
+    if (!q.solution) warnings.push(`${at}: 没有 solution（解析），学生答错时看不到解释`)
+  }
+
+  // 考点覆盖检查
+  for (const [tid, t] of Object.entries(raw.topics ?? {})) {
+    const n = topicCount.get(tid) ?? 0
+    if (n === 0) warnings.push(`考点 ${tid}(${t?.name ?? '?'}) 一道题都没有`)
+    else if (n < 3) warnings.push(`考点 ${tid}(${t?.name ?? '?'}) 只有 ${n} 道题，组卷时会被重复抽到`)
+  }
+
+  return { ok: errors.length === 0, errors, warnings, bank: errors.length === 0 ? normalizeBank(raw) : null }
+}
+
+/** 补齐默认字段，统一形状 */
+function normalizeBank(raw) {
+  return {
+    subject: raw.subject,
+    title: raw.title ?? raw.subject,
+    version: raw.version ?? 1,
+    topics: raw.topics ?? {},
+    questions: raw.questions.map((q) => ({
+      type: 'numeric',
+      difficulty: 0.5,
+      answer: {},
+      solution: '',
+      ...q,
+      // 归一化：answer.value 一律存成数组，方便统一处理多空题
+      answer: {
+        ...q.answer,
+        value: Array.isArray(q.answer?.value) ? q.answer.value : [q.answer?.value],
+      },
+    })),
+  }
+}
+
+/** 从 JSON 文本加载 */
+function loadBank(text) {
+  let raw
+  try { raw = JSON.parse(text) } catch (e) {
+    throw new BankError(`题库 JSON 解析失败：${e.message}`)
+  }
+  const res = validateBank(raw)
+  if (!res.ok) {
+    throw new BankError(`题库校验未通过：\n  - ${res.errors.join('\n  - ')}`)
+  }
+  return { bank: res.bank, warnings: res.warnings }
+}
+
+/** 按考点索引题目 */
+function indexByTopic(bank) {
+  const m = new Map()
+  for (const q of bank.questions) {
+    if (!m.has(q.topic)) m.set(q.topic, [])
+    m.get(q.topic).push(q)
+  }
+  return m
+}
+
+
+// ===== core/select.js =====
+/**
+ * select.js —— 组卷
+ *
+ * 组卷要回答一个问题：**从一堆题里挑 n 道，挑哪些？**
+ *
+ * 核心结论（来自评测理论，不是拍脑袋）：
+ *   难度全部挤在一块时，测出来的分数没有信息量。
+ *   - 全考简单题：谁都能考 90，分不出人
+ *   - 全考难题：谁都考 20，也分不出人
+ *   所以要让**难度摊开**，覆盖学生真实能力附近的一段区间。
+ *
+ * 具体做法：
+ *   1. 算每道题在"当前能力 θ"下的预测通过率 p
+ *   2. 把题按难度排序，切成 k 段（k = 题数），每段抽一道 → 天然摊匀
+ *   3. 但太简单（p > 0.95）和太难（p < 0.08）的题信息量接近 0，降权
+ *   4. 同考点不能超过上限，避免一张卷全在同一个知识点上
+ *   5. 到期的复习考点加权
+ */
+
+
+/**
+ * @param bank         题库
+ * @param opts.theta   当前能力
+ * @param opts.n       题数
+ * @param opts.progress  学习进度（可选，来自 state.js），用来做到期加权
+ * @returns { picked, meta }
+ */
+function composePaper(bank, {
+  theta = 0.4,
+  n = 12,
+  progress = null,
+  a = DEFAULT_DISCRIMINATION,
+  maxPerTopic = null,
+  band = 0.45,          // 只在这个难度带附近抽：[θ-band, θ+band]
+  rng = Math.random,
+} = {}) {
+  const pool = bank.questions.map((q) => {
+    const p = predictPass(theta, q.difficulty, a)
+    // 信息量：p(1-p) 最大在 p=0.5，两端趋近 0
+    const info = p * (1 - p)
+
+    // 到期待复习加权：该考点到期越久，抽中概率越高
+    let dueBoost = 1
+    if (progress) {
+      const rec = progress.topics?.[q.topic]
+      if (rec?.dueAt != null) {
+        const overdueDays = (Date.now() - rec.dueAt) / 86400000
+        if (overdueDays > 0) dueBoost = 1 + Math.min(2, overdueDays / 3)
+      }
+    }
+
+    const weight = (info + 0.02) * dueBoost
+    return { q, p, info, dueBoost, weight, jitter: rng() }
+  })
+
+  // 1) 先按预测通过率收紧到难度带内，带内题不够就逐步放宽
+  let candidates = pool.filter((x) => {
+    const d = Math.abs(x.q.difficulty - theta)
+    return d <= band
+  })
+  let widened = false
+  for (const b of [band, band * 2, 1.01]) {
+    if (candidates.length >= n) break
+    candidates = pool.filter((x) => Math.abs(x.q.difficulty - theta) <= b)
+    widened = b !== band
+  }
+  if (candidates.length === 0) candidates = pool.slice()
+
+  // 2) 按难度排序后分段，每段取一个 → 难度摊匀
+  candidates.sort((x, y) => x.q.difficulty - y.q.difficulty)
+
+  const limitPerTopic = maxPerTopic ?? Math.max(1, Math.ceil(n / 3))
+  const picked = []
+  const topicUse = new Map()
+
+  // 分段：把候选切成 n 段，每段里按权重加权随机取一道
+  const segments = splitEvenly(candidates, n)
+
+  for (const seg of segments) {
+    const choice = weightedPick(seg, topicUse, limitPerTopic, rng)
+    if (choice) {
+      picked.push(choice.q)
+      topicUse.set(choice.q.topic, (topicUse.get(choice.q.topic) ?? 0) + 1)
+    }
+  }
+
+  // 3) 分段不够（候选少）时，从剩下的题里按权重补齐
+  if (picked.length < n) {
+    const pickedIds = new Set(picked.map((q) => q.id))
+    const rest = candidates
+      .filter((x) => !pickedIds.has(x.q.id))
+      .sort((x, y) => y.weight - x.weight)
+    for (const x of rest) {
+      if (picked.length >= n) break
+      const used = topicUse.get(x.q.topic) ?? 0
+      if (used >= limitPerTopic) continue
+      picked.push(x.q)
+      topicUse.set(x.q.topic, used + 1)
+    }
+  }
+
+  // 4) 还是不够就放开考点上限硬补（题池太小的情况）
+  if (picked.length < n) {
+    const pickedIds = new Set(picked.map((q) => q.id))
+    for (const x of candidates) {
+      if (picked.length >= n) break
+      if (pickedIds.has(x.q.id)) continue
+      picked.push(x.q)
+    }
+  }
+
+  // 交卷顺序再打乱一次，避免从易到难
+  shuffle(picked, rng)
+
+  const difficulties = picked.map((q) => q.difficulty)
+  return {
+    picked,
+    meta: {
+      requested: n,
+      actual: picked.length,
+      theta,
+      widenedBand: widened,
+      difficultySpread: summarize(difficulties),
+      topicUse: Object.fromEntries(topicUse),
+    },
+  }
+}
+
+
+function weightedPick(seg, topicUse, limitPerTopic, rng) {
+  const usable = seg.filter((x) => (topicUse.get(x.q.topic) ?? 0) < limitPerTopic)
+  const list = usable.length ? usable : seg
+  const total = list.reduce((s, x) => s + x.weight, 0)
+  if (total <= 0) return list[0] ?? null
+  let r = rng() * total
+  for (const x of list) {
+    r -= x.weight
+    if (r <= 0) return x
+  }
+  return list[list.length - 1]
+}
+
+function shuffle(arr, rng = Math.random) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr
+}
+
+function summarize(nums) {
+  if (!nums.length) return { min: null, max: null, mean: null }
+  const sorted = [...nums].sort((x, y) => x - y)
+  return {
+    min: round(sorted[0]),
+    max: round(sorted[sorted.length - 1]),
+    mean: round(nums.reduce((s, v) => s + v, 0) / nums.length),
+  }
+}
+
+
+
+// ===== core/state.js =====
+/**
+ * state.js —— 学习状态与复习排程
+ *
+ * 存三样东西：
+ *   1. θ：整体能力，一个数
+ *   2. topics：每个考点的记录（做过几题、对几题、下次该复习的日期）
+ *   3. log：每场练习的流水（用于复盘和算趋势）
+ *
+ * 排程用的是简化的 SM-2（间隔重复）：
+ *   答对 → 间隔 = 上次间隔 × 该考点的"易度因子"
+ *   答错 → 间隔归 1 天，易度因子下调
+ *
+ * 易度因子 EF 限制在 [1.3, 2.8]，这是 SM-2 的经典区间：
+ *   EF 越大说明这个考点对你越轻松，间隔可以拉得越长。
+ */
+
+
+const STATE_VERSION = 1
+
+function emptyState(subject) {
+  return {
+    version: STATE_VERSION,
+    subject,
+    theta: 0.35,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    topics: {},
+    log: [],
+  }
+}
+
+function topicRecord(state, topicId) {
+  if (!state.topics[topicId]) {
+    state.topics[topicId] = {
+      attempts: 0,
+      correct: 0,
+      streak: 0,          // 连续答对次数
+      ease: 2.5,          // 易度因子
+      intervalDays: 0,
+      dueAt: null,
+      lastSeenAt: null,
+    }
+  }
+  return state.topics[topicId]
+}
+
+/**
+ * 结算一场练习。
+ *
+ * @param state     已有状态（会被修改并返回）
+ * @param bank      题库
+ * @param answers   [{ question, correct, input }]  correct 可以是 true/false
+ * @returns { state, report }
+ */
+function finishSession(state, bank, answers, { lr = 0.12 } = {}) {
+  const before = state.theta
+
+  // 1) 更新整体能力 θ
+  const { theta, trace } = updateThetaBatch(
+    state.theta,
+    answers.map((x) => ({ difficulty: x.question.difficulty, correct: x.correct })),
+    { lr },
+  )
+  state.theta = theta
+
+  // 2) 更新每个考点
+  const byTopic = new Map()
+  for (const a of answers) {
+    const t = a.question.topic
+    if (!byTopic.has(t)) byTopic.set(t, [])
+    byTopic.get(t).push(a)
+  }
+
+  const now = Date.now()
+  const topicUpdates = []
+
+  for (const [topicId, list] of byTopic) {
+    const rec = topicRecord(state, topicId)
+    const correctCount = list.filter((x) => x.correct).length
+    const wrongCount = list.length - correctCount
+
+    rec.attempts += list.length
+    rec.correct += correctCount
+    rec.lastSeenAt = now
+
+    // 易度因子：全对上调，有错下调
+    const acc = correctCount / list.length
+    rec.ease = clamp(rec.ease + 0.1 * (acc - 0.5) * 2, 1.3, 2.8)
+
+    if (wrongCount === 0) {
+      rec.streak += list.length
+      rec.intervalDays = rec.intervalDays === 0 ? 1 : Math.min(180, rec.intervalDays * rec.ease)
+    } else {
+      rec.streak = 0
+      rec.intervalDays = 1
+      rec.ease = clamp(rec.ease - 0.2 * wrongCount, 1.3, 2.8)
+    }
+
+    rec.dueAt = now + rec.intervalDays * DAY
+
+    topicUpdates.push({
+      topicId,
+      name: bank.topics[topicId]?.name ?? topicId,
+      asked: list.length,
+      correct: correctCount,
+      accuracy: round(acc),
+      nextDueDays: round(rec.intervalDays),
+      needReview: wrongCount > 0,
+    })
+  }
+
+  const totalCorrect = answers.filter((x) => x.correct).length
+
+  // 3) 记账
+  state.log.push({
+    at: now,
+    asked: answers.length,
+    correct: totalCorrect,
+    thetaBefore: round(before),
+    thetaAfter: round(state.theta),
+    topics: [...byTopic.keys()],
+  })
+  state.updatedAt = now
+
+  const report = {
+    asked: answers.length,
+    correct: totalCorrect,
+    accuracy: round(totalCorrect / Math.max(1, answers.length)),
+    thetaBefore: round(before),
+    thetaAfter: round(state.theta),
+    thetaDelta: round(state.theta - before),
+    level: describeTheta(state.theta),
+    topicUpdates,
+    needReview: topicUpdates.filter((t) => t.needReview),
+    trace,
+  }
+
+  return { state, report }
+}
+
+/** 现在应该复习的考点（到期或逾期） */
+function dueTopics(state, bank, now = Date.now()) {
+  const out = []
+  for (const [topicId, rec] of Object.entries(state.topics ?? {})) {
+    if (rec.dueAt != null && rec.dueAt <= now && bank.topics[topicId]) {
+      out.push({
+        topicId,
+        name: bank.topics[topicId].name,
+        lateDays: round((now - rec.dueAt) / 86400000),
+        accuracy: round(rec.correct / Math.max(1, rec.attempts)),
+      })
+    }
+  }
+  return out.sort((a, b) => b.lateDays - a.lateDays)
+}
+
+/** 该考点的掌握度估计：用该考点历史正确率做平滑，避免"做1题全对=100%" */
+function topicMastery(rec) {
+  if (!rec) return null
+  // 拉普拉斯平滑：(correct + 1) / (attempts + 2)
+  return round((rec.correct + 1) / (rec.attempts + 2))
+}
+
+
+
+// ===== web/app.js =====
+/**
+ * app.js —— 网页界面
+ *
+ * 三种模式：
+ *   1. 直接双击 dist/openstudy.html（引擎已内联）
+ *   2. 用 http 打开本目录（引擎从 ../core 加载）
+ *   3. 把题库 JSON 拖进页面
+ */
+
+
+const $root = document.getElementById('root')
+const KEY = (subject) => `openstudy.state.${subject}`
+
+const app = {
+  bank: null,
+  warnings: [],
+  state: null,
+  paper: null,
+  index: 0,
+  answers: [],
+  phase: 'load',   // load | ready | practice | done
+  current: null,   // 当前题的临时作答
+  report: null,
+}
+
+// ---------- 存档 ----------
+function saveState() {
+  if (!app.bank) return
+  try {
+    localStorage.setItem(KEY(app.bank.subject), JSON.stringify(app.state))
+  } catch (e) {
+    console.warn('存档失败', e)
+  }
+}
+function loadState(subject) {
+  try {
+    const raw = localStorage.getItem(KEY(subject))
+    if (!raw) return null
+    const s = JSON.parse(raw)
+    return s?.version === 1 ? s : null
+  } catch { return null }
+}
+
+// ---------- 载入题库 ----------
+function useBankText(text, name) {
+  const res = validateBank(JSON.parse(text))
+  if (!res.ok) {
+    alert(`题库「${name}」有问题：\n\n` + res.errors.join('\n'))
+    return
+  }
+  app.bank = res.bank
+  app.warnings = res.warnings
+  app.state = loadState(app.bank.subject) ?? emptyState(app.bank.subject)
+  app.phase = 'ready'
+  render()
+}
+
+async function tryAutoLoad() {
+  // 先试从 ../data 读（用 http 打开时可行）
+  try {
+    const r = await fetch('../data/example.bank.json')
+    if (r.ok) { useBankText(await r.text(), 'example.bank.json'); return true }
+  } catch { /* 双击打开时 file:// 会拦 fetch，正常 */ }
+
+  // 兜底：用 build 时内联进来的示例题库（单文件版专供）
+  if (typeof __EMBEDDED_BANK__ !== 'undefined' && __EMBEDDED_BANK__) {
+    useBankText(__EMBEDDED_BANK__, '内置示例题库')
+    return true
+  }
+  return false
+}
+
+// ---------- 渲染 ----------
+function render() {
+  if (app.phase === 'load') return renderLoad()
+  if (app.phase === 'ready') return renderReady()
+  if (app.phase === 'practice') return renderPractice()
+  if (app.phase === 'done') return renderDone()
+}
+
+function renderLoad() {
+  $root.innerHTML = `
+    <div class="card">
+      <div class="drop" id="drop">
+        把题库 JSON 拖到这里<br><br>
+        或者 <button class="btn ghost" id="pick" style="margin-top:6px">选择文件</button>
+        <input type="file" id="file" accept=".json,application/json" hidden>
+      </div>
+      <p class="muted" style="margin-top:14px">
+        题库格式见 <code>docs/格式说明.md</code>。每道题必须有 <code>source</code>（出处），否则会被拒绝加载。
+      </p>
+    </div>`
+
+  const pick = (text, name) => {
+    try { useBankText(text, name) } catch (e) { alert('解析失败：' + e.message) }
+  }
+
+  document.getElementById('pick').onclick = () => document.getElementById('file').click()
+  document.getElementById('file').onchange = (e) => {
+    const f = e.target.files?.[0]
+    if (!f) return
+    f.text().then((t) => pick(t, f.name))
+  }
+
+  const drop = document.getElementById('drop')
+  drop.ondragover = (e) => { e.preventDefault(); drop.classList.add('over') }
+  drop.ondragleave = () => drop.classList.remove('over')
+  drop.ondrop = (e) => {
+    e.preventDefault(); drop.classList.remove('over')
+    const f = e.dataTransfer?.files?.[0]
+    if (f) f.text().then((t) => pick(t, f.name))
+  }
+
+  tryAutoLoad()
+}
+
+function renderReady() {
+  const { bank, state } = app
+  const due = dueTopics(state, bank)
+  const topicRows = Object.entries(bank.topics).map(([id, t]) => {
+    const rec = state.topics[id]
+    return `<tr>
+      <td>${id}</td><td>${t.name}</td>
+      <td>${rec ? `${rec.correct}/${rec.attempts}` : '—'}</td>
+      <td>${rec ? Math.round(topicMastery(rec) * 100) + '%' : '—'}</td>
+      <td>${rec?.dueAt ? daysUntil(rec.dueAt) : '—'}</td>
+    </tr>`
+  }).join('')
+
+  $root.innerHTML = `
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <b>${bank.title}</b>
+          <div class="muted">${Object.keys(bank.topics).length} 个考点 · ${bank.questions.length} 道题</div>
+        </div>
+        <button class="btn plain" id="reset">重置进度</button>
+      </div>
+      <div class="stat">
+        <div><b>${state.theta.toFixed(2)}</b>能力 θ</div>
+        <div><b>${describeTheta(state.theta)}</b>水平</div>
+        <div><b>${state.log.length}</b>练过场次</div>
+        <div><b>${due.length}</b>到期考点</div>
+      </div>
+      ${app.warnings.length ? `<p class="muted" style="margin-top:12px">题库提醒：${app.warnings.slice(0, 3).join('；')}${app.warnings.length > 3 ? ' …' : ''}</p>` : ''}
+    </div>
+
+    ${due.length ? `<div class="card">
+      <b>该复习了</b>
+      <p class="muted" style="margin:6px 0 0">
+        ${due.map((d) => `<span class="tag due">${d.name} 逾期 ${d.lateDays} 天</span>`).join('')}
+      </p>
+    </div>` : ''}
+
+    <div class="card">
+      <div class="row">
+        <span class="muted">题数</span>
+        <select id="n" style="padding:8px;border-radius:8px;border:1px solid var(--line);font:inherit">
+          <option value="8">8 题（约 5 分钟）</option>
+          <option value="12" selected>12 题（约 8 分钟）</option>
+          <option value="20">20 题（约 15 分钟）</option>
+        </select>
+        <button class="btn" id="start">开始练习</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <b>各考点</b>
+      <table><thead><tr><th>编号</th><th>考点</th><th>对/做</th><th>掌握度</th><th>下次</th></tr></thead>
+      <tbody>${topicRows}</tbody></table>
+    </div>`
+
+  document.getElementById('start').onclick = () => startSession(Number(document.getElementById('n').value))
+  document.getElementById('reset').onclick = () => {
+    if (!confirm('确定清空这个学科的进度？')) return
+    localStorage.removeItem(KEY(bank.subject))
+    app.state = emptyState(bank.subject)
+    render()
+  }
+}
+
+function startSession(n) {
+  const { picked, meta } = composePaper(app.bank, {
+    theta: app.state.theta,
+    n,
+    progress: app.state,
+  })
+  app.paper = { questions: picked, meta }
+  app.index = 0
+  app.answers = []
+  app.phase = 'practice'
+  nextQuestion()
+}
+
+function nextQuestion() {
+  if (app.index >= app.paper.questions.length) return finish()
+  app.current = { input: '', picked: null, selfGrade: null, graded: null }
+  render()
+}
+
+function renderPractice() {
+  const q = app.paper.questions[app.index]
+  const total = app.paper.questions.length
+  const pct = (app.index / total) * 100
+  const c = app.current
+
+  let inputArea = ''
+  if (q.type === 'numeric') {
+    inputArea = `<input type="text" id="ans" placeholder="填数值，可带单位" autocomplete="off"
+      value="${escapeAttr(c.input)}" ${c.graded ? 'disabled' : ''}>`
+  } else if (q.type === 'choice') {
+    inputArea = q.choices.map((ch, i) => {
+      let cls = 'choice'
+      if (c.graded) {
+        const correct = q.answer.value.includes(i)
+        if (correct) cls += ' right'
+        else if (c.picked === i) cls += ' wrong'
+      } else if (c.picked === i) cls += ' picked'
+      return `<button class="${cls}" data-i="${i}" ${c.graded ? 'disabled' : ''}>${'ABCDEFG'[i]}. ${escapeHtml(ch)}</button>`
+    }).join('')
+  } else {
+    inputArea = `<textarea id="ans" rows="4" placeholder="写下你的思路"
+      style="width:100%;padding:11px 13px;font:inherit;border:1px solid var(--line);border-radius:10px;background:#fdfcfa"
+      ${c.graded ? 'disabled' : ''}>${escapeHtml(c.input)}</textarea>`
+  }
+
+  let feedback = ''
+  if (c.graded) {
+    if (q.type === 'text') {
+      feedback = `<div class="feedback ok">
+        <b>参考答案</b>
+        <div class="sol">${escapeHtml(q.answer.reference ?? '（题库没写参考答案）')}</div>
+        <div style="margin-top:12px" class="row">
+          <span class="muted">自己判：</span>
+          <button class="btn ghost" data-self="full">对了</button>
+          <button class="btn ghost" data-self="half">半对</button>
+          <button class="btn ghost" data-self="none">错了</button>
+        </div>
+      </div>`
+    } else {
+      const ok = c.graded.correct
+      feedback = `<div class="feedback ${ok ? 'ok' : 'no'}">
+        <b>${ok ? '对' : '错'}</b>
+        ${c.graded.reason ? `<div class="sol">${escapeHtml(c.graded.reason)}</div>` : ''}
+        ${q.solution ? `<div class="sol">解析：${escapeHtml(q.solution)}</div>` : ''}
+      </div>`
+    }
+  }
+
+  const canSubmit = q.type === 'text'
+    ? true
+    : c.picked !== null || c.input.trim() !== ''
+
+  $root.innerHTML = `
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <span class="muted">第 ${app.index + 1} / ${total} 题</span>
+        <span class="muted">难度 ${q.difficulty.toFixed(2)} · 预测通过 ${(predictPass(app.state.theta, q.difficulty) * 100).toFixed(0)}%</span>
+      </div>
+      <div class="progress"><i style="width:${pct}%"></i></div>
+      <p class="stem" style="margin-top:16px">${escapeHtml(q.stem)}</p>
+      ${inputArea}
+      ${feedback}
+      <div class="row" style="margin-top:16px">
+        ${c.graded && q.type !== 'text'
+          ? `<button class="btn" id="next">${app.index + 1 === total ? '交卷' : '下一题'}</button>`
+          : c.graded && q.type === 'text'
+            ? `<span class="muted">选完再点下一题</span>`
+            : `<button class="btn" id="submit" ${canSubmit ? '' : 'disabled'}>提交</button>`}
+      </div>
+    </div>`
+
+  const ansEl = document.getElementById('ans')
+  if (ansEl && !c.graded) {
+    ansEl.oninput = (e) => { app.current.input = e.target.value }
+    if (q.type === 'numeric') {
+      ansEl.onkeydown = (e) => { if (e.key === 'Enter') doSubmit() }
+      ansEl.focus()
+    }
+  }
+
+  document.querySelectorAll('.choice').forEach((b) => {
+    b.onclick = () => {
+      if (app.current.graded) return
+      app.current.picked = Number(b.dataset.i)
+      render()
+    }
+  })
+
+  document.getElementById('submit')?.addEventListener('click', doSubmit)
+  document.getElementById('next')?.addEventListener('click', () => {
+    app.index++
+    nextQuestion()
+  })
+
+  document.querySelectorAll('[data-self]').forEach((b) => {
+    b.onclick = () => {
+      const g = grade({ type: 'text' }, b.dataset.self)
+      app.current.graded = g
+      // 文字题不参与 θ 更新（无法可靠判分），只记录
+      recordAnswer(g, true)
+      render()
+    }
+  })
+}
+
+function doSubmit() {
+  const q = app.paper.questions[app.index]
+  const c = app.current
+  if (c.graded) return
+
+  const input = q.type === 'choice' ? c.picked : c.input
+  const g = grade(q, input)
+  c.graded = g
+  recordAnswer(g, q.type !== 'text')
+  render()
+}
+
+function recordAnswer(g, countsForTheta) {
+  const q = app.paper.questions[app.index]
+  app.answers.push({
+    question: q,
+    correct: g.correct === true,
+    countsForTheta,
+    input: app.current.input,
+  })
+}
+
+function finish() {
+  const counted = app.answers.filter((a) => a.countsForTheta)
+  const { state, report } = finishSession(app.state, app.bank, counted)
+  app.state = state
+  app.report = report
+  app.phase = 'done'
+  saveState()
+  render()
+}
+
+function renderDone() {
+  const r = app.report
+  const rows = r.topicUpdates.map((t) => `
+    <tr><td>${t.name}</td><td>${t.correct}/${t.asked}</td>
+    <td>${Math.round(t.accuracy * 100)}%</td>
+    <td>${t.nextDueDays} 天后</td></tr>`).join('')
+
+  $root.innerHTML = `
+    <div class="card">
+      <b>这一场做完了</b>
+      <div class="stat">
+        <div><b>${r.correct}/${r.asked}</b>答对</div>
+        <div><b>${Math.round(r.accuracy * 100)}%</b>正确率</div>
+        <div><b>${r.thetaBefore} → ${r.thetaAfter}</b>能力</div>
+        <div><b>${r.level}</b>水平</div>
+      </div>
+    </div>
+    <div class="card">
+      <b>各考点</b>
+      <table><thead><tr><th>考点</th><th>对/做</th><th>正确率</th><th>下次复习</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+    </div>
+    ${r.needReview.length ? `<div class="card">
+      <b>需要补的</b>
+      <p class="muted" style="margin:6px 0 0">${r.needReview.map((t) => `<span class="tag due">${t.name}</span>`).join('')}</p>
+    </div>` : ''}
+    <div class="card">
+      <button class="btn" id="again">再来一场</button>
+      <button class="btn plain" id="home" style="margin-left:8px">回到首页</button>
+    </div>`
+
+  document.getElementById('again').onclick = () => startSession(app.paper.questions.length)
+  document.getElementById('home').onclick = () => { app.phase = 'ready'; render() }
+}
+
+// ---------- 小工具 ----------
+function daysUntil(ts) {
+  const d = Math.round((ts - Date.now()) / 86400000)
+  if (d <= 0) return '已到期'
+  return `${d} 天后`
+}
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]))
+}
+function escapeAttr(s) { return escapeHtml(s) }
+
+render()
+
+})();
+</script>
+</body>
+</html>

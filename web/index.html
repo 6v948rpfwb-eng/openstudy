@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>开卷 · 练习引擎</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root {
+    --bg: #fbf9f5;
+    --card: #ffffff;
+    --ink: #2b2b2b;
+    --sub: #7a736c;
+    --line: #e6e0d6;
+    --accent: #2f6f4e;
+    --accent-soft: #e7f1ea;
+    --wrong: #a8443a;
+    --wrong-soft: #f8e9e6;
+    --warn: #b4762a;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.65 -apple-system, "PingFang SC", "Hiragino Sans GB", sans-serif;
+    padding: 18px 16px 60px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 19px; margin: 0 0 2px; letter-spacing: .5px; }
+  .sub { color: var(--sub); font-size: 13px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    margin-top: 14px;
+  }
+  .btn {
+    appearance: none; border: none; cursor: pointer;
+    background: var(--accent); color: #fff;
+    border-radius: 10px; padding: 10px 18px;
+    font-size: 15px; font-family: inherit;
+  }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  .btn.plain { background: transparent; color: var(--sub); border: 1px solid var(--line); }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .stat { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 10px; }
+  .stat div { font-size: 13px; color: var(--sub); }
+  .stat b { display: block; font-size: 20px; color: var(--ink); font-weight: 600; }
+  .stem { font-size: 17px; line-height: 1.7; margin: 0 0 14px; white-space: pre-wrap; }
+  input[type=text] {
+    width: 100%; padding: 11px 13px; font-size: 16px; font-family: inherit;
+    border: 1px solid var(--line); border-radius: 10px; background: #fdfcfa; color: var(--ink);
+  }
+  input[type=text]:focus { outline: 2px solid var(--accent-soft); outline-offset: 1px; }
+  .choice {
+    display: block; width: 100%; text-align: left; margin: 8px 0;
+    padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px;
+    background: #fdfcfa; cursor: pointer; font: inherit; color: inherit;
+  }
+  .choice.picked { border-color: var(--accent); background: var(--accent-soft); }
+  .choice.right { border-color: var(--accent); background: var(--accent-soft); }
+  .choice.wrong { border-color: var(--wrong); background: var(--wrong-soft); }
+  .feedback { border-radius: 10px; padding: 12px 14px; margin-top: 14px; font-size: 14px; }
+  .feedback.ok { background: var(--accent-soft); }
+  .feedback.no { background: var(--wrong-soft); }
+  .feedback .sol { color: var(--sub); margin-top: 8px; white-space: pre-wrap; }
+  .tag {
+    display: inline-block; font-size: 12px; padding: 2px 8px;
+    border-radius: 20px; background: #f0ece4; color: var(--sub); margin-right: 6px;
+  }
+  .tag.due { background: #fbf0dd; color: var(--warn); }
+  .progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 12px; }
+  .progress i { display: block; height: 100%; background: var(--accent); transition: width .25s; }
+  .muted { color: var(--sub); font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+  th { color: var(--sub); font-weight: 500; }
+  .drop {
+    border: 1.5px dashed var(--line); border-radius: 12px; padding: 26px 16px;
+    text-align: center; color: var(--sub); font-size: 14px;
+  }
+  .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  code { background: #f0ece4; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+</style>
+</head>
+<body>
+  <h1>开卷</h1>
+  <div class="sub">可验证的练习引擎 —— 学科是数据，引擎是代码</div>
+  <div id="root"></div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
