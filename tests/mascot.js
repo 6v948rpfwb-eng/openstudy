@@ -52,7 +52,7 @@ const ok = (cond, name) => { if (cond) { pass++; console.log('✓', name) } else
 mod.mountMascot()
 const mascot = body.children.find((c) => c.id === 'mascot')
 ok(!!mascot, '挂载后 body 里有 #mascot')
-ok(/<svg/.test(mascot.innerHTML), ' mascot 里带 SVG')
+ok(/<img/.test(mascot.innerHTML) && /data:image\/(webp|png)/.test(mascot.innerHTML), ' mascot 里带内联头像图')
 ok(mascot.className.includes('mascot'), ' class 含 mascot')
 
 mod.mascotSay('测试一句', 'happy', 1)
