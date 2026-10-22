@@ -20,7 +20,7 @@ import { dirname, join, resolve } from 'node:path'
 const here = dirname(fileURLToPath(import.meta.url))
 
 // 顺序很重要：被依赖的放前面
-const CORE_ORDER = ['util.js', 'irt.js', 'grade.js', 'bank.js', 'select.js', 'state.js']
+const CORE_ORDER = ['util.js', 'irt.js', 'grade.js', 'bank.js', 'select.js', 'state.js', 'math.js']
 
 function stripModuleSyntax(src, filename) {
   const lines = src.split('\n')

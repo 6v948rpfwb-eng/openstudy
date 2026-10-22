@@ -112,14 +112,31 @@ open dist/openstudy.html
 
 做题有两种方式：默认「**成套**」——一次抽 8 / 12 / 20 题，做完一起结算；选「**不限**」——每交一题就结算一题，随时可以停，适合只想做十几分钟的时候。
 
-### 方式二：开发模式
+### 方式二：本地服务器（记录写进硬盘，能做完整）
+
+```bash
+OPENSTUDY_STORE="$HOME/某个目录" node serve.js
+# 打开 http://127.0.0.1:8770/openstudy-data/openstudy-physics.html
+```
+
+比方式一多三件事：
+
+- `/api/sync`：每次交卷把状态写成 `state-<学科>.json`，把这道题追加到 `答题记录-<学科>.jsonl`
+- `/api/ask`：页面里「这题想问」写的话，追加进 `提问队列.jsonl`
+- 打开页面时先跟服务器对一次账，服务器上记录更全就用服务器的
+
+`OPENSTUDY_STORE` 不设就落在 `openstudy-data/store/`。存档是普通文件，可以随便备份、用 `grep` 翻、交给别的程序读。
+
+> 不想要服务器也没关系：网页会自动退回 localStorage，只是记录离不开这台浏览器。
+
+### 方式三：开发模式
 
 ```bash
 python3 -m http.server 8000
 # 打开 http://127.0.0.1:8000/web/
 ```
 
-### 方式三：命令行自检
+### 方式四：命令行自检
 
 ```bash
 node tests/run.js      # 组卷 → 模拟作答 → 结算 → 排程，全流程跑一遍
@@ -234,12 +251,14 @@ core/     引擎（纯函数、零依赖，浏览器与 Node 通用）
   bank.js     题库格式与校验
   select.js   组卷
   state.js    状态与复习排程
+  math.js     LaTeX 记号渲染（自带子集，不依赖 KaTeX）
 data/     题库（示例数据，非真题）
 tools/    导入器：把真题 Markdown 转成题库 JSON
 web/      网页界面
 dsh/      DSH 插件外壳
 tests/    自检脚本
 dist/     构建产物（单文件 HTML）
+serve.js  本地小服务器：发文件 + 收存档 + 收提问
 ```
 
 ---
@@ -264,6 +283,8 @@ dist/     构建产物（单文件 HTML）
 - [x] DSH 插件外壳
 - [x] 题目导入器（从 Markdown 试卷批量转 JSON）
 - [x] 不限量模式（一题一结算）
+- [x] LaTeX 公式渲染（自带子集，含分式、根式、上下标）
+- [x] 本地服务器：存档落盘 + 提问队列
 - [ ] 知识点依赖图（前置没掌握时，先补前置）
 - [ ] 错题重做队列
 - [ ] 更多题型（多空、排序、匹配）

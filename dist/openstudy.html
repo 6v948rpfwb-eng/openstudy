@@ -85,6 +85,25 @@
   }
   .drop.over { border-color: var(--accent); background: var(--accent-soft); }
   code { background: #f0ece4; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+
+/* ---- 数学记号 ---- */
+.frac { display: inline-flex; flex-direction: column; vertical-align: middle;
+        text-align: center; margin: 0 .14em; line-height: 1.15; font-size: .96em; }
+.frac .fnum { padding: 0 .22em 1px; border-bottom: 1px solid currentColor; }
+.frac .fden { padding: 1px .22em 0; }
+.sqrt { display: inline-block; white-space: nowrap; }
+.sqrt .srad { padding-right: 1px; }
+.sqrt .sbody { display: inline-block; border-top: 1px solid currentColor; padding: 0 .12em; }
+.sqrt .sidx { font-size: .62em; vertical-align: super; }
+.mrm { font-style: normal; }
+.mfn { font-style: normal; padding-right: .08em; }
+sup, sub { font-size: .72em; line-height: 0; }
+.mathblock { display: block; text-align: center; margin: .5em 0; }
+
+/* ---- 提问框 ---- */
+.askbox { margin-top:16px; border-top:1px dashed var(--line, #ddd); padding-top:10px; }
+.askbox summary { cursor:pointer; color:#666; font-size:14px; user-select:none; }
+.askbox textarea { width:100%; margin-top:8px; box-sizing:border-box; }
 </style>
 </head>
 <body>
@@ -963,6 +982,240 @@ function topicMastery(rec) {
 
 
 
+// ===== core/math.js =====
+/**
+ * math.js —— 把题库里的 LaTeX 记号渲染成网页能显示的 HTML
+ *
+ * 为什么自己写：单文件版不能带外部库（KaTeX 光压缩后就要两百多 KB），
+ * 而题库里实际用到的命令只有三十来个，写个够用的子集比塞库划算。
+ *
+ * 支持的写法（够物理/数学高考题用）：
+ *   $...$ 行内、$$...$$ 独立成段
+ *   \frac \dfrac \sqrt[n]{} ^ _ {} \left \right
+ *   \mathrm \text（正体）、希腊字母、常用符号、\sin \cos \tan 等函数名
+ * 不认识的命令原样显示（宁可露出源码，也不静默吞掉）。
+ */
+
+const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }
+
+function escHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (m) => ESC[m])
+}
+
+const GREEK = {
+  alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', varepsilon: 'ε',
+  zeta: 'ζ', eta: 'η', theta: 'θ', vartheta: 'ϑ', iota: 'ι', kappa: 'κ',
+  lambda: 'λ', mu: 'μ', nu: 'ν', xi: 'ξ', pi: 'π', rho: 'ρ', sigma: 'σ',
+  tau: 'τ', upsilon: 'υ', phi: 'φ', varphi: 'φ', chi: 'χ', psi: 'ψ', omega: 'ω',
+  Gamma: 'Γ', Delta: 'Δ', Theta: 'Θ', Lambda: 'Λ', Xi: 'Ξ', Pi: 'Π',
+  Sigma: 'Σ', Upsilon: 'Υ', Phi: 'Φ', Psi: 'Ψ', Omega: 'Ω',
+}
+
+const SYMBOL = {
+  times: '×', cdot: '·', div: '÷', pm: '±', mp: '∓',
+  approx: '≈', le: '≤', leq: '≤', ge: '≥', geq: '≥', neq: '≠', ne: '≠',
+  circ: '°', sim: '∼', ll: '≪', gg: '≫', equiv: '≡', propto: '∝',
+  rightarrow: '→', to: '→', leftarrow: '←', leftrightarrow: '↔',
+  dots: '…', cdots: '⋯', ldots: '…', vdots: '⋮',
+  angle: '∠', infty: '∞', perp: '⊥', parallel: '∥', therefore: '∴', because: '∵',
+  degree: '°', prime: '′', partial: '∂', nabla: '∇', sum: 'Σ', int: '∫',
+}
+
+const FUNC = new Set([
+  'sin', 'cos', 'tan', 'cot', 'sec', 'csc',
+  'arcsin', 'arccos', 'arctan',
+  'log', 'ln', 'lg', 'exp', 'lim', 'max', 'min', 'det',
+])
+
+const UPRIGHT = new Set(['mathrm', 'text', 'textrm', 'textup', 'operatorname', 'mathbf', 'mathit', 'mathsf'])
+
+const SPACE = { ',': '\u2009', ';': '\u2005', ':': '\u2005', '!': '', ' ': ' ', quad: '\u2003', qquad: '\u2003\u2003' }
+
+/** 读取一个花括号分组；src[i] 必须是 '{'。返回 [内容, 下一个位置] */
+function readGroup(src, i) {
+  if (src[i] !== '{') return ['', i]
+  let depth = 0
+  let j = i
+  for (; j < src.length; j += 1) {
+    if (src[j] === '\\') { j += 1; continue }
+    if (src[j] === '{') depth += 1
+    else if (src[j] === '}') {
+      depth -= 1
+      if (depth === 0) return [src.slice(i + 1, j), j + 1]
+    }
+  }
+  return [src.slice(i + 1), src.length]
+}
+
+/** 读一个「参数」：可能是 {...}，也可能是单个字符（如 x^2 里的 2） */
+function readArg(src, i) {
+  let k = i
+  while (k < src.length && src[k] === ' ') k += 1
+  if (src[k] === '{') {
+    const [inner, next] = readGroup(src, k)
+    return [renderSeq(inner), next]
+  }
+  if (src[k] === '\\') {
+    let j = k + 1
+    let name = ''
+    while (j < src.length && /[a-zA-Z]/.test(src[j])) name += src[j++]
+    if (!name) { name = src[j] || ''; j += 1 }
+    return [renderSeq('\\' + name), j]
+  }
+  if (k >= src.length) return ['', k]
+  return [escHtml(src[k]), k + 1]
+}
+
+/** 把一段 TeX 渲染成 HTML */
+function renderMath(tex) {
+  const src = String(tex ?? '')
+  const atoms = []
+  let i = 0
+
+  while (i < src.length) {
+    const ch = src[i]
+
+    if (ch === '\\') {
+      let j = i + 1
+      let name = ''
+      if (/[a-zA-Z]/.test(src[j] || '')) {
+        while (j < src.length && /[a-zA-Z]/.test(src[j])) name += src[j++]
+      } else {
+        name = src[j] || ''
+        j += 1
+      }
+      i = j
+
+      if (name in SPACE) { atoms.push(SPACE[name]); continue }
+      if (GREEK[name]) { atoms.push(GREEK[name]); continue }
+      if (SYMBOL[name]) { atoms.push(SYMBOL[name]); continue }
+      if (FUNC.has(name)) { atoms.push(`<span class="mfn">${name}</span>`); continue }
+
+      if (name === 'frac' || name === 'dfrac' || name === 'tfrac' || name === 'cfrac') {
+        const [num, i1] = readArg(src, i)
+        const [den, i2] = readArg(src, i1)
+        i = i2
+        atoms.push(
+          `<span class="frac"><span class="fnum">${num}</span><span class="fden">${den}</span></span>`,
+        )
+        continue
+      }
+
+      if (name === 'sqrt') {
+        let k = i
+        while (k < src.length && src[k] === ' ') k += 1
+        let index = null
+        if (src[k] === '[') {
+          const close = src.indexOf(']', k)
+          if (close > 0) { index = src.slice(k + 1, close); k = close + 1 }
+        }
+        const [body, i1] = readArg(src, k)
+        i = i1
+        atoms.push(
+          `<span class="sqrt">${index ? `<sup class="sidx">${renderSeq(index)}</sup>` : ''}`
+          + `<span class="srad">√</span><span class="sbody">${body}</span></span>`,
+        )
+        continue
+      }
+
+      if (name === 'left' || name === 'right') {
+        let k = i
+        while (k < src.length && src[k] === ' ') k += 1
+        let delim = src[k] || ''
+        if (delim === '\\') {
+          const m = /^\\([{}|])/.exec(src.slice(k))
+          if (m) { delim = m[1]; k += 2 } else { k += 1; delim = '' }
+        } else {
+          k += 1
+        }
+        i = k
+        if (delim && delim !== '.') atoms.push(escHtml(delim))
+        continue
+      }
+
+      if (UPRIGHT.has(name)) {
+        const [inner, i1] = readArg(src, i)
+        i = i1
+        atoms.push(`<span class="mrm">${inner}</span>`)
+        continue
+      }
+
+      if (name === '{' || name === '}' || name === '%' || name === '&' || name === '#' || name === '_') {
+        atoms.push(escHtml(name))
+        continue
+      }
+
+      // 不认识的命令：原样露出来，方便发现题库里写了没支持的东西
+      atoms.push(escHtml('\\' + name))
+      continue
+    }
+
+    if (ch === '^' || ch === '_') {
+      const [arg, i1] = readArg(src, i + 1)
+      i = i1
+      const tag = ch === '^' ? 'sup' : 'sub'
+      const last = atoms.length ? atoms.pop() : ''
+      atoms.push(`${last}<${tag}>${arg}</${tag}>`)
+      continue
+    }
+
+    if (ch === '{') {
+      const [inner, i1] = readGroup(src, i)
+      i = i1
+      atoms.push(renderSeq(inner))
+      continue
+    }
+
+    if (ch === '}') { i += 1; continue }   // 多余的右括号，忽略
+
+    atoms.push(escHtml(ch))
+    i += 1
+  }
+
+  return atoms.join('')
+}
+
+/** 内部用：把一段已确定是「TeX 片段」的内容渲染（供 readArg 复用） */
+function renderSeq(tex) {
+  // renderMath 本身就能处理片段，这里只是给它一个更好读的名字
+  return renderMath(tex)
+}
+
+/**
+ * 把含 $...$ / $$...$$ 的普通文本渲染成 HTML。
+ * 数学记号出去渲染，其余部分照常转义。
+ */
+function renderMathText(text) {
+  const s = String(text ?? '')
+  const out = []
+  let i = 0
+
+  while (i < s.length) {
+    const ch = s[i]
+    if (ch === '$') {
+      const display = s[i + 1] === '$'
+      const open = display ? i + 2 : i + 1
+      const close = s.indexOf(display ? '$$' : '$', open)
+      // 找不到配对：把这个 $ 当普通字符吐出去
+      if (close < 0) {
+        out.push(escHtml(ch))
+        i += 1
+        continue
+      }
+      const tex = s.slice(open, close)
+      const html = renderMath(tex)
+      out.push(display ? `<span class="mathblock">${html}</span>` : html)
+      i = close + (display ? 2 : 1)
+      continue
+    }
+    out.push(escHtml(ch))
+    i += 1
+  }
+
+  return out.join('')
+}
+
+
 // ===== web/app.js =====
 /**
  * app.js —— 网页界面
@@ -994,13 +1247,53 @@ const app = {
 const isEndless = () => app.mode === 'endless'
 
 // ---------- 存档 ----------
-function saveState() {
+function saveState(attempt) {
   if (!app.bank) return
   try {
     localStorage.setItem(KEY(app.bank.subject), JSON.stringify(app.state))
   } catch (e) {
     console.warn('存档失败', e)
   }
+  pushRemote(app.state, attempt || null)
+}
+
+// ---------- 和本地服务器（serve.js）对账 ----------
+// 没有服务器时全部静默跳过，行为和以前一样：只用 localStorage。
+// 用 file:// 直接双击打开时 API_BASE 为 null，不会去 fetch 一个不存在的接口。
+const API_BASE = (typeof location !== 'undefined' && /^https?:$/.test(location.protocol)) ? '' : null
+
+async function pushRemote(state, attempt) {
+  if (API_BASE === null || !state || !state.subject) return
+  try {
+    await fetch(`${API_BASE}/api/sync`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ subject: state.subject, state, attempt }),
+    })
+  } catch { /* 服务器不在，只存本地 */ }
+}
+
+async function pullRemote(subject) {
+  if (API_BASE === null) return null
+  try {
+    const r = await fetch(`${API_BASE}/api/state?subject=${encodeURIComponent(subject)}`)
+    if (!r.ok) return null
+    const j = await r.json()
+    return j && j.state ? j.state : null
+  } catch { return null }
+}
+
+async function sendQuestion(payload) {
+  if (API_BASE === null) return { ok: false, reason: 'offline' }
+  try {
+    const r = await fetch(`${API_BASE}/api/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!r.ok) return { ok: false, reason: 'bad' }
+    return { ok: true }
+  } catch { return { ok: false, reason: 'offline' } }
 }
 function loadState(subject) {
   try {
@@ -1025,6 +1318,19 @@ function useBankText(text, name) {
   migrateState(app.state)
   app.phase = 'ready'
   render()
+
+  // 后台跟本地服务器对一次账：服务器上的记录更全就换成服务器的
+  pullRemote(app.bank.subject).then((remote) => {
+    if (!remote) return
+    const localN = (app.state.log || []).length
+    const remoteN = (remote.log || []).length
+    if (remoteN > localN) {
+      app.state = remote
+      migrateState(app.state)
+      try { localStorage.setItem(KEY(app.bank.subject), JSON.stringify(app.state)) } catch { /* 忽略 */ }
+      if (app.phase === 'ready') render()
+    }
+  })
 }
 
 async function tryAutoLoad() {
@@ -1214,7 +1520,15 @@ function settleEndless() {
   }
   app.endless.asked++
   if (a.correct) app.endless.correct++
-  saveState()
+  saveState({
+    mode: 'endless',
+    questionId: a.question.id,
+    topic: a.question.topic,
+    type: a.question.type,
+    correct: a.correct,
+    counted: !!a.countsForTheta,
+    difficulty: a.question.difficulty,
+  })
 }
 
 function finishEndless() {
@@ -1246,7 +1560,7 @@ function renderPractice() {
         if (correct) cls += ' right'
         else if (c.picked === i) cls += ' wrong'
       } else if (c.picked === i) cls += ' picked'
-      return `<button class="${cls}" data-i="${i}" ${c.graded ? 'disabled' : ''}>${'ABCDEFG'[i]}. ${escapeHtml(ch)}</button>`
+      return `<button class="${cls}" data-i="${i}" ${c.graded ? 'disabled' : ''}>${'ABCDEFG'[i]}. ${renderMathText(ch)}</button>`
     }).join('')
   } else {
     inputArea = `<textarea id="ans" rows="4" placeholder="写下你的思路"
@@ -1259,8 +1573,8 @@ function renderPractice() {
     if (q.type === 'text') {
       feedback = `<div class="feedback ok">
         <b>参考答案</b>
-        <div class="sol">${escapeHtml(q.answer.reference ?? '（题库没写参考答案）')}</div>
-        ${q.solution ? `<div class="sol" style="margin-top:10px">解析：${escapeHtml(q.solution)}</div>` : ''}
+        <div class="sol">${renderMathText(q.answer.reference ?? '（题库没写参考答案）')}</div>
+        ${q.solution ? `<div class="sol" style="margin-top:10px">解析：${renderMathText(q.solution)}</div>` : ''}
         <div style="margin-top:12px" class="row">
           <span class="muted">自己判：</span>
           <button class="btn ghost" data-self="full">对了</button>
@@ -1272,8 +1586,8 @@ function renderPractice() {
       const ok = c.graded.correct
       feedback = `<div class="feedback ${ok ? 'ok' : 'no'}">
         <b>${ok ? '对' : '错'}</b>
-        ${c.graded.reason ? `<div class="sol">${escapeHtml(c.graded.reason)}</div>` : ''}
-        ${q.solution ? `<div class="sol">解析：${escapeHtml(q.solution)}</div>` : ''}
+        ${c.graded.reason ? `<div class="sol">${renderMathText(c.graded.reason)}</div>` : ''}
+        ${q.solution ? `<div class="sol">解析：${renderMathText(q.solution)}</div>` : ''}
       </div>`
     }
   }
@@ -1295,7 +1609,7 @@ function renderPractice() {
         <span class="muted">难度 ${q.difficulty.toFixed(2)} · 预测通过 ${(predictPass(app.state.theta, q.difficulty) * 100).toFixed(0)}%</span>
       </div>
       ${isEndless() ? '' : `<div class="progress"><i style="width:${pct}%"></i></div>`}
-      <p class="stem" style="margin-top:16px">${escapeHtml(q.stem)}</p>
+      <p class="stem" style="margin-top:16px">${renderMathText(q.stem)}</p>
       ${inputArea}
       ${feedback}
       <div class="row" style="margin-top:16px">
@@ -1304,7 +1618,42 @@ function renderPractice() {
             + (isEndless() ? `<button class="btn plain" id="stop" style="margin-left:8px">结束</button>` : '')
           : `<button class="btn" id="submit" ${canSubmit ? '' : 'disabled'}>提交</button>`}
       </div>
+      <details class="askbox">
+        <summary>这题想问</summary>
+        <textarea id="asktext" rows="3" placeholder="想问什么？比如：为什么 B 不对、这一步怎么来的"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btn plain" id="askbtn">记进提问队列</button>
+          <span class="muted" id="askmsg"></span>
+        </div>
+      </details>
     </div>`
+
+  const askBtn = document.getElementById('askbtn')
+  if (askBtn) {
+    askBtn.onclick = async () => {
+      const ta = document.getElementById('asktext')
+      const msg = document.getElementById('askmsg')
+      const text = (ta?.value || '').trim()
+      if (!text) { if (msg) msg.textContent = '先写点什么'; return }
+      const q = app.paper.questions[app.index]
+      if (msg) msg.textContent = '记录中…'
+      const r = await sendQuestion({
+        subject: app.bank?.subject,
+        questionId: q?.id,
+        stem: q?.stem,
+        myAnswer: c.graded ? (app.current.picked ?? app.current.input ?? '') : null,
+        correct: c.graded ? c.graded.correct : null,
+        reference: q?.answer?.reference ?? null,
+        message: text,
+      })
+      if (msg) {
+        msg.textContent = r.ok
+          ? '已记下。回到对话里说「看看提问队列」，我就能看到。'
+          : '没连上本地服务器，这次没记下（用 打开练习.sh 启动才有服务器）'
+      }
+      if (r.ok && ta) ta.value = ''
+    }
+  }
 
   const ansEl = document.getElementById('ans')
   if (ansEl && !c.graded) {
@@ -1371,7 +1720,14 @@ function finish() {
   app.state = state
   app.report = report
   app.phase = 'done'
-  saveState()
+  saveState({
+    mode: 'paper',
+    scored: report.scored,
+    unscored: report.unscored,
+    correct: counted.filter((a) => a.correct === true).length,
+    thetaBefore: report.thetaBefore,
+    thetaAfter: report.thetaAfter,
+  })
   render()
 }
 

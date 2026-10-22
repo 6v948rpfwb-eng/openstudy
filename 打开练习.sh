@@ -1,25 +1,44 @@
 #!/bin/bash
 # 打开练习页面。
-# 作用：如果本地服务器没在跑就起一个，然后在浏览器打开固定的网址。
-# 固定用 http://127.0.0.1:8770 而不是双击 HTML，是为了让浏览器把作答记录
-# 存到同一个 origin 下（file:// 打开时各浏览器隔离规则不一样，记录可能丢）。
+#
+# 为什么不用 python -m http.server：
+#   静态服务器只能发文件、收不了 POST，做题记录就只能躺在浏览器里。
+#   这里用 serve.js，多两个接口：/api/sync 把记录写进硬盘，/api/ask 记下你的提问。
+#
+# 存档目录写在 .env.local 的 OPENSTUDY_STORE 里（那个文件不进仓库）。
 
 set -euo pipefail
 cd "$(dirname "$0")"
 
-PORT=8770
-URL="http://127.0.0.1:${PORT}/openstudy-data/openstudy-physics.html"
+if [ -f .env.local ]; then . ./.env.local; fi
 
-if curl -s -o /dev/null --max-time 1 "http://127.0.0.1:${PORT}/"; then
+PORT="${OPENSTUDY_PORT:-8770}"
+BASE="http://127.0.0.1:${PORT}"
+URL="${BASE}/openstudy-data/openstudy-physics.html"
+
+NODE="${OPENSTUDY_NODE:-/Applications/DeepSeek Harness.app/Contents/Resources/runtime/primary-runtime/dependencies/node/bin/node}"
+if [ ! -x "$NODE" ]; then
+  NODE="$(command -v node || true)"
+fi
+if [ -z "$NODE" ]; then
+  echo "找不到 node，无法启动服务器。" >&2
+  echo "装一个 node，或在 .env.local 里写 OPENSTUDY_NODE=/path/to/node" >&2
+  exit 1
+fi
+
+if curl -s -o /dev/null --max-time 1 "${BASE}/api/health"; then
   echo "服务器已在运行：${URL}"
 else
   echo "启动本地服务器（端口 ${PORT}）…"
-  nohup python3 -m http.server "${PORT}" --bind 127.0.0.1 >/tmp/openstudy-server.log 2>&1 &
-  for _ in $(seq 1 30); do
-    if curl -s -o /dev/null --max-time 1 "http://127.0.0.1:${PORT}/"; then break; fi
+  ARGS=(serve.js --port "${PORT}")
+  if [ -n "${OPENSTUDY_STORE:-}" ]; then ARGS+=(--store "${OPENSTUDY_STORE}"); fi
+  nohup "$NODE" "${ARGS[@]}" > /tmp/openstudy-server.log 2>&1 &
+  for _ in $(seq 1 40); do
+    if curl -s -o /dev/null --max-time 1 "${BASE}/api/health"; then break; fi
     sleep 0.2
   done
   echo "已启动：${URL}"
+  echo "存档目录：${OPENSTUDY_STORE:-(未设置，落在 openstudy-data/store)}"
 fi
 
 open "${URL}"

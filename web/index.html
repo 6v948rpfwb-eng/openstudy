@@ -85,6 +85,25 @@
   }
   .drop.over { border-color: var(--accent); background: var(--accent-soft); }
   code { background: #f0ece4; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+
+/* ---- 数学记号 ---- */
+.frac { display: inline-flex; flex-direction: column; vertical-align: middle;
+        text-align: center; margin: 0 .14em; line-height: 1.15; font-size: .96em; }
+.frac .fnum { padding: 0 .22em 1px; border-bottom: 1px solid currentColor; }
+.frac .fden { padding: 1px .22em 0; }
+.sqrt { display: inline-block; white-space: nowrap; }
+.sqrt .srad { padding-right: 1px; }
+.sqrt .sbody { display: inline-block; border-top: 1px solid currentColor; padding: 0 .12em; }
+.sqrt .sidx { font-size: .62em; vertical-align: super; }
+.mrm { font-style: normal; }
+.mfn { font-style: normal; padding-right: .08em; }
+sup, sub { font-size: .72em; line-height: 0; }
+.mathblock { display: block; text-align: center; margin: .5em 0; }
+
+/* ---- 提问框 ---- */
+.askbox { margin-top:16px; border-top:1px dashed var(--line, #ddd); padding-top:10px; }
+.askbox summary { cursor:pointer; color:#666; font-size:14px; user-select:none; }
+.askbox textarea { width:100%; margin-top:8px; box-sizing:border-box; }
 </style>
 </head>
 <body>

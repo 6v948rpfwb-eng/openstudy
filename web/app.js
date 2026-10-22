@@ -14,6 +14,7 @@ import {
   emptyState, finishSession, dueTopics, topicMastery, migrateState,
   describeTheta, predictPass,
 } from '../core/index.js'
+import { renderMathText } from '../core/math.js'
 
 const $root = document.getElementById('root')
 const KEY = (subject) => `openstudy.state.${subject}`
@@ -35,13 +36,53 @@ const app = {
 const isEndless = () => app.mode === 'endless'
 
 // ---------- 存档 ----------
-function saveState() {
+function saveState(attempt) {
   if (!app.bank) return
   try {
     localStorage.setItem(KEY(app.bank.subject), JSON.stringify(app.state))
   } catch (e) {
     console.warn('存档失败', e)
   }
+  pushRemote(app.state, attempt || null)
+}
+
+// ---------- 和本地服务器（serve.js）对账 ----------
+// 没有服务器时全部静默跳过，行为和以前一样：只用 localStorage。
+// 用 file:// 直接双击打开时 API_BASE 为 null，不会去 fetch 一个不存在的接口。
+const API_BASE = (typeof location !== 'undefined' && /^https?:$/.test(location.protocol)) ? '' : null
+
+async function pushRemote(state, attempt) {
+  if (API_BASE === null || !state || !state.subject) return
+  try {
+    await fetch(`${API_BASE}/api/sync`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ subject: state.subject, state, attempt }),
+    })
+  } catch { /* 服务器不在，只存本地 */ }
+}
+
+async function pullRemote(subject) {
+  if (API_BASE === null) return null
+  try {
+    const r = await fetch(`${API_BASE}/api/state?subject=${encodeURIComponent(subject)}`)
+    if (!r.ok) return null
+    const j = await r.json()
+    return j && j.state ? j.state : null
+  } catch { return null }
+}
+
+async function sendQuestion(payload) {
+  if (API_BASE === null) return { ok: false, reason: 'offline' }
+  try {
+    const r = await fetch(`${API_BASE}/api/ask`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!r.ok) return { ok: false, reason: 'bad' }
+    return { ok: true }
+  } catch { return { ok: false, reason: 'offline' } }
 }
 function loadState(subject) {
   try {
@@ -66,6 +107,19 @@ function useBankText(text, name) {
   migrateState(app.state)
   app.phase = 'ready'
   render()
+
+  // 后台跟本地服务器对一次账：服务器上的记录更全就换成服务器的
+  pullRemote(app.bank.subject).then((remote) => {
+    if (!remote) return
+    const localN = (app.state.log || []).length
+    const remoteN = (remote.log || []).length
+    if (remoteN > localN) {
+      app.state = remote
+      migrateState(app.state)
+      try { localStorage.setItem(KEY(app.bank.subject), JSON.stringify(app.state)) } catch { /* 忽略 */ }
+      if (app.phase === 'ready') render()
+    }
+  })
 }
 
 async function tryAutoLoad() {
@@ -255,7 +309,15 @@ function settleEndless() {
   }
   app.endless.asked++
   if (a.correct) app.endless.correct++
-  saveState()
+  saveState({
+    mode: 'endless',
+    questionId: a.question.id,
+    topic: a.question.topic,
+    type: a.question.type,
+    correct: a.correct,
+    counted: !!a.countsForTheta,
+    difficulty: a.question.difficulty,
+  })
 }
 
 function finishEndless() {
@@ -287,7 +349,7 @@ function renderPractice() {
         if (correct) cls += ' right'
         else if (c.picked === i) cls += ' wrong'
       } else if (c.picked === i) cls += ' picked'
-      return `<button class="${cls}" data-i="${i}" ${c.graded ? 'disabled' : ''}>${'ABCDEFG'[i]}. ${escapeHtml(ch)}</button>`
+      return `<button class="${cls}" data-i="${i}" ${c.graded ? 'disabled' : ''}>${'ABCDEFG'[i]}. ${renderMathText(ch)}</button>`
     }).join('')
   } else {
     inputArea = `<textarea id="ans" rows="4" placeholder="写下你的思路"
@@ -300,8 +362,8 @@ function renderPractice() {
     if (q.type === 'text') {
       feedback = `<div class="feedback ok">
         <b>参考答案</b>
-        <div class="sol">${escapeHtml(q.answer.reference ?? '（题库没写参考答案）')}</div>
-        ${q.solution ? `<div class="sol" style="margin-top:10px">解析：${escapeHtml(q.solution)}</div>` : ''}
+        <div class="sol">${renderMathText(q.answer.reference ?? '（题库没写参考答案）')}</div>
+        ${q.solution ? `<div class="sol" style="margin-top:10px">解析：${renderMathText(q.solution)}</div>` : ''}
         <div style="margin-top:12px" class="row">
           <span class="muted">自己判：</span>
           <button class="btn ghost" data-self="full">对了</button>
@@ -313,8 +375,8 @@ function renderPractice() {
       const ok = c.graded.correct
       feedback = `<div class="feedback ${ok ? 'ok' : 'no'}">
         <b>${ok ? '对' : '错'}</b>
-        ${c.graded.reason ? `<div class="sol">${escapeHtml(c.graded.reason)}</div>` : ''}
-        ${q.solution ? `<div class="sol">解析：${escapeHtml(q.solution)}</div>` : ''}
+        ${c.graded.reason ? `<div class="sol">${renderMathText(c.graded.reason)}</div>` : ''}
+        ${q.solution ? `<div class="sol">解析：${renderMathText(q.solution)}</div>` : ''}
       </div>`
     }
   }
@@ -336,7 +398,7 @@ function renderPractice() {
         <span class="muted">难度 ${q.difficulty.toFixed(2)} · 预测通过 ${(predictPass(app.state.theta, q.difficulty) * 100).toFixed(0)}%</span>
       </div>
       ${isEndless() ? '' : `<div class="progress"><i style="width:${pct}%"></i></div>`}
-      <p class="stem" style="margin-top:16px">${escapeHtml(q.stem)}</p>
+      <p class="stem" style="margin-top:16px">${renderMathText(q.stem)}</p>
       ${inputArea}
       ${feedback}
       <div class="row" style="margin-top:16px">
@@ -345,7 +407,42 @@ function renderPractice() {
             + (isEndless() ? `<button class="btn plain" id="stop" style="margin-left:8px">结束</button>` : '')
           : `<button class="btn" id="submit" ${canSubmit ? '' : 'disabled'}>提交</button>`}
       </div>
+      <details class="askbox">
+        <summary>这题想问</summary>
+        <textarea id="asktext" rows="3" placeholder="想问什么？比如：为什么 B 不对、这一步怎么来的"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btn plain" id="askbtn">记进提问队列</button>
+          <span class="muted" id="askmsg"></span>
+        </div>
+      </details>
     </div>`
+
+  const askBtn = document.getElementById('askbtn')
+  if (askBtn) {
+    askBtn.onclick = async () => {
+      const ta = document.getElementById('asktext')
+      const msg = document.getElementById('askmsg')
+      const text = (ta?.value || '').trim()
+      if (!text) { if (msg) msg.textContent = '先写点什么'; return }
+      const q = app.paper.questions[app.index]
+      if (msg) msg.textContent = '记录中…'
+      const r = await sendQuestion({
+        subject: app.bank?.subject,
+        questionId: q?.id,
+        stem: q?.stem,
+        myAnswer: c.graded ? (app.current.picked ?? app.current.input ?? '') : null,
+        correct: c.graded ? c.graded.correct : null,
+        reference: q?.answer?.reference ?? null,
+        message: text,
+      })
+      if (msg) {
+        msg.textContent = r.ok
+          ? '已记下。回到对话里说「看看提问队列」，我就能看到。'
+          : '没连上本地服务器，这次没记下（用 打开练习.sh 启动才有服务器）'
+      }
+      if (r.ok && ta) ta.value = ''
+    }
+  }
 
   const ansEl = document.getElementById('ans')
   if (ansEl && !c.graded) {
@@ -412,7 +509,14 @@ function finish() {
   app.state = state
   app.report = report
   app.phase = 'done'
-  saveState()
+  saveState({
+    mode: 'paper',
+    scored: report.scored,
+    unscored: report.unscored,
+    correct: counted.filter((a) => a.correct === true).length,
+    thetaBefore: report.thetaBefore,
+    thetaAfter: report.thetaAfter,
+  })
   render()
 }
 
