@@ -385,6 +385,12 @@ function renderPractice() {
     ? true
     : c.picked !== null || c.input.trim() !== ''
 
+  // 题目配图：figure 可能是字符串，也可能是字符串数组
+  const figList = q.figure ? (Array.isArray(q.figure) ? q.figure : [q.figure]) : []
+  const figureHtml = figList.length
+    ? `<div class="figbox">${figList.map((src) => `<img class="fig" src="${escapeAttr(src)}" alt="题目配图">`).join('')}</div>`
+    : ''
+
   // 这题以前做过几次？0 = 新题。做过的话答对只算一半证据（见 core/state.js）
   const seenTimes = app.state?.seen?.[q.id]?.times ?? 0
   const freshTag = seenTimes === 0
@@ -399,6 +405,7 @@ function renderPractice() {
       </div>
       ${isEndless() ? '' : `<div class="progress"><i style="width:${pct}%"></i></div>`}
       <p class="stem" style="margin-top:16px">${renderMathText(q.stem)}</p>
+      ${figureHtml}
       ${inputArea}
       ${feedback}
       <div class="row" style="margin-top:16px">

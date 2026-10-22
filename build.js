@@ -13,9 +13,9 @@
  *   "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/primary-runtime/dependencies/node/bin/node" build.js
  */
 
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join, resolve, isAbsolute } from 'node:path'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
@@ -74,7 +74,30 @@ const bankPath = bankArgAt > 0 ? resolve(process.argv[bankArgAt + 1]) : join(her
 // --out 指定输出文件。真题库请输出到 openstudy-data/ 下（那个目录不进仓库）
 const outArgAt = process.argv.indexOf('--out')
 const outPath = outArgAt > 0 ? resolve(process.argv[outArgAt + 1]) : join(here, 'dist', 'openstudy.html')
-const sampleBank = readFileSync(bankPath, 'utf8')
+let sampleBank = readFileSync(bankPath, 'utf8')
+
+// --inline-figures：把题目配图读进来转成 data URI，这样单文件产物仍然自包含、能离线用
+if (process.argv.includes('--inline-figures')) {
+  const bankDir = dirname(bankPath)
+  let inlined = 0
+  const missing = []
+  const obj = JSON.parse(sampleBank)
+  const toDataUri = (src) => {
+    if (/^(data:|https?:)/.test(src)) return src
+    const file = isAbsolute(src) ? src : join(bankDir, src)
+    if (!existsSync(file)) { missing.push(src); return src }
+    const ext = file.slice(file.lastIndexOf('.') + 1).toLowerCase()
+    const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : ext === 'svg' ? 'image/svg+xml' : 'image/jpeg'
+    inlined += 1
+    return `data:${mime};base64,${readFileSync(file).toString('base64')}`
+  }
+  for (const q of obj.questions || []) {
+    if (!q.figure) continue
+    q.figure = Array.isArray(q.figure) ? q.figure.map(toDataUri) : toDataUri(q.figure)
+  }
+  sampleBank = JSON.stringify(obj, null, 2)
+  console.log(`配图内联：${inlined} 张${missing.length ? `，找不到 ${missing.length} 张（${missing.slice(0, 3).join(', ')}…）` : ''}`)
+}
 const bankConst = `const __EMBEDDED_BANK__ = ${JSON.stringify(sampleBank)};`
 
 const bundle = `(function(){\n"use strict";\n${bankConst}\n${parts.join('\n\n')}\n})();`

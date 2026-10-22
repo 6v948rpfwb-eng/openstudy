@@ -104,6 +104,12 @@ export function validateBank(raw) {
         errors.push(`${at}: 未知 type "${q.type}"，只能是 numeric / choice / text`)
     }
 
+    if (q.figure !== undefined) {
+      const figs = Array.isArray(q.figure) ? q.figure : [q.figure]
+      if (figs.length && figs.some((f) => typeof f !== 'string' || !f.trim())) {
+        errors.push(`${at}: figure 必须是非空字符串，或字符串数组`)
+      }
+    }
     if (!q.solution) warnings.push(`${at}: 没有 solution（解析），学生答错时看不到解释`)
   }
 

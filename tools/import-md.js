@@ -15,6 +15,7 @@
  * 额外开关：
  *   --exclude-figure   丢掉带 [图 …] 标注的题（默认保留，因为标注本身常常是文字描述）
  *   --dry-run          只解析、只打印报告，不写文件
+ *   --figures <json>   配图表：{"题目id": "图片相对路径"}，把图挂到题上
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
@@ -39,6 +40,7 @@ function parseArgv(argv) {
     else if (a === '--out') opts.out = argv[++i]
     else if (a === '--exclude-figure') opts.excludeFigure = true
     else if (a === '--dry-run') opts.dryRun = true
+    else if (a === '--figures') opts.figures = argv[++i]
     else if (a.startsWith('--')) throw new Error(`不认识的参数：${a}`)
     else opts.files.push(a)
   }
@@ -318,6 +320,29 @@ function main() {
   const byType = {}
   for (const q of all) byType[q.type] = (byType[q.type] ?? 0) + 1
 
+  // ── 配图：--figures 指定一个 { 题目id: 图片路径 } 的 JSON，把图挂到题上 ──
+  // 图片路径写相对 bank 文件的路径即可（build --inline-figures 会把它内联成 data URI）
+  let figureHits = 0
+  const figureMisses = []
+  if (opts.figures) {
+    const map = JSON.parse(readFileSync(opts.figures, 'utf8'))
+    for (const q of all) {
+      const fig = map[q.id]
+      if (!fig) continue
+      if (q.needsFigure === false) {
+        // 原文没标图的题也允许挂，但记一笔，方便回头核对是不是挂错了
+        figureMisses.push(`${q.id}（原文无图标注，仍然挂上了）`)
+      }
+      q.figure = fig
+      figureHits += 1
+    }
+    const unused = Object.keys(map).filter((id) => !all.some((q) => q.id === id))
+    if (unused.length) {
+      line()
+      line(`⚠️  figures 里有 ${unused.length} 个 id 在题库里找不到：${unused.slice(0, 5).join(', ')}`)
+    }
+  }
+
   const bank = {
     subject: topicCfg.subject,
     title: topicCfg.title,
@@ -375,6 +400,12 @@ function main() {
     line(`   （${check.warnings.length} 条提示，不影响使用）`)
     for (const w of check.warnings.slice(0, 15)) line(`     · ${w}`)
     if (check.warnings.length > 15) line(`     …还有 ${check.warnings.length - 15} 条`)
+  }
+
+  if (opts.figures) {
+    line()
+    line(`配图：挂上 ${figureHits} 张${figureMisses.length ? `，其中 ${figureMisses.length} 张挂在原文没标图的题上` : ''}`)
+    for (const m of figureMisses.slice(0, 5)) line(`     · ${m}`)
   }
 
   if (opts.dryRun) {

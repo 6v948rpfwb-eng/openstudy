@@ -201,6 +201,37 @@ A. 选项一　B. 选项二　C. 选项三　D. 选项四
 （1）第一问；
 （2）第二问。
 
+## 给题目配图
+
+题目可以带图，写一个可选的 `figure` 字段（字符串，或字符串数组）：
+
+```json
+{
+  "id": "2026-06-zj-q7",
+  "figure": "figures/2026-06-zj-q7.png",
+  "stem": "..."
+}
+```
+
+路径写**相对题库文件**的路径。想让单文件产物也带着图，构建时加 `--inline-figures`，
+图片会被转成 data URI 内嵌进 HTML，仍然能离线双击打开：
+
+```bash
+node build.js --bank openstudy-data/physics.bank.json \
+  --out openstudy-data/openstudy-physics.html --inline-figures
+```
+
+从真题 Markdown 批量导入时，用 `--figures` 指定一个 `{题目id: 图片路径}` 的映射表：
+
+```bash
+node tools/import-md.js --topics tools/topics-physics.json \
+  --out openstudy-data/physics.bank.json --figures openstudy-data/figures.json 试卷.md
+```
+
+没有 `figure` 字段的题就只显示题干，不影响使用。
+
+---
+
 ## 参考答案与解析
 
 **1.【答案】C**
@@ -285,6 +316,7 @@ serve.js  本地小服务器：发文件 + 收存档 + 收提问
 - [x] 不限量模式（一题一结算）
 - [x] LaTeX 公式渲染（自带子集，含分式、根式、上下标）
 - [x] 本地服务器：存档落盘 + 提问队列
+- [x] 题目配图（`figure` 字段 + 构建时内联成 data URI）
 - [ ] 知识点依赖图（前置没掌握时，先补前置）
 - [ ] 错题重做队列
 - [ ] 更多题型（多空、排序、匹配）
