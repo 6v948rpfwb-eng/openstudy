@@ -120,5 +120,34 @@ line('=== 7. 独立表现 vs 重复表现 ===')
 }
 
 line()
+line('=== 8. 一题一结算（不限模式靠的就是它）===')
+{
+  const s = emptyState('测试')
+  const q = bank.questions.find((x) => x.type === 'numeric') || bank.questions[0]
+
+  // 连做 3 题，每次都只传一条答案，模拟「做一题结算一题」
+  const thetaPath = [s.theta]
+  for (let i = 0; i < 3; i += 1) {
+    const { state, report } = finishSession(s, bank, [{ question: q, correct: true }])
+    Object.assign(s, state)
+    thetaPath.push(s.theta)
+    line(`  第 ${i + 1} 题结算：计入 ${report.scored} 道 / 跳过 ${report.unscored} 道，θ ${report.thetaBefore} → ${report.thetaAfter}`)
+    if (report.scored !== 1) { line('  → 单题结算应只计入 1 道，出错'); process.exitCode = 1 }
+  }
+  line(`  θ 轨迹：${thetaPath.map((v) => v.toFixed(3)).join(' → ')}`)
+  const rose = thetaPath.every((v, i) => i === 0 || v > thetaPath[i - 1])
+  line(`  → 每次都涨：${rose ? '对' : '错'}`)
+  if (!rose) process.exitCode = 1
+
+  line(`  seen 记录：${q.id} 做了 ${s.seen?.[q.id]?.times ?? 0} 次（应为 3）`)
+  if ((s.seen?.[q.id]?.times ?? 0) !== 3) process.exitCode = 1
+
+  // 答错也要能单题结算
+  const { report: rBad } = finishSession(s, bank, [{ question: q, correct: false }])
+  line(`  再答错一次：θ ${rBad.thetaBefore} → ${rBad.thetaAfter}（应下降）`)
+  if (!(rBad.thetaAfter < rBad.thetaBefore)) { line('  → 答错θ未下降，出错'); process.exitCode = 1 }
+}
+
+line()
 line(`能力描述：θ=0.2 → ${describeTheta(0.2)}；θ=0.5 → ${describeTheta(0.5)}；θ=0.9 → ${describeTheta(0.9)}`)
 line('全部跑通。')

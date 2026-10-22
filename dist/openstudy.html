@@ -987,7 +987,11 @@ const app = {
   phase: 'load',   // load | ready | practice | done
   current: null,   // 当前题的临时作答
   report: null,
+  mode: 'paper',   // paper = 一次做完固定题数；endless = 做一题结算一题
+  endless: null,
 }
+
+const isEndless = () => app.mode === 'endless'
 
 // ---------- 存档 ----------
 function saveState() {
@@ -1045,7 +1049,7 @@ function render() {
   if (app.phase === 'load') return renderLoad()
   if (app.phase === 'ready') return renderReady()
   if (app.phase === 'practice') return renderPractice()
-  if (app.phase === 'done') return renderDone()
+  if (app.phase === 'done') return isEndless() ? renderEndlessDone() : renderDone()
 }
 
 function renderLoad() {
@@ -1129,6 +1133,7 @@ function renderReady() {
           <option value="8">8 题（约 5 分钟）</option>
           <option value="12" selected>12 题（约 8 分钟）</option>
           <option value="20">20 题（约 15 分钟）</option>
+          <option value="0">不限（做一题结算一题，随时停）</option>
         </select>
         <button class="btn" id="start">开始练习</button>
       </div>
@@ -1150,6 +1155,8 @@ function renderReady() {
 }
 
 function startSession(n) {
+  if (!n) return startEndless()
+  app.mode = 'paper'
   const { picked, meta } = composePaper(app.bank, {
     theta: app.state.theta,
     n,
@@ -1162,6 +1169,59 @@ function startSession(n) {
   nextQuestion()
 }
 
+// ---------- 不限模式：做一题、结算一题 ----------
+function startEndless() {
+  app.mode = 'endless'
+  app.endless = { asked: 0, correct: 0, thetaStart: app.state.theta, drawn: new Set(), topicTally: {} }
+  app.paper = { questions: [], meta: null }
+  app.index = 0
+  app.answers = []
+  app.phase = 'practice'
+  drawNextEndless()
+}
+
+/** 按当前 θ 抽下一道；同一场里尽量不重复出已经出过的题 */
+function drawNextEndless() {
+  let picked = null
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const res = composePaper(app.bank, { theta: app.state.theta, n: 1, progress: app.state })
+    const cand = res.picked[0]
+    if (!cand) break
+    picked = cand
+    if (!app.endless.drawn.has(cand.id)) break
+  }
+  if (!picked) return finishEndless()
+  app.endless.drawn.add(picked.id)
+  app.paper.questions.push(picked)
+  app.index = app.paper.questions.length - 1
+  app.current = { input: '', picked: null, selfGrade: null, graded: null }
+  render()
+}
+
+/** 一道题刚记完，就地把这一道结算掉 —— θ 立刻更新并存盘 */
+function settleEndless() {
+  const a = app.answers[app.answers.length - 1]
+  if (!a) return
+  if (a.countsForTheta) {
+    const { state, report } = finishSession(app.state, app.bank, [a])
+    app.state = state
+    for (const t of report.topicUpdates) {
+      const k = t.name
+      app.endless.topicTally[k] = app.endless.topicTally[k] || { name: k, asked: 0, correct: 0 }
+      app.endless.topicTally[k].asked += t.asked
+      app.endless.topicTally[k].correct += t.correct
+    }
+  }
+  app.endless.asked++
+  if (a.correct) app.endless.correct++
+  saveState()
+}
+
+function finishEndless() {
+  app.phase = 'done'
+  render()
+}
+
 function nextQuestion() {
   if (app.index >= app.paper.questions.length) return finish()
   app.current = { input: '', picked: null, selfGrade: null, graded: null }
@@ -1171,7 +1231,7 @@ function nextQuestion() {
 function renderPractice() {
   const q = app.paper.questions[app.index]
   const total = app.paper.questions.length
-  const pct = (app.index / total) * 100
+  const pct = isEndless() ? null : (app.index / total) * 100
   const c = app.current
 
   let inputArea = ''
@@ -1231,19 +1291,18 @@ function renderPractice() {
   $root.innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:space-between">
-        <span class="muted">第 ${app.index + 1} / ${total} 题 ${freshTag}</span>
+        <span class="muted">${isEndless() ? `第 ${app.index + 1} 题 · 不限` : `第 ${app.index + 1} / ${total} 题`} ${freshTag}</span>
         <span class="muted">难度 ${q.difficulty.toFixed(2)} · 预测通过 ${(predictPass(app.state.theta, q.difficulty) * 100).toFixed(0)}%</span>
       </div>
-      <div class="progress"><i style="width:${pct}%"></i></div>
+      ${isEndless() ? '' : `<div class="progress"><i style="width:${pct}%"></i></div>`}
       <p class="stem" style="margin-top:16px">${escapeHtml(q.stem)}</p>
       ${inputArea}
       ${feedback}
       <div class="row" style="margin-top:16px">
-        ${c.graded && q.type !== 'text'
-          ? `<button class="btn" id="next">${app.index + 1 === total ? '交卷' : '下一题'}</button>`
-          : c.graded && q.type === 'text'
-            ? `<span class="muted">选完再点下一题</span>`
-            : `<button class="btn" id="submit" ${canSubmit ? '' : 'disabled'}>提交</button>`}
+        ${c.graded
+          ? `<button class="btn" id="next">${isEndless() ? '下一题' : (app.index + 1 === total ? '交卷' : '下一题')}</button>`
+            + (isEndless() ? `<button class="btn plain" id="stop" style="margin-left:8px">结束</button>` : '')
+          : `<button class="btn" id="submit" ${canSubmit ? '' : 'disabled'}>提交</button>`}
       </div>
     </div>`
 
@@ -1266,16 +1325,18 @@ function renderPractice() {
 
   document.getElementById('submit')?.addEventListener('click', doSubmit)
   document.getElementById('next')?.addEventListener('click', () => {
+    if (isEndless()) return drawNextEndless()
     app.index++
     nextQuestion()
   })
+  document.getElementById('stop')?.addEventListener('click', () => finishEndless())
 
   document.querySelectorAll('[data-self]').forEach((b) => {
     b.onclick = () => {
       const g = grade({ type: 'text' }, b.dataset.self)
       app.current.graded = g
       // 文字题不参与 θ 更新（无法可靠判分），只记录
-      recordAnswer(g, true)
+      recordAnswer(g, false)
       render()
     }
   })
@@ -1301,6 +1362,7 @@ function recordAnswer(g, countsForTheta) {
     countsForTheta,
     input: app.current.input,
   })
+  if (isEndless()) settleEndless()
 }
 
 function finish() {
@@ -1359,6 +1421,40 @@ function renderDone() {
     </div>`
 
   document.getElementById('again').onclick = () => startSession(app.paper.questions.length)
+  document.getElementById('home').onclick = () => { app.phase = 'ready'; render() }
+}
+
+function renderEndlessDone() {
+  const e = app.endless
+  const acc = e.asked ? Math.round((e.correct / e.asked) * 100) : 0
+  const rows = Object.values(e.topicTally).map((t) => `
+    <tr><td>${t.name}</td><td>${t.correct}/${t.asked}</td>
+    <td>${Math.round((t.correct / Math.max(1, t.asked)) * 100)}%</td></tr>`).join('')
+
+  $root.innerHTML = `
+    <div class="card">
+      <b>这一轮做完了</b>
+      <div class="stat">
+        <div><b>${e.correct}/${e.asked}</b>答对</div>
+        <div><b>${acc}%</b>正确率</div>
+        <div><b>${e.thetaStart} → ${app.state.theta}</b>能力</div>
+        <div><b>${describeTheta(app.state.theta)}</b>水平</div>
+      </div>
+      <p class="muted" style="margin:10px 0 0">
+        不限模式下每交一题就更新一次能力并存盘，所以随时可以停，停下来之前的都已经算过账了。
+      </p>
+    </div>
+    ${rows ? `<div class="card">
+      <b>这一轮碰到的考点</b>
+      <table><thead><tr><th>考点</th><th>对/做</th><th>正确率</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+    </div>` : ''}
+    <div class="card">
+      <button class="btn" id="again">再开一轮</button>
+      <button class="btn plain" id="home" style="margin-left:8px">回到首页</button>
+    </div>`
+
+  document.getElementById('again').onclick = () => startEndless()
   document.getElementById('home').onclick = () => { app.phase = 'ready'; render() }
 }
 

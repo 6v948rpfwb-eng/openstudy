@@ -116,5 +116,24 @@ check('ready 页出现「开始练习」按钮', allText.includes('开始练习'
 check('ready 页出现了能力 θ 和水平', /能力 θ/.test(allText) && /水平/.test(allText))
 check('没弹出任何 alert', alerts.length === 0)
 
+// ---- 不限模式：点「开始练习」且题数选 0，应该直接出一道题，不报错 ----
+const nEl = document.getElementById('n')   // 用 document 拿，才能和被测代码拿到同一个桩
+const startEl = els.get('start')
+if (nEl && startEl && typeof startEl.onclick === 'function') {
+  nEl.value = '0'
+  const before = renders.length
+  try {
+    startEl.onclick()
+  } catch (e) {
+    console.error('不限模式启动报错：', e.message)
+    process.exitCode = 1
+  }
+  const after = renders.slice(before).map((r) => r.html).join('\n')
+  check('不限模式能出第一题（出现「· 不限」）', after.includes('· 不限'))
+  check('不限模式出题后没有 alert', alerts.length === 0)
+} else {
+  console.log('· 跳过不限模式检查（没拿到 n / start 元素）')
+}
+
 console.log(`\n渲染次数：${renders.length}，最后一次 ${last.html.length} 字符`)
 console.log('冒烟测试通过。')
