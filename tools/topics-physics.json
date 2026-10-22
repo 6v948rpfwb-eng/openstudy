@@ -78,7 +78,11 @@
         "追及",
         "初速度",
         "挡光"
-      ]
+      ],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "物-01✅ 物-02✅ 物-12·"
     },
     "P-02": {
       "alias": "P-02",
@@ -101,7 +105,11 @@
         "斜靠",
         "平衡力",
         "光滑的竖直墙壁"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "物-03·"
     },
     "P-03": {
       "alias": "P-03",
@@ -117,7 +125,11 @@
         "加速度",
         "斜面",
         "连接体"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "物-04·"
     },
     "P-04": {
       "alias": "P-04",
@@ -136,7 +148,11 @@
         "周期 T",
         "线速度",
         "角速度"
-      ]
+      ],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "物-05· 物-06· 物-07✅"
     },
     "P-05": {
       "alias": "P-05",
@@ -152,7 +168,11 @@
         "做功",
         "功率",
         "热机效率"
-      ]
+      ],
+      "state": "🟡",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "物-08· 物-09🟡"
     },
     "P-06": {
       "alias": "P-06",
@@ -169,7 +189,11 @@
         "振动",
         "多普勒",
         "波形"
-      ]
+      ],
+      "state": "🟡",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "物-10· 物-11🟡"
     },
     "P-07": {
       "alias": "P-07",
@@ -186,7 +210,11 @@
         "平行板",
         "点电荷",
         "库仑"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "物-13· 物-14·"
     },
     "P-08": {
       "alias": "P-08",
@@ -205,7 +233,11 @@
         "并联",
         "串联",
         "桥式"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "物-15· 物-21· 物-22·"
     },
     "P-09": {
       "alias": "P-09",
@@ -224,7 +256,11 @@
         "磁通量",
         "应变片",
         "霍尔"
-      ]
+      ],
+      "state": "🔴",
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "物-16· 物-17· 物-20🔴"
     },
     "P-10": {
       "alias": "P-10",
@@ -242,7 +278,11 @@
         "THz",
         "副线圈",
         "原线圈"
-      ]
+      ],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "物-18✅ 物-19·"
     },
     "P-11": {
       "alias": "P-11",
@@ -259,7 +299,11 @@
         "等温",
         "绝热",
         "内能"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "物-23· 物-24· 物-25· 物-26· 物-27· 物-28·"
     },
     "P-12": {
       "alias": "P-12",
@@ -275,7 +319,11 @@
         "双缝",
         "薄膜",
         "光路"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "物-29· 物-30· 物-31·"
     },
     "P-13": {
       "alias": "P-13",
@@ -293,7 +341,11 @@
         "光子波长",
         "电离能",
         "普朗克"
-      ]
+      ],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "物-32· 物-33· 物-34✅ 物-35· 物-36· 物-37· 物-38· 物-39·"
     },
     "P-14": {
       "alias": "P-14",
@@ -309,7 +361,11 @@
         "油膜法",
         "实验题",
         "实验中"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
     },
     "P-99": {
       "alias": "P-99",
@@ -317,7 +373,11 @@
       "desc": "关键词没命中，需要人工归到上面的考点",
       "group": null,
       "cues": [],
-      "fillMe": true
+      "fillMe": true,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
     },
     "P-98": {
       "alias": "P-98",
@@ -329,7 +389,11 @@
         "下列说法中正确的是",
         "下列说法错误的是",
         "则下列说法"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
     }
   },
   "rules": [

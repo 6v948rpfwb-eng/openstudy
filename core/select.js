@@ -34,9 +34,20 @@ export function composePaper(bank, {
   a = DEFAULT_DISCRIMINATION,
   maxPerTopic = null,
   band = 0.45,          // 只在这个难度带附近抽：[θ-band, θ+band]
+  skipMastered = false, // true = 跳过《知识状态库》里已掌握的考点（当时做错过的照样出）
   rng = Math.random,
 } = {}) {
-  const pool = bank.questions.map((q) => {
+  // 已掌握的考点默认不再出题。判定不在这里猜：mastered/retry 由 tools/build-state.js 写进考点表。
+  const usable = skipMastered
+    ? bank.questions.filter((q) => {
+        const t = bank.topics?.[q.topic]
+        if (!t) return true
+        if (t.mastered === true && t.retry !== true) return false
+        return true
+      })
+    : bank.questions
+
+  const pool = usable.map((q) => {
     const p = predictPass(theta, q.difficulty, a)
     // 信息量：p(1-p) 最大在 p=0.5，两端趋近 0
     const info = p * (1 - p)

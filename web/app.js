@@ -22,6 +22,7 @@ const $root = document.getElementById('root')
 const KEY = (subject) => `openstudy.state.${subject}`
 
 const app = {
+  opts: loadOpts(),
   bank: null,
   warnings: [],
   state: null,
@@ -289,6 +290,18 @@ async function sendQuestion(payload) {
     return { ok: true }
   } catch { return { ok: false, reason: 'offline' } }
 }
+/** 组卷偏好：默认跳过《知识状态库》里已掌握的考点 */
+function loadOpts() {
+  try {
+    const raw = localStorage.getItem('openstudy.opts')
+    if (raw) return { skipMastered: true, ...JSON.parse(raw) }
+  } catch (e) { /* 隐私模式忽略 */ }
+  return { skipMastered: true }
+}
+function saveOpts() {
+  try { localStorage.setItem('openstudy.opts', JSON.stringify(app.opts)) } catch (e) { /* 忽略 */ }
+}
+
 function loadState(subject) {
   try {
     const raw = localStorage.getItem(KEY(subject))
@@ -394,13 +407,24 @@ function renderLoad() {
   tryAutoLoad()
 }
 
+/** 已掌握（且当时没做错）的考点与题数 —— 这些默认不再出 */
+function masteredView(bank) {
+  const topics = Object.entries(bank.topics).filter(([, t]) => t.mastered === true && t.retry !== true)
+  const ids = new Set(topics.map(([id]) => id))
+  const questions = bank.questions.filter((q) => ids.has(q.topic))
+  return { topics, questions }
+}
+
 function renderReady() {
   const { bank, state } = app
+  const mastered = masteredView(bank)
   const due = dueTopics(state, bank)
   const topicRows = Object.entries(bank.topics).map(([id, t]) => {
     const rec = state.topics[id]
+    const kb = t.state === '✅' ? '✅ 已会' : t.state === '🔴' ? '🔴 错的' : t.state === '🟡' ? '🟡 待确认' : '⬜ 没测'
     return `<tr>
       <td>${id}</td><td>${t.name}</td>
+      <td class="muted" title="${(t.stateDetail || '').replace(/"/g, '')}">${kb}</td>
       <td>${rec ? `${rec.correct}/${rec.attempts}` : '—'}</td>
       <td>${rec ? Math.round(topicMastery(rec) * 100) + '%' : '—'}</td>
       <td>${rec?.dueAt ? daysUntil(rec.dueAt) : '—'}</td>
@@ -443,15 +467,25 @@ function renderReady() {
         </select>
         <button class="btn" id="start">开始练习</button>
       </div>
+      <label class="switch">
+        <input type="checkbox" id="skipMastered" ${app.opts.skipMastered ? 'checked' : ''}>
+        <span>只为没掌握的考点出题</span>
+      </label>
+      <p class="muted" style="margin:6px 0 0">
+        依据《知识状态库》：已掌握 ${mastered.topics.length} 个考点（${mastered.questions.length} 道题）默认不出；
+        当时没做出来的（🔴）照样出，🟡 待确认的也出。
+      </p>
     </div>
 
     <div class="card">
       <b>各考点</b>
-      <table><thead><tr><th>编号</th><th>考点</th><th>对/做</th><th>掌握度</th><th>下次</th></tr></thead>
+      <table><thead><tr><th>编号</th><th>考点</th><th>知识状态</th><th>对/做</th><th>掌握度</th><th>下次</th></tr></thead>
       <tbody>${topicRows}</tbody></table>
     </div>`
 
   document.getElementById('start').onclick = () => startSession(Number(document.getElementById('n').value))
+  const skip = document.getElementById('skipMastered')
+  if (skip) skip.onchange = () => { app.opts.skipMastered = skip.checked; saveOpts(); render() }
   document.getElementById('reset').onclick = () => {
     if (!confirm('确定清空这个学科的进度？')) return
     localStorage.removeItem(KEY(bank.subject))
@@ -467,7 +501,13 @@ function startSession(n) {
     theta: app.state.theta,
     n,
     progress: app.state,
+    skipMastered: app.opts.skipMastered,
   })
+  if (!picked.length) {
+    // 开了「只为没掌握的考点出题」，但这科的题全在已掌握考点里
+    mascotSay('这科的题你都会了。想练就把上面那个开关关掉', 'think', 7)
+    return
+  }
   app.paper = { questions: picked, meta }
   app.index = 0
   app.answers = []
@@ -492,7 +532,7 @@ function startEndless() {
 function drawNextEndless() {
   let picked = null
   for (let attempt = 0; attempt < 8; attempt++) {
-    const res = composePaper(app.bank, { theta: app.state.theta, n: 1, progress: app.state })
+    const res = composePaper(app.bank, { theta: app.state.theta, n: 1, progress: app.state, skipMastered: app.opts.skipMastered })
     const cand = res.picked[0]
     if (!cand) break
     picked = cand

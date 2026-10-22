@@ -74,7 +74,10 @@
         "超分子",
         "氧化物分类"
       ],
-      "state": "✅"
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "化-01✅"
     },
     "C-02": {
       "alias": "化-02",
@@ -93,7 +96,10 @@
         "电子空间运动状态种数=轨道数（如 26 号元素为 15），不是电子数",
         "核素符号的质量数与质子数位置",
         "电子排布式按能级顺序写还是按层写"
-      ]
+      ],
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "化-02🔴"
     },
     "C-03": {
       "alias": "化-03",
@@ -105,7 +111,10 @@
         "电子转移",
         "化合价升降"
       ],
-      "state": "✅"
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "化-03✅"
     },
     "C-04": {
       "alias": "化-04",
@@ -116,7 +125,11 @@
         "拆不拆",
         "电荷守恒",
         "过量/少量"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-04·"
     },
     "C-05": {
       "alias": "化-05",
@@ -138,7 +151,10 @@
         "酯水解断的是酰氧键不是烷氧键",
         "浓硝酸见光分解产物",
         "铁与水蒸气只生成 Fe₃O₄ 不放 Fe(OH)₃"
-      ]
+      ],
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "化-05🔴"
     },
     "C-06": {
       "alias": "化-06",
@@ -149,7 +165,11 @@
         "22.4 L",
         "微粒数",
         "标准状况"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-06·"
     },
     "C-07": {
       "alias": "化-07",
@@ -171,7 +191,10 @@
         "硝酸本身会腐蚀铜器",
         "酚醛树脂由苯酚+甲醛经加成-缩聚生成",
         "足量 NaOH 下铝只得偏铝酸盐"
-      ]
+      ],
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "化-07🔴"
     },
     "C-08": {
       "alias": "化-08",
@@ -185,7 +208,11 @@
         "NH4Cl",
         "Cl2O7",
         "Cl2O"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-08·"
     },
     "C-09": {
       "alias": "化-09",
@@ -201,7 +228,10 @@
       "errorType": "知识性",
       "extraChecks": [
         "明矾净水靠 Al³⁺ 水解生成胶体吸附；高铁酸盐靠强氧化性杀菌——两者原理不同"
-      ]
+      ],
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-09🟡"
     },
     "C-10": {
       "alias": "化-10",
@@ -218,7 +248,10 @@
         "短周期元素",
         "元素周期表"
       ],
-      "state": "✅"
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "化-10✅"
     },
     "C-11": {
       "alias": "化-11",
@@ -233,7 +266,10 @@
       "errorType": "知识性",
       "extraChecks": [
         "C=O 比 C=C 更容易加氢"
-      ]
+      ],
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "化-11🔴"
     },
     "C-12": {
       "alias": "化-12",
@@ -244,7 +280,11 @@
         "盖斯定律",
         "键能",
         "燃烧热"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-12·"
     },
     "C-13": {
       "alias": "化-13",
@@ -262,7 +302,10 @@
       "extraChecks": [
         "水的电离度要用 Kw 与 c(H⁺) 联立",
         "求中和体积需 Ka 加物料/电荷守恒联立（19.89 mL vs 19.52 mL 的差别就在这）"
-      ]
+      ],
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "化-13🔴"
     },
     "C-14": {
       "alias": "化-14",
@@ -276,7 +319,10 @@
         "移动方向",
         "平衡逆向"
       ],
-      "state": "✅"
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "化-14✅"
     },
     "C-15": {
       "alias": "化-15",
@@ -286,7 +332,11 @@
         "转化率",
         "三段式",
         "勒夏特列"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-15·"
     },
     "C-16": {
       "alias": "化-16",
@@ -306,7 +356,10 @@
       "extraChecks": [
         "先判正负极再写电极反应式，不能凭电极材料名",
         "1 mol e⁻ 对应的产物物质的量要按半反应系数换算（如全铁液流 1 mol e⁻ → 1.5 mol Fe²⁺）"
-      ]
+      ],
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "化-16🔴"
     },
     "C-17": {
       "alias": "化-17",
@@ -317,7 +370,11 @@
         "过渡态",
         "决速步",
         "能垒"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-17·"
     },
     "C-18": {
       "alias": "化-18",
@@ -333,7 +390,10 @@
       "errorType": "知识性",
       "extraChecks": [
         "熵是状态函数，只与始末状态有关——术语含义必须先讲清"
-      ]
+      ],
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-18🟡"
     },
     "C-19": {
       "alias": "化-19",
@@ -350,7 +410,10 @@
       "errorType": "知识性",
       "extraChecks": [
         "同浓度 HA 与 HCl 稀释同样倍数，看 pH 变化幅度判强弱"
-      ]
+      ],
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "化-19🔴"
     },
     "C-20": {
       "alias": "化-20",
@@ -360,7 +423,11 @@
         "Ksp",
         "沉淀转化",
         "溶度积"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-20·"
     },
     "C-21": {
       "alias": "化-21",
@@ -371,7 +438,11 @@
         "变量控制",
         "催化剂",
         "温度"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-21·"
     },
     "C-22": {
       "alias": "化-22",
@@ -383,7 +454,10 @@
         "VSEPR",
         "等电子体"
       ],
-      "state": "✅"
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "化-22✅"
     },
     "C-23": {
       "alias": "化-23",
@@ -393,7 +467,11 @@
         "官能团",
         "性质",
         "转化"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-23·"
     },
     "C-24": {
       "alias": "化-24",
@@ -404,7 +482,11 @@
         "取代",
         "消去",
         "氧化"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-24·"
     },
     "C-25": {
       "alias": "化-25",
@@ -414,7 +496,11 @@
         "同分异构",
         "数目",
         "手性碳"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-25·"
     },
     "C-26": {
       "alias": "化-26",
@@ -424,7 +510,11 @@
         "鉴别",
         "现象",
         "试剂"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-26·"
     },
     "C-27": {
       "alias": "化-27",
@@ -434,7 +524,11 @@
         "合成路线",
         "流程图",
         "逆推"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-27·"
     },
     "C-28": {
       "alias": "化-28",
@@ -443,7 +537,11 @@
       "cues": [
         "酸性比较",
         "分子内氢键"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-28·"
     },
     "C-29": {
       "alias": "化-29",
@@ -452,7 +550,11 @@
       "cues": [
         "消耗 NaOH",
         "物质的量"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-29·"
     },
     "C-30": {
       "alias": "化-30",
@@ -462,7 +564,11 @@
         "核磁共振氢谱",
         "峰面积",
         "副产物"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-30·"
     },
     "C-31": {
       "alias": "化-31",
@@ -476,7 +582,10 @@
       "errorType": "知识性",
       "extraChecks": [
         "原子利用率 = 目标产物质量 ÷ 总投入质量 × 100%，不是产率"
-      ]
+      ],
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "化-31🔴"
     },
     "C-32": {
       "alias": "化-32",
@@ -493,7 +602,10 @@
       "extraChecks": [
         "均摊法按顶点 1/8、棱 1/4、面 1/2、体内 1 数，先数再约分（B:A=2:1）",
         "金属晶体熔化只破坏金属键，不破坏共价键"
-      ]
+      ],
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "化-32🔴"
     },
     "C-33": {
       "alias": "化-33",
@@ -503,7 +615,11 @@
         "电子式",
         "结构式",
         "结构简式"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-33·"
     },
     "C-34": {
       "alias": "化-34",
@@ -514,7 +630,11 @@
         "sp",
         "sp²",
         "sp³"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-34·"
     },
     "C-35": {
       "alias": "化-35",
@@ -525,7 +645,11 @@
         "范德华力",
         "熔沸点",
         "沸点"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-35·"
     },
     "C-36": {
       "alias": "化-36",
@@ -535,7 +659,11 @@
         "Ka 差异",
         "结构原因",
         "给电子基"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-36·"
     },
     "C-37": {
       "alias": "化-37",
@@ -545,7 +673,11 @@
         "第一电离能",
         "电负性",
         "递变"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-37·"
     },
     "C-38": {
       "alias": "化-38",
@@ -561,7 +693,10 @@
       "errorType": "知识性",
       "extraChecks": [
         "先判断谁给电子对：Fe³⁺ 与尿素是 O 给电子对，N 上的孤对仍空着可再与 H⁺ 配位"
-      ]
+      ],
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-38🟡"
     },
     "C-39": {
       "alias": "化-39",
@@ -571,7 +706,11 @@
         "掺杂",
         "稀土",
         "荧光"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-39·"
     },
     "C-40": {
       "alias": "化-40",
@@ -594,7 +733,10 @@
         "制氨装置要看加热与收集方式是否匹配",
         "热稳定性比较必须两套装置分开加热",
         "钠与水的安全操作（不能伸入、要盖玻璃片）"
-      ]
+      ],
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "化-40🔴"
     },
     "C-41": {
       "alias": "化-41",
@@ -605,7 +747,11 @@
         "分离",
         "提纯",
         "干扰离子"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-41·"
     },
     "C-42": {
       "alias": "化-42",
@@ -622,7 +768,10 @@
       "errorType": "方法性",
       "extraChecks": [
         "验证可逆要用「产物仍在 + 反应物过量」双证据（过量 I⁻ + K₄Fe(CN)₆ 证明 Fe³⁺ 与 I⁻ 反应可逆）"
-      ]
+      ],
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "化-42🔴"
     },
     "C-43": {
       "alias": "化-43",
@@ -634,7 +783,10 @@
         "废液",
         "通风"
       ],
-      "state": "✅"
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "化-43✅"
     },
     "C-44": {
       "alias": "化-44",
@@ -645,7 +797,11 @@
         "流程排序",
         "重结晶",
         "过滤"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-44·"
     },
     "C-45": {
       "alias": "化-45",
@@ -656,14 +812,22 @@
         "温度",
         "pH",
         "解释原因"
-      ]
+      ],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-45·"
     },
     "C-99": {
       "alias": "化-99",
       "name": "未分类",
       "group": null,
       "cues": [],
-      "fillMe": true
+      "fillMe": true,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "化-99·"
     }
   }
 }

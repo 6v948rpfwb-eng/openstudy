@@ -148,6 +148,38 @@ line('=== 8. 一题一结算（不限模式靠的就是它）===')
   if (!(rBad.thetaAfter < rBad.thetaBefore)) { line('  → 答错θ未下降，出错'); process.exitCode = 1 }
 }
 
+// ---- 跳过已掌握考点（知识状态库接入）----
+{
+  line()
+  const b = {
+    subject: 'physics', title: '测试卷',
+    topics: {
+      'P-A': { name: '已会（✅）', mastered: true, retry: false },
+      'P-B': { name: '已会但当时做错过（🔴）', mastered: false, retry: true },
+      'P-C': { name: '没测过（⬜）', mastered: false, retry: false },
+    },
+    questions: [
+      { id: 'q-a1', topic: 'P-A', type: 'choice', difficulty: 0.4, stem: 'A1', choices: ['1', '2'], answer: { kind: 'index', value: 0 } },
+      { id: 'q-a2', topic: 'P-A', type: 'choice', difficulty: 0.4, stem: 'A2', choices: ['1', '2'], answer: { kind: 'index', value: 0 } },
+      { id: 'q-b1', topic: 'P-B', type: 'choice', difficulty: 0.4, stem: 'B1', choices: ['1', '2'], answer: { kind: 'index', value: 0 } },
+      { id: 'q-c1', topic: 'P-C', type: 'choice', difficulty: 0.4, stem: 'C1', choices: ['1', '2'], answer: { kind: 'index', value: 0 } },
+    ],
+  }
+  const all = composePaper(b, { theta: 0.4, n: 4 })
+  const skip = composePaper(b, { theta: 0.4, n: 4, skipMastered: true })
+  const allIds = all.picked.map((q) => q.id).sort().join(',')
+  const skipTopics = [...new Set(skip.picked.map((q) => q.topic))].sort().join(',')
+  line(`  不开跳过：出 ${allIds}（应为 q-a1,q-a2,q-b1,q-c1）`)
+  line(`  开跳过：题目来自考点 ${skipTopics}（应为 P-B,P-C —— 已会的不出，当时做错的照样出；题不够会重复同一考点）`)
+  if (allIds !== 'q-a1,q-a2,q-b1,q-c1') process.exitCode = 1
+  if (skipTopics !== 'P-B,P-C') process.exitCode = 1
+
+  const allMastered = { ...b, topics: { 'P-A': { name: '全都会', mastered: true, retry: false } }, questions: [b.questions[0]] }
+  const empty = composePaper(allMastered, { theta: 0.4, n: 4, skipMastered: true })
+  line(`  全都会时开跳过：出 ${empty.picked.length} 道（应为 0，页面据此提示「都掌握了」）`)
+  if (empty.picked.length !== 0) process.exitCode = 1
+}
+
 line()
 line(`能力描述：θ=0.2 → ${describeTheta(0.2)}；θ=0.5 → ${describeTheta(0.5)}；θ=0.9 → ${describeTheta(0.9)}`)
 line('全部跑通。')

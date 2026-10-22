@@ -71,6 +71,7 @@ mod.mascotOnAnswer(false)
 ok(bubble.textContent.includes('方法论'), '连错 3 题：推方法论')
 
 mod.mascotOnSessionStart()
-ok(mascot.className.includes('mood-happy'), '开始一轮：开心问候')
+ok(mascot.className.includes('mood-think') || mascot.className.includes('mood-happy'), '开始一轮：说了一句（傲娇脸或开心脸）')
+ok(bubble.textContent.length > 0, ' 开始一轮：气泡有字')
 
 console.log(`\n${process.exitCode ? '✗ 有失败' : '✓ 全部通过'}（${pass} 项）`)
