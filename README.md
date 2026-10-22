@@ -121,6 +121,68 @@ node tests/smoke.js    # 用最小 DOM 桩验证网页脚本能跑到底
 
 ---
 
+## 从真题 Markdown 导入题库
+
+手写题库不现实。实际做法是：把试卷原文存成 Markdown，让导入器去解析。
+
+```bash
+node tools/import-md.js \
+  --topics tools/topics-physics.json \
+  --out openstudy-data/physics.bank.json \
+  ../资料/2026-1月-浙江选考-物理-真题.md \
+  ../资料/2026-6月-浙江选考-物理-真题.md
+```
+
+导入器认的原文格式（只要大致长这样就够）：
+
+```markdown
+**1.** 题干……（　　）
+A. 选项一　B. 选项二　C. 选项三　D. 选项四
+
+**15.（8 分）** 题干……
+（1）第一问；
+（2）第二问。
+
+## 参考答案与解析
+
+**1.【答案】C**
+解析文字……
+
+**15.【答案】（1）……　（2）……**
+解析文字……
+```
+
+它会做这些判断：
+
+| 原文长什么样 | 判成什么题型 |
+| --- | --- |
+| 有 A–D 选项、答案是字母 | `choice`，字母转成 0 起下标 |
+| 没有选项、答案就是一个数 | `numeric`，带 1% 相对误差 |
+| 有（1）（2）（3）多个小问 | `text`，参考答案取自【答案】，解析取自下文 |
+| 选项是纯图（`A.　B.　C.　D.` 文字为空） | `text`，因为文字界面里没法点图 |
+
+同时自动填上：
+
+- `source`：`2026年1月浙江省物理选考 第1题`（校验器强制要求这个字段）
+- `difficulty`：按题号粗排（1–10 最简单 → 18 最难），之后用你的真实正确率校准
+- `needsFigure`：题干里有 `[图 …]` 就标上，界面会提示「这题原文带图」
+- `topic`：按 `tools/topics-physics.json` 里的关键词归考点，没命中的进 `P-99 未分类`
+
+**归错考点不用改代码**，改 `tools/topics-physics.json` 的关键词重跑就行。
+
+跑完会打印一份核对清单：哪几道题没归到考点、哪几道原文没答案、哪几道的答案区对不上题干。
+
+### 生成带真题的单文件网页
+
+```bash
+node build.js --bank openstudy-data/physics.bank.json \
+              --out openstudy-data/openstudy-physics.html
+```
+
+输出到 `openstudy-data/`（这个目录在 `.gitignore` 里），双击就能做卷子。
+
+---
+
 ## 目录结构
 
 ```
@@ -132,6 +194,7 @@ core/     引擎（纯函数、零依赖，浏览器与 Node 通用）
   select.js   组卷
   state.js    状态与复习排程
 data/     题库（示例数据，非真题）
+tools/    导入器：把真题 Markdown 转成题库 JSON
 web/      网页界面
 dsh/      DSH 插件外壳
 tests/    自检脚本
@@ -158,7 +221,7 @@ dist/     构建产物（单文件 HTML）
 - [x] 引擎：能力模型 / 判分 / 组卷 / 排程
 - [x] 网页界面（单文件版）
 - [x] DSH 插件外壳
-- [ ] 题目导入器（从 Markdown 试卷批量转 JSON）
+- [x] 题目导入器（从 Markdown 试卷批量转 JSON）
 - [ ] 知识点依赖图（前置没掌握时，先补前置）
 - [ ] 错题重做队列
 - [ ] 更多题型（多空、排序、匹配）

@@ -15,7 +15,7 @@
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
@@ -66,8 +66,15 @@ for (const f of CORE_ORDER) {
 }
 parts.push('// ===== web/app.js =====\n' + stripModuleSyntax(readFileSync(join(here, 'web', 'app.js'), 'utf8'), 'web/app.js'))
 
-// 把示例题库也塞进去，这样单文件版不用联网也能跑
-const sampleBank = readFileSync(join(here, 'data', 'example.bank.json'), 'utf8')
+// 把题库也塞进去，这样单文件版不用联网也能跑
+// 默认用示例题库；用 --bank 指定真题库（比如 openstudy-data/physics.bank.json）
+//   node build.js --bank openstudy-data/physics.bank.json
+const bankArgAt = process.argv.indexOf('--bank')
+const bankPath = bankArgAt > 0 ? resolve(process.argv[bankArgAt + 1]) : join(here, 'data', 'example.bank.json')
+// --out 指定输出文件。真题库请输出到 openstudy-data/ 下（那个目录不进仓库）
+const outArgAt = process.argv.indexOf('--out')
+const outPath = outArgAt > 0 ? resolve(process.argv[outArgAt + 1]) : join(here, 'dist', 'openstudy.html')
+const sampleBank = readFileSync(bankPath, 'utf8')
 const bankConst = `const __EMBEDDED_BANK__ = ${JSON.stringify(sampleBank)};`
 
 const bundle = `(function(){\n"use strict";\n${bankConst}\n${parts.join('\n\n')}\n})();`
@@ -78,8 +85,10 @@ if (!html.includes(marker)) throw new Error('index.html 里找不到脚本占位
 
 const outHtml = html.replace(marker, () => `<script>\n${bundle}\n</script>`)
 
-mkdirSync(join(here, 'dist'), { recursive: true })
-writeFileSync(join(here, 'dist', 'openstudy.html'), outHtml, 'utf8')
+mkdirSync(dirname(outPath), { recursive: true })
+writeFileSync(outPath, outHtml, 'utf8')
 
 const kb = (Buffer.byteLength(outHtml) / 1024).toFixed(1)
-console.log(`已生成 dist/openstudy.html（${kb} KB）`)
+let bankCount = '?'
+try { bankCount = JSON.parse(sampleBank).questions.length } catch {}
+console.log(`已生成 ${outPath}（${kb} KB，内嵌 ${bankCount} 道题，来自 ${bankPath}）`)

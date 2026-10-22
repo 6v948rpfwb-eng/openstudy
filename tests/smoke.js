@@ -9,13 +9,18 @@
 
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import vm from 'node:vm'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const html = readFileSync(join(here, '..', 'dist', 'openstudy.html'), 'utf8')
+// 可以指定别的构建产物：node tests/smoke.js openstudy-data/openstudy-physics.html
+const targetPath = process.argv[2]
+  ? resolve(process.argv[2])
+  : join(here, '..', 'dist', 'openstudy.html')
+const customBank = Boolean(process.argv[2])
+const html = readFileSync(targetPath, 'utf8')
 const script = html.match(/<script>\n([\s\S]*)\n<\/script>/)?.[1]
-if (!script) throw new Error('dist/openstudy.html 里没有内联脚本')
+if (!script) throw new Error(`${targetPath} 里没有内联脚本`)
 
 // ---- 最小 DOM 桩 ----
 const renders = []
@@ -106,7 +111,7 @@ function check(label, cond) {
 
 check('渲染过一次以上', renders.length > 0)
 check('载入页出现拖放区', allText.includes('把题库 JSON 拖到这里'))
-check('示例题库被内联载入（出现过「示例题库」）', allText.includes('示例题库'))
+if (!customBank) check('示例题库被内联载入（出现过「示例题库」）', allText.includes('示例题库'))
 check('ready 页出现「开始练习」按钮', allText.includes('开始练习'))
 check('ready 页出现了能力 θ 和水平', /能力 θ/.test(allText) && /水平/.test(allText))
 check('没弹出任何 alert', alerts.length === 0)

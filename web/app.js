@@ -237,6 +237,7 @@ function renderPractice() {
       feedback = `<div class="feedback ok">
         <b>参考答案</b>
         <div class="sol">${escapeHtml(q.answer.reference ?? '（题库没写参考答案）')}</div>
+        ${q.solution ? `<div class="sol" style="margin-top:10px">解析：${escapeHtml(q.solution)}</div>` : ''}
         <div style="margin-top:12px" class="row">
           <span class="muted">自己判：</span>
           <button class="btn ghost" data-self="full">对了</button>
