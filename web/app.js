@@ -11,7 +11,7 @@ import {
   loadBank, validateBank,
   composePaper,
   grade,
-  emptyState, finishSession, dueTopics, topicMastery,
+  emptyState, finishSession, dueTopics, topicMastery, migrateState,
   describeTheta, predictPass,
 } from '../core/index.js'
 
@@ -58,6 +58,7 @@ function useBankText(text, name) {
   app.bank = res.bank
   app.warnings = res.warnings
   app.state = loadState(app.bank.subject) ?? emptyState(app.bank.subject)
+  migrateState(app.state)
   app.phase = 'ready'
   render()
 }
@@ -259,10 +260,16 @@ function renderPractice() {
     ? true
     : c.picked !== null || c.input.trim() !== ''
 
+  // 这题以前做过几次？0 = 新题。做过的话答对只算一半证据（见 core/state.js）
+  const seenTimes = app.state?.seen?.[q.id]?.times ?? 0
+  const freshTag = seenTimes === 0
+    ? `<span class="tag ok" title="没做过：答对算完整证据">新题</span>`
+    : `<span class="tag due" title="做过 ${seenTimes} 次：答对只算 1/${seenTimes + 1} 证据">复习 · 做过 ${seenTimes} 次</span>`
+
   $root.innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:space-between">
-        <span class="muted">第 ${app.index + 1} / ${total} 题</span>
+        <span class="muted">第 ${app.index + 1} / ${total} 题 ${freshTag}</span>
         <span class="muted">难度 ${q.difficulty.toFixed(2)} · 预测通过 ${(predictPass(app.state.theta, q.difficulty) * 100).toFixed(0)}%</span>
       </div>
       <div class="progress"><i style="width:${pct}%"></i></div>
@@ -346,9 +353,11 @@ function finish() {
 
 function renderDone() {
   const r = app.report
+  const ind = r.independence ?? { independentAsked: r.asked, independentCorrect: r.correct, repeatAsked: 0, repeatCorrect: 0, discounted: 0 }
   const rows = r.topicUpdates.map((t) => `
     <tr><td>${t.name}</td><td>${t.correct}/${t.asked}</td>
     <td>${Math.round(t.accuracy * 100)}%</td>
+    <td>${Math.round((t.independentCorrect / Math.max(1, t.independentAsked)) * 100) || 0}%</td>
     <td>${t.nextDueDays} 天后</td></tr>`).join('')
 
   $root.innerHTML = `
@@ -362,8 +371,20 @@ function renderDone() {
       </div>
     </div>
     <div class="card">
+      <b>这份成绩的证据有多硬</b>
+      <p class="muted" style="margin:8px 0 0">
+        新题（完整证据）：<b>${ind.independentCorrect}/${ind.independentAsked}</b>
+        ${ind.repeatAsked ? `　重复题（折算 ${ind.discounted} 道）：<b>${ind.repeatCorrect}/${ind.repeatAsked}</b>` : ''}
+      </p>
+      ${ind.repeatAsked ? `<p class="muted" style="margin:8px 0 0">
+        重复题答对只算 1/(做过次数+1) 的证据 —— 可能是真会，也可能只是记住了这题的答案，外部看不出来。
+        想要完整证据，得换一道<b>没做过</b>的新题。
+      </p>` : ''}
+      ${r.unscored ? `<p class="muted" style="margin:8px 0 0">另有 ${r.unscored} 道主观题：自评只记录，不计入能力估计。</p>` : ''}
+    </div>
+    <div class="card">
       <b>各考点</b>
-      <table><thead><tr><th>考点</th><th>对/做</th><th>正确率</th><th>下次复习</th></tr></thead>
+      <table><thead><tr><th>考点</th><th>对/做</th><th>正确率</th><th>新题正确率</th><th>下次复习</th></tr></thead>
       <tbody>${rows}</tbody></table>
     </div>
     ${r.needReview.length ? `<div class="card">

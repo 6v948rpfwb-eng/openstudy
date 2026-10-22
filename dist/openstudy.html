@@ -72,6 +72,7 @@
     border-radius: 20px; background: #f0ece4; color: var(--sub); margin-right: 6px;
   }
   .tag.due { background: #fbf0dd; color: var(--warn); }
+  .tag.ok { background: var(--accent-soft); color: var(--accent); }
   .progress { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 12px; }
   .progress i { display: block; height: 100%; background: var(--accent); transition: width .25s; }
   .muted { color: var(--sub); font-size: 13px; }
@@ -175,15 +176,28 @@ function updateTheta(theta, difficulty, correct, { lr = 0.12, a = DEFAULT_DISCRI
 
 /**
  * 一次答很多题后批量更新 θ。
- * 返回 { theta, trace }，trace 是每步的 (b, correct, p, thetaAfter)，方便复盘。
+ *
+ * 每条作答可以带一个 weight（证据权重），默认 1。weight 直接乘在步长上：
+ *   weight = 1    这题是新的 → 完整证据
+ *   weight = 0.5  这题以前做过，这次又对了 → 只能算一半证据
+ *
+ * 为什么要这个：同一道题第二次答对，可能是真会，也可能只是记住了答案。
+ * 两种情况的区别外部看不出来，所以只能降低这一次的证实力度，
+ * 靠"换一道没做过的新题"去补回真正的信息。
+ *
+ * 返回 { theta, trace }，trace 是每步的 (b, correct, weight, p, thetaAfter)。
  */
 function updateThetaBatch(theta, answers, opts = {}) {
+  const a = opts.a ?? DEFAULT_DISCRIMINATION
+  const lr = opts.lr ?? 0.12
   let t = theta
   const trace = []
-  for (const { difficulty, correct } of answers) {
-    const p = predictPass(t, difficulty, opts.a ?? DEFAULT_DISCRIMINATION)
-    t = updateTheta(t, difficulty, correct, opts)
-    trace.push({ difficulty, correct, p, theta: t })
+  for (const { difficulty, correct, weight = 1 } of answers) {
+    const p = predictPass(t, difficulty, a)
+    const step = lr * weight
+    const next = correct ? t + step * (1 - p) : t - step * p
+    t = Math.min(1, Math.max(0, next))
+    trace.push({ difficulty, correct, weight, p, theta: t })
   }
   return { theta: t, trace }
 }
@@ -546,8 +560,17 @@ function composePaper(bank, {
       }
     }
 
-    const weight = (info + 0.02) * dueBoost
-    return { q, p, info, dueBoost, weight, jitter: rng() }
+    // 新鲜度：**没做过**的题优先。
+    // 做过一次的题再答对，可能是记住了答案，证据要打对折；
+    // 所以复习同一个考点时，换一道没做过的新题才有完整信息。
+    //   fresh = 1/(1+做过次数)：0 次 → 1，1 次 → 0.5，2 次 → 0.333
+    //   freshFactor = 0.3 + 0.7*fresh：0 次 → 1.0，1 次 → 0.65，2 次 → 0.533
+    const seen = progress?.seen?.[q.id]?.times ?? 0
+    const fresh = 1 / (1 + seen)
+    const freshFactor = 0.3 + 0.7 * fresh
+
+    const weight = (info + 0.02) * dueBoost * freshFactor
+    return { q, p, info, dueBoost, seen, fresh, freshFactor, weight, jitter: rng() }
   })
 
   // 1) 先按预测通过率收紧到难度带内，带内题不够就逐步放宽
@@ -610,6 +633,9 @@ function composePaper(bank, {
   shuffle(picked, rng)
 
   const difficulties = picked.map((q) => q.difficulty)
+  const seenById = new Map(pool.map((x) => [x.q.id, x.seen]))
+  const pickedFresh = picked.filter((q) => (seenById.get(q.id) ?? 0) === 0).length
+
   return {
     picked,
     meta: {
@@ -619,6 +645,9 @@ function composePaper(bank, {
       widenedBand: widened,
       difficultySpread: summarize(difficulties),
       topicUse: Object.fromEntries(topicUse),
+      // 这一卷里有几道是没做过的新题 —— 只有新题提供完整证据
+      pickedFresh,
+      pickedRepeat: picked.length - pickedFresh,
     },
   }
 }
@@ -661,10 +690,11 @@ function summarize(nums) {
 /**
  * state.js —— 学习状态与复习排程
  *
- * 存三样东西：
+ * 存四样东西：
  *   1. θ：整体能力，一个数
  *   2. topics：每个考点的记录（做过几题、对几题、下次该复习的日期）
- *   3. log：每场练习的流水（用于复盘和算趋势）
+ *   3. seen：**每道题做过几次**（用来区分"真会"和"记住了这题答案"）
+ *   4. log：每场练习的流水（用于复盘和算趋势）
  *
  * 排程用的是简化的 SM-2（间隔重复）：
  *   答对 → 间隔 = 上次间隔 × 该考点的"易度因子"
@@ -672,10 +702,20 @@ function summarize(nums) {
  *
  * 易度因子 EF 限制在 [1.3, 2.8]，这是 SM-2 的经典区间：
  *   EF 越大说明这个考点对你越轻松，间隔可以拉得越长。
+ *
+ * ── 关于"独立表现"──
+ *
+ * 间隔复习会把同一道题再出一次。这时答对有两种可能：
+ *   (a) 真的会了
+ *   (b) 记住了这道题的答案
+ * 外部看不出来。所以：
+ *   - 重复题答对 → 证据打对折（见 answerWeight）
+ *   - 重复题答错 → 不打折，这是"其实没学会"的硬证据
+ * 想要完整的证据，只能换一道**没做过的新题**再答一次。
  */
 
 
-const STATE_VERSION = 1
+const STATE_VERSION = 2
 
 function emptyState(subject) {
   return {
@@ -685,8 +725,54 @@ function emptyState(subject) {
     createdAt: Date.now(),
     updatedAt: Date.now(),
     topics: {},
+    seen: {},
     log: [],
   }
+}
+
+/** 老状态文件没有 seen 字段，补上即可（其余字段结构兼容） */
+function migrateState(state) {
+  if (!state || typeof state !== 'object') return state
+  if (!state.topics) state.topics = {}
+  if (!state.seen) state.seen = {}
+  if (!state.log) state.log = []
+  if (state.version !== STATE_VERSION) state.version = STATE_VERSION
+  return state
+}
+
+/**
+ * 这道题做过几次了（在本次作答之前）。
+ * 没有记录 = 0 = 第一次见。
+ */
+function seenCount(state, questionId) {
+  return state?.seen?.[questionId]?.times ?? 0
+}
+
+/** 这道题的作答记忆 */
+function seenRecord(state, questionId) {
+  if (!state.seen) state.seen = {}
+  if (!state.seen[questionId]) {
+    state.seen[questionId] = { times: 0, correct: 0, lastAt: null, lastCorrect: null }
+  }
+  return state.seen[questionId]
+}
+
+/**
+ * 一次作答算多少证据。
+ *
+ * @param before  这次作答**之前**做过几次（0 = 新题）
+ * @param correct 这次对没对
+ * @returns 0..1 的权重
+ *
+ * 第一次做      → 1     完整证据
+ * 第二次做且对  → 0.5   可能是记住了
+ * 第三次做且对  → 0.333 …
+ * 任何时候答错  → 1     重复题还错，说明确实没学会，不打折
+ */
+function answerWeight(before, correct) {
+  if (before <= 0) return 1
+  if (!correct) return 1
+  return 1 / (1 + before)
 }
 
 function topicRecord(state, topicId) {
@@ -713,19 +799,38 @@ function topicRecord(state, topicId) {
  * @returns { state, report }
  */
 function finishSession(state, bank, answers, { lr = 0.12 } = {}) {
+  migrateState(state)
   const before = state.theta
 
-  // 1) 更新整体能力 θ
+  // 0) 只有 countsForTheta !== false 的题才参与能力估计
+  //    （主观题自评不算；重复题按权重折算）
+  const scored = answers.filter((x) => x.countsForTheta !== false)
+
+  const weighted = scored.map((x) => {
+    const before0 = seenCount(state, x.question.id)
+    return {
+      question: x.question,
+      correct: x.correct === true,
+      seenBefore: before0,
+      weight: answerWeight(before0, x.correct === true),
+    }
+  })
+
+  // 1) 更新整体能力 θ（按证据权重）
   const { theta, trace } = updateThetaBatch(
     state.theta,
-    answers.map((x) => ({ difficulty: x.question.difficulty, correct: x.correct })),
+    weighted.map((x) => ({
+      difficulty: x.question.difficulty,
+      correct: x.correct,
+      weight: x.weight,
+    })),
     { lr },
   )
   state.theta = theta
 
-  // 2) 更新每个考点
+  // 2) 更新每个考点（只看计入能力的题；主观题不污染考点正确率）
   const byTopic = new Map()
-  for (const a of answers) {
+  for (const a of weighted) {
     const t = a.question.topic
     if (!byTopic.has(t)) byTopic.set(t, [])
     byTopic.get(t).push(a)
@@ -763,19 +868,39 @@ function finishSession(state, bank, answers, { lr = 0.12 } = {}) {
       name: bank.topics[topicId]?.name ?? topicId,
       asked: list.length,
       correct: correctCount,
+      independentAsked: list.filter((x) => x.seenBefore === 0).length,
+      independentCorrect: list.filter((x) => x.seenBefore === 0 && x.correct).length,
       accuracy: round(acc),
       nextDueDays: round(rec.intervalDays),
       needReview: wrongCount > 0,
     })
   }
 
+  // 3) 记下"每道题做过几次"（在更新统计之后再写，保证下次读到的是累计值）
+  for (const a of weighted) {
+    const rec = seenRecord(state, a.question.id)
+    rec.times += 1
+    rec.correct += a.correct ? 1 : 0
+    rec.lastAt = now
+    rec.lastCorrect = a.correct
+  }
+
   const totalCorrect = answers.filter((x) => x.correct).length
 
-  // 3) 记账
+  // 4) 记账
+  const independentAsked = weighted.filter((x) => x.seenBefore === 0).length
+  const independentCorrect = weighted.filter((x) => x.seenBefore === 0 && x.correct).length
+  const repeatAsked = weighted.length - independentAsked
+  const repeatCorrect = weighted.filter((x) => x.seenBefore > 0 && x.correct).length
+
   state.log.push({
     at: now,
     asked: answers.length,
     correct: totalCorrect,
+    scored: weighted.length,
+    independentAsked,
+    independentCorrect,
+    repeatAsked,
     thetaBefore: round(before),
     thetaAfter: round(state.theta),
     topics: [...byTopic.keys()],
@@ -786,6 +911,21 @@ function finishSession(state, bank, answers, { lr = 0.12 } = {}) {
     asked: answers.length,
     correct: totalCorrect,
     accuracy: round(totalCorrect / Math.max(1, answers.length)),
+
+    // 计入能力的题数（主观题不计）
+    scored: weighted.length,
+    unscored: answers.length - weighted.length,
+
+    // 独立表现 vs 重复表现 —— 这两者不能混
+    independence: {
+      asked: weighted.length,
+      independentAsked,
+      independentCorrect,
+      repeatAsked,
+      repeatCorrect,
+      discounted: weighted.filter((x) => x.weight < 1).length,
+    },
+
     thetaBefore: round(before),
     thetaAfter: round(state.theta),
     thetaDelta: round(state.theta - before),
@@ -877,6 +1017,7 @@ function useBankText(text, name) {
   app.bank = res.bank
   app.warnings = res.warnings
   app.state = loadState(app.bank.subject) ?? emptyState(app.bank.subject)
+  migrateState(app.state)
   app.phase = 'ready'
   render()
 }
@@ -1078,10 +1219,16 @@ function renderPractice() {
     ? true
     : c.picked !== null || c.input.trim() !== ''
 
+  // 这题以前做过几次？0 = 新题。做过的话答对只算一半证据（见 core/state.js）
+  const seenTimes = app.state?.seen?.[q.id]?.times ?? 0
+  const freshTag = seenTimes === 0
+    ? `<span class="tag ok" title="没做过：答对算完整证据">新题</span>`
+    : `<span class="tag due" title="做过 ${seenTimes} 次：答对只算 1/${seenTimes + 1} 证据">复习 · 做过 ${seenTimes} 次</span>`
+
   $root.innerHTML = `
     <div class="card">
       <div class="row" style="justify-content:space-between">
-        <span class="muted">第 ${app.index + 1} / ${total} 题</span>
+        <span class="muted">第 ${app.index + 1} / ${total} 题 ${freshTag}</span>
         <span class="muted">难度 ${q.difficulty.toFixed(2)} · 预测通过 ${(predictPass(app.state.theta, q.difficulty) * 100).toFixed(0)}%</span>
       </div>
       <div class="progress"><i style="width:${pct}%"></i></div>
@@ -1165,9 +1312,11 @@ function finish() {
 
 function renderDone() {
   const r = app.report
+  const ind = r.independence ?? { independentAsked: r.asked, independentCorrect: r.correct, repeatAsked: 0, repeatCorrect: 0, discounted: 0 }
   const rows = r.topicUpdates.map((t) => `
     <tr><td>${t.name}</td><td>${t.correct}/${t.asked}</td>
     <td>${Math.round(t.accuracy * 100)}%</td>
+    <td>${Math.round((t.independentCorrect / Math.max(1, t.independentAsked)) * 100) || 0}%</td>
     <td>${t.nextDueDays} 天后</td></tr>`).join('')
 
   $root.innerHTML = `
@@ -1181,8 +1330,20 @@ function renderDone() {
       </div>
     </div>
     <div class="card">
+      <b>这份成绩的证据有多硬</b>
+      <p class="muted" style="margin:8px 0 0">
+        新题（完整证据）：<b>${ind.independentCorrect}/${ind.independentAsked}</b>
+        ${ind.repeatAsked ? `　重复题（折算 ${ind.discounted} 道）：<b>${ind.repeatCorrect}/${ind.repeatAsked}</b>` : ''}
+      </p>
+      ${ind.repeatAsked ? `<p class="muted" style="margin:8px 0 0">
+        重复题答对只算 1/(做过次数+1) 的证据 —— 可能是真会，也可能只是记住了这题的答案，外部看不出来。
+        想要完整证据，得换一道<b>没做过</b>的新题。
+      </p>` : ''}
+      ${r.unscored ? `<p class="muted" style="margin:8px 0 0">另有 ${r.unscored} 道主观题：自评只记录，不计入能力估计。</p>` : ''}
+    </div>
+    <div class="card">
       <b>各考点</b>
-      <table><thead><tr><th>考点</th><th>对/做</th><th>正确率</th><th>下次复习</th></tr></thead>
+      <table><thead><tr><th>考点</th><th>对/做</th><th>正确率</th><th>新题正确率</th><th>下次复习</th></tr></thead>
       <tbody>${rows}</tbody></table>
     </div>
     ${r.needReview.length ? `<div class="card">

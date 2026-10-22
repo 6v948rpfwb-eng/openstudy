@@ -17,7 +17,7 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import { loadBank, validateBank } from '../core/bank.js'
 import { composePaper } from '../core/select.js'
 import { grade } from '../core/grade.js'
-import { emptyState, finishSession, dueTopics, topicMastery } from '../core/state.js'
+import { emptyState, finishSession, dueTopics, topicMastery, migrateState } from '../core/state.js'
 import { describeTheta, predictPass } from '../core/irt.js'
 
 export const name = 'openstudy'
@@ -76,7 +76,8 @@ function statePath(cwd, subject) {
 async function readState(cwd, subject) {
   try {
     const s = JSON.parse(await fs.readFile(statePath(cwd, subject), 'utf8'))
-    return s?.version === 1 ? s : emptyState(subject)
+    if (!s || typeof s !== 'object') return emptyState(subject)
+    return migrateState(s)   // 老版本状态文件补上 seen 字段，不丢进度
   } catch {
     return emptyState(subject)
   }
@@ -124,10 +125,13 @@ export function apply(ctx) {
       lines.push(`# ${bank.title} · 练习卷（${picked.length} 题）`)
       lines.push(`卷号 ${paperId}｜当前能力 θ=${state.theta}（${describeTheta(state.theta)}）`)
       lines.push(`难度分布 min ${meta.difficultySpread.min} / 均 ${meta.difficultySpread.mean} / max ${meta.difficultySpread.max}`)
+      lines.push(`新题 ${meta.pickedFresh} 道，复习题 ${meta.pickedRepeat} 道（只有新题答对算完整证据）`)
       lines.push('')
+      const freshIds = new Set(picked.filter((q) => (state.seen?.[q.id]?.times ?? 0) === 0).map((q) => q.id))
       picked.forEach((q, i) => {
         const p = Math.round(predictPass(state.theta, q.difficulty) * 100)
-        lines.push(`## ${i + 1}. [${q.id}]  ${bank.topics[q.topic]?.name ?? q.topic}　通过率预测 ${p}%`)
+        const mark = freshIds.has(q.id) ? '新题' : `复习·做过${state.seen[q.id].times}次`
+        lines.push(`## ${i + 1}. [${q.id}]  ${bank.topics[q.topic]?.name ?? q.topic}　通过率预测 ${p}%　${mark}`)
         lines.push(q.stem)
         if (q.type === 'choice') {
           q.choices.forEach((c, k) => lines.push(`  ${'ABCDEFG'[k]}. ${c}`))
@@ -183,6 +187,11 @@ export function apply(ctx) {
       if (q.solution) lines.push(`解析：${q.solution}`)
       lines.push('')
       lines.push(`能力 θ ${report.thetaBefore} → ${report.thetaAfter}（${report.level}）`)
+      const ind = report.independence
+      if (ind) {
+        lines.push(`证据：新题 ${ind.independentCorrect}/${ind.independentAsked}` +
+          (ind.repeatAsked ? `，重复题 ${ind.repeatCorrect}/${ind.repeatAsked}（答对按 1/(做过次数+1) 折算）` : ''))
+      }
       for (const t of report.topicUpdates) {
         lines.push(`考点「${t.name}」：${t.correct}/${t.asked}，下次 ${t.nextDueDays} 天后`)
       }

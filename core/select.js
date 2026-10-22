@@ -51,8 +51,17 @@ export function composePaper(bank, {
       }
     }
 
-    const weight = (info + 0.02) * dueBoost
-    return { q, p, info, dueBoost, weight, jitter: rng() }
+    // 新鲜度：**没做过**的题优先。
+    // 做过一次的题再答对，可能是记住了答案，证据要打对折；
+    // 所以复习同一个考点时，换一道没做过的新题才有完整信息。
+    //   fresh = 1/(1+做过次数)：0 次 → 1，1 次 → 0.5，2 次 → 0.333
+    //   freshFactor = 0.3 + 0.7*fresh：0 次 → 1.0，1 次 → 0.65，2 次 → 0.533
+    const seen = progress?.seen?.[q.id]?.times ?? 0
+    const fresh = 1 / (1 + seen)
+    const freshFactor = 0.3 + 0.7 * fresh
+
+    const weight = (info + 0.02) * dueBoost * freshFactor
+    return { q, p, info, dueBoost, seen, fresh, freshFactor, weight, jitter: rng() }
   })
 
   // 1) 先按预测通过率收紧到难度带内，带内题不够就逐步放宽
@@ -115,6 +124,9 @@ export function composePaper(bank, {
   shuffle(picked, rng)
 
   const difficulties = picked.map((q) => q.difficulty)
+  const seenById = new Map(pool.map((x) => [x.q.id, x.seen]))
+  const pickedFresh = picked.filter((q) => (seenById.get(q.id) ?? 0) === 0).length
+
   return {
     picked,
     meta: {
@@ -124,6 +136,9 @@ export function composePaper(bank, {
       widenedBand: widened,
       difficultySpread: summarize(difficulties),
       topicUse: Object.fromEntries(topicUse),
+      // 这一卷里有几道是没做过的新题 —— 只有新题提供完整证据
+      pickedFresh,
+      pickedRepeat: picked.length - pickedFresh,
     },
   }
 }

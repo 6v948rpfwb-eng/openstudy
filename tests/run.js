@@ -83,5 +83,42 @@ line(`故意给一个难度=2、无来源的题 → ok=${bad.ok}`)
 for (const e of bad.errors) line('  ✗ ' + e)
 
 line()
+line('=== 7. 独立表现 vs 重复表现 ===')
+{
+  const q = bank.questions.find((x) => x.type === 'numeric') ?? bank.questions[0]
+  line(`用同一道题（id ${q.id}，难度 ${q.difficulty}）连做三遍，全答对：`)
+
+  const s = emptyState('测试')
+  const r1 = finishSession(s, bank, [{ question: q, correct: true }]).report
+  const r2 = finishSession(s, bank, [{ question: q, correct: true }]).report
+  const r3 = finishSession(s, bank, [{ question: q, correct: true }]).report
+
+  const show = (tag, r) =>
+    line(`  ${tag}  θ ${r.thetaBefore} → ${r.thetaAfter}  涨 ${r.thetaDelta}  证据权重 ${r.trace[0].weight.toFixed(3)}`)
+  show('第1遍（新题）', r1)
+  show('第2遍（重复）', r2)
+  show('第3遍（重复）', r3)
+
+  const ok1 = r1.thetaDelta > r2.thetaDelta && r2.thetaDelta > r3.thetaDelta && r3.thetaDelta > 0
+  line(`  → 增幅递减：${ok1 ? '对' : '错'}`)
+
+  // 重复题答错不打折
+  const s2 = emptyState('测试')
+  finishSession(s2, bank, [{ question: q, correct: true }])
+  const rw = finishSession(s2, bank, [{ question: q, correct: false }]).report
+  line(`  重复题答错：证据权重 ${rw.trace[0].weight.toFixed(3)}（应保持 1，答错是硬证据）`)
+
+  // 主观题不计入能力
+  const s3 = emptyState('测试')
+  const rt = finishSession(s3, bank, [{ question: q, correct: true, countsForTheta: false }]).report
+  line(`  主观题（countsForTheta:false）：θ ${rt.thetaBefore} → ${rt.thetaAfter}，计入 ${rt.scored} 道、跳过 ${rt.unscored} 道`)
+  line(`  → θ 未变：${rt.thetaAfter === rt.thetaBefore ? '对' : '错'}`)
+
+  // 组卷时新题优先
+  const { meta: m2 } = composePaper(bank, { theta: 0.35, n: 6, progress: s })
+  line(`  带上"做过 3 遍"的记录再组 6 题：新题 ${m2.pickedFresh} 道 / 重复题 ${m2.pickedRepeat} 道`)
+}
+
+line()
 line(`能力描述：θ=0.2 → ${describeTheta(0.2)}；θ=0.5 → ${describeTheta(0.5)}；θ=0.9 → ${describeTheta(0.9)}`)
 line('全部跑通。')

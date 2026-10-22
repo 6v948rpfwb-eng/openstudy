@@ -53,15 +53,28 @@ export function updateTheta(theta, difficulty, correct, { lr = 0.12, a = DEFAULT
 
 /**
  * 一次答很多题后批量更新 θ。
- * 返回 { theta, trace }，trace 是每步的 (b, correct, p, thetaAfter)，方便复盘。
+ *
+ * 每条作答可以带一个 weight（证据权重），默认 1。weight 直接乘在步长上：
+ *   weight = 1    这题是新的 → 完整证据
+ *   weight = 0.5  这题以前做过，这次又对了 → 只能算一半证据
+ *
+ * 为什么要这个：同一道题第二次答对，可能是真会，也可能只是记住了答案。
+ * 两种情况的区别外部看不出来，所以只能降低这一次的证实力度，
+ * 靠"换一道没做过的新题"去补回真正的信息。
+ *
+ * 返回 { theta, trace }，trace 是每步的 (b, correct, weight, p, thetaAfter)。
  */
 export function updateThetaBatch(theta, answers, opts = {}) {
+  const a = opts.a ?? DEFAULT_DISCRIMINATION
+  const lr = opts.lr ?? 0.12
   let t = theta
   const trace = []
-  for (const { difficulty, correct } of answers) {
-    const p = predictPass(t, difficulty, opts.a ?? DEFAULT_DISCRIMINATION)
-    t = updateTheta(t, difficulty, correct, opts)
-    trace.push({ difficulty, correct, p, theta: t })
+  for (const { difficulty, correct, weight = 1 } of answers) {
+    const p = predictPass(t, difficulty, a)
+    const step = lr * weight
+    const next = correct ? t + step * (1 - p) : t - step * p
+    t = Math.min(1, Math.max(0, next))
+    trace.push({ difficulty, correct, weight, p, theta: t })
   }
   return { theta: t, trace }
 }
