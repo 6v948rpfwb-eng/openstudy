@@ -391,6 +391,12 @@ function renderPractice() {
     ? `<div class="figbox">${figList.map((src) => `<img class="fig" src="${escapeAttr(src)}" alt="题目配图">`).join('')}</div>`
     : ''
 
+  // 原文有图、但题库没收到这张图：明确提示，别让人对着 [图 …] 那行文字硬猜
+  const missingFigure = !figList.length && /\[图[：: ]/.test(q.stem || '')
+  const figureNote = missingFigure
+    ? `<div class="fignote">原题这里有图，题库只收到文字描述。若某个选项必须看图才能判断，做完把它标成「不会」——那是缺图，不是你的错。</div>`
+    : ''
+
   // 这题以前做过几次？0 = 新题。做过的话答对只算一半证据（见 core/state.js）
   const seenTimes = app.state?.seen?.[q.id]?.times ?? 0
   const freshTag = seenTimes === 0
@@ -405,7 +411,7 @@ function renderPractice() {
       </div>
       ${isEndless() ? '' : `<div class="progress"><i style="width:${pct}%"></i></div>`}
       <p class="stem" style="margin-top:16px">${renderMathText(q.stem)}</p>
-      ${figureHtml}
+      ${figureHtml}${figureNote}
       ${inputArea}
       ${feedback}
       <div class="row" style="margin-top:16px">

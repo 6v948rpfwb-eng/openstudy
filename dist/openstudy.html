@@ -104,6 +104,11 @@ sup, sub { font-size: .72em; line-height: 0; }
 .askbox { margin-top:16px; border-top:1px dashed var(--line, #ddd); padding-top:10px; }
 .askbox summary { cursor:pointer; color:#666; font-size:14px; user-select:none; }
 .askbox textarea { width:100%; margin-top:8px; box-sizing:border-box; }
+
+/* ---- 题目配图 ---- */
+.figbox { margin: 12px 0; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+.figbox .fig { max-width: 100%; border-radius: 8px; border: 1px solid var(--line, #e5e5e5); background: #fff; }
+.fignote { margin: 10px 0 0; padding: 9px 12px; border-left: 3px solid #d9a441; background: #fdf7ea; color: #7a5c19; font-size: 13px; line-height: 1.6; border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -468,6 +473,12 @@ function validateBank(raw) {
         errors.push(`${at}: 未知 type "${q.type}"，只能是 numeric / choice / text`)
     }
 
+    if (q.figure !== undefined) {
+      const figs = Array.isArray(q.figure) ? q.figure : [q.figure]
+      if (figs.length && figs.some((f) => typeof f !== 'string' || !f.trim())) {
+        errors.push(`${at}: figure 必须是非空字符串，或字符串数组`)
+      }
+    }
     if (!q.solution) warnings.push(`${at}: 没有 solution（解析），学生答错时看不到解释`)
   }
 
@@ -1596,6 +1607,18 @@ function renderPractice() {
     ? true
     : c.picked !== null || c.input.trim() !== ''
 
+  // 题目配图：figure 可能是字符串，也可能是字符串数组
+  const figList = q.figure ? (Array.isArray(q.figure) ? q.figure : [q.figure]) : []
+  const figureHtml = figList.length
+    ? `<div class="figbox">${figList.map((src) => `<img class="fig" src="${escapeAttr(src)}" alt="题目配图">`).join('')}</div>`
+    : ''
+
+  // 原文有图、但题库没收到这张图：明确提示，别让人对着 [图 …] 那行文字硬猜
+  const missingFigure = !figList.length && /\[图[：: ]/.test(q.stem || '')
+  const figureNote = missingFigure
+    ? `<div class="fignote">原题这里有图，题库只收到文字描述。若某个选项必须看图才能判断，做完把它标成「不会」——那是缺图，不是你的错。</div>`
+    : ''
+
   // 这题以前做过几次？0 = 新题。做过的话答对只算一半证据（见 core/state.js）
   const seenTimes = app.state?.seen?.[q.id]?.times ?? 0
   const freshTag = seenTimes === 0
@@ -1610,6 +1633,7 @@ function renderPractice() {
       </div>
       ${isEndless() ? '' : `<div class="progress"><i style="width:${pct}%"></i></div>`}
       <p class="stem" style="margin-top:16px">${renderMathText(q.stem)}</p>
+      ${figureHtml}${figureNote}
       ${inputArea}
       ${feedback}
       <div class="row" style="margin-top:16px">
