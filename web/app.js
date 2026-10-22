@@ -46,14 +46,101 @@ const fwEsc = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '
 
 app.view = 'practice'                                  // practice | framework
 app.fw = { subject: FW_SUBJECTS[0] || '', group: 'all', only: 'all' }
-// 支持 #framework 深链：直接双击打不开某个标签时，地址栏加 #framework 就能落在方法论页
-if (FW_SUBJECTS.length && typeof location !== 'undefined' && location.hash === '#framework') app.view = 'framework'
+// 地址栏 hash：`#framework` 落在方法论页，`#subject=chemistry` 直接进化学。
+// 两者可组合：`#framework&subject=chemistry`
+function pageParams() {
+  if (typeof location === 'undefined') return {}
+  const out = {}
+  // 查问号后面的（?subject=chemistry）——`open` 命令常把 # 后面的片段丢掉，查问号更可靠
+  const search = (location.search || '').replace(/^\?/, '')
+  for (const kv of search.split('&')) {
+    if (!kv) continue
+    const i = kv.indexOf('=')
+    if (i > 0) out[kv.slice(0, i)] = decodeURIComponent(kv.slice(i + 1))
+  }
+  // 再看 # 后面的（#framework / #subject=chemistry / #framework&subject=chemistry）
+  for (const kv of (location.hash || '').replace(/^#/, '').split('&')) {
+    if (!kv) continue
+    const i = kv.indexOf('=')
+    if (i < 0) out[kv] = true
+    else out[kv.slice(0, i)] = decodeURIComponent(kv.slice(i + 1))
+  }
+  return out
+}
+const hashNow = pageParams()
+if (FW_SUBJECTS.length && (hashNow.framework || hashNow.view === 'framework')) app.view = 'framework'
+let pendingSubject = typeof hashNow.subject === 'string' ? hashNow.subject : null
+// 没在地址栏指定学科时，沿用上次切的学科（换学科是习惯，不该每次回默认）
+if (!pendingSubject) {
+  try { pendingSubject = localStorage.getItem('openstudy.lastSubject') } catch (e) { /* 隐私模式忽略 */ }
+}
+
+/** 把当前视图与学科写回地址栏（file:// 下改 hash 不会重新加载页面） */
+function syncHash() {
+  if (typeof history === 'undefined' || !history.replaceState) return
+  const parts = []
+  if (app.view === 'framework') parts.push('framework')
+  const sub = app.bank ? app.bank.subject : ''
+  if (sub) parts.push('subject=' + encodeURIComponent(sub))
+  try { history.replaceState(null, '', '#' + parts.join('&')) } catch (e) { /* file:// 某些情况不让改，忽略 */ }
+}
 // 地址栏改 hash 时原地切换（file:// 下改 hash 不会重新加载页面）
-if (FW_SUBJECTS.length && typeof window !== 'undefined') {
+if (typeof window !== 'undefined') {
   window.addEventListener('hashchange', () => {
-    const v = location.hash === '#framework' ? 'framework' : 'practice'
+    const h = pageParams()
+    const v = (h.framework || h.view === 'framework') ? 'framework' : 'practice'
+    if (h.subject && BANKS && BANKS[h.subject] && app.bank && app.bank.subject !== h.subject) {
+      switchBank(h.subject)
+      return
+    }
     if (v !== app.view) { app.view = v; render() }
   })
+}
+
+// ---------- 右上角学科切换 ----------
+// 构建时把多个 --bank 内联成 __EMBEDDED_BANKS__（key = 题库 subject，值是题目 JSON 文本）。
+// 只有一个学科时不显示切换按钮。
+const BANKS = (typeof __EMBEDDED_BANKS__ !== 'undefined' && __EMBEDDED_BANKS__) ? __EMBEDDED_BANKS__ : null
+const BANK_KEYS = BANKS ? Object.keys(BANKS) : []
+const SUBJECT_LABEL = { physics: '物理', chemistry: '化学', technology: '技术', math: '数学', chinese: '语文', english: '英语' }
+
+function bankTitle(key) {
+  try { return JSON.parse(BANKS[key]).title || SUBJECT_LABEL[key] || key } catch (e) { return SUBJECT_LABEL[key] || key }
+}
+
+function renderSubjects() {
+  const box = document.getElementById('subjects')
+  if (!box) return
+  if (BANK_KEYS.length < 2) { box.innerHTML = ''; return }
+  const cur = app.bank ? app.bank.subject : ''
+  box.innerHTML = BANK_KEYS.map((k) =>
+    `<button class="subj ${k === cur ? 'on' : ''}" data-bank="${k}">${bankTitle(k)}</button>`).join('')
+  box.querySelectorAll('[data-bank]').forEach((b) => {
+    b.onclick = () => switchBank(b.dataset.bank)
+  })
+  // 地址栏指定了学科：等题库加载完再切（题库是异步/自动加载的）
+  if (pendingSubject) {
+    const want = pendingSubject
+    pendingSubject = null
+    if (BANKS[want] && (!app.bank || app.bank.subject !== want)) { switchBank(want); return }
+  }
+}
+
+/** 换学科：题库、存档、做卷进度全部换掉，方法论视图跟着切 */
+function switchBank(key) {
+  if (!BANKS || !BANKS[key]) return
+  if (app.bank && app.bank.subject === key) return
+  app.paper = null
+  app.index = 0
+  app.answers = []
+  app.current = null
+  app.report = null
+  app.endless = null
+  app.phase = 'load'
+  if (FW_DOCS[key]) app.fw.subject = key
+  useBankText(BANKS[key], key)
+  try { localStorage.setItem('openstudy.lastSubject', key) } catch (e) { /* 忽略 */ }
+  syncHash()
 }
 
 function renderTabs() {
@@ -66,7 +153,7 @@ function renderTabs() {
   bar.querySelectorAll('.tab').forEach((b) => {
     b.onclick = () => {
       app.view = b.dataset.v
-      try { history.replaceState(null, '', app.view === 'framework' ? '#framework' : location.pathname) } catch (e) {}
+      syncHash()
       render()
     }
   })
@@ -258,6 +345,7 @@ async function tryAutoLoad() {
 
 // ---------- 渲染 ----------
 function render() {
+  renderSubjects()
   renderTabs()
   if (app.view === 'framework') return renderFramework()
   if (app.phase === 'load') return renderLoad()

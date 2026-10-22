@@ -66,39 +66,58 @@ for (const f of CORE_ORDER) {
 }
 parts.push('// ===== web/app.js =====\n' + stripModuleSyntax(readFileSync(join(here, 'web', 'app.js'), 'utf8'), 'web/app.js'))
 
-// 把题库也塞进去，这样单文件版不用联网也能跑
-// 默认用示例题库；用 --bank 指定真题库（比如 openstudy-data/physics.bank.json）
-//   node build.js --bank openstudy-data/physics.bank.json
-const bankArgAt = process.argv.indexOf('--bank')
-const bankPath = bankArgAt > 0 ? resolve(process.argv[bankArgAt + 1]) : join(here, 'data', 'example.bank.json')
+// 把题库塞进去，这样单文件版不用联网也能跑、还能在页面右上角切换学科。
+//   node build.js --bank openstudy-data/physics.bank.json --bank openstudy-data/chemistry.bank.json
+// 只给一个 --bank 时行为和以前一样（只有一科，右上角不显示切换按钮）。
+const bankPaths = []
+for (let i = 2; i < process.argv.length; i++) {
+  if (process.argv[i] === '--bank' && process.argv[i + 1]) bankPaths.push(resolve(process.argv[i + 1]))
+}
+if (!bankPaths.length) bankPaths.push(join(here, 'data', 'example.bank.json'))
+
 // --out 指定输出文件。真题库请输出到 openstudy-data/ 下（那个目录不进仓库）
 const outArgAt = process.argv.indexOf('--out')
 const outPath = outArgAt > 0 ? resolve(process.argv[outArgAt + 1]) : join(here, 'dist', 'openstudy.html')
-let sampleBank = readFileSync(bankPath, 'utf8')
+
+const banks = {}
+const bankOrder = []
+let inlinedFigures = 0
+const missingFigures = []
 
 // --inline-figures：把题目配图读进来转成 data URI，这样单文件产物仍然自包含、能离线用
-if (process.argv.includes('--inline-figures')) {
-  const bankDir = dirname(bankPath)
-  let inlined = 0
-  const missing = []
-  const obj = JSON.parse(sampleBank)
-  const toDataUri = (src) => {
-    if (/^(data:|https?:)/.test(src)) return src
-    const file = isAbsolute(src) ? src : join(bankDir, src)
-    if (!existsSync(file)) { missing.push(src); return src }
-    const ext = file.slice(file.lastIndexOf('.') + 1).toLowerCase()
-    const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : ext === 'svg' ? 'image/svg+xml' : 'image/jpeg'
-    inlined += 1
-    return `data:${mime};base64,${readFileSync(file).toString('base64')}`
+const inlineFigures = process.argv.includes('--inline-figures')
+
+for (const bankPath of bankPaths) {
+  const obj = JSON.parse(readFileSync(bankPath, 'utf8'))
+  if (inlineFigures) {
+    const bankDir = dirname(bankPath)
+    const toDataUri = (src) => {
+      if (/^(data:|https?:)/.test(src)) return src
+      const file = isAbsolute(src) ? src : join(bankDir, src)
+      if (!existsSync(file)) { missingFigures.push(src); return src }
+      const ext = file.slice(file.lastIndexOf('.') + 1).toLowerCase()
+      const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : ext === 'svg' ? 'image/svg+xml' : 'image/jpeg'
+      inlinedFigures += 1
+      return `data:${mime};base64,${readFileSync(file).toString('base64')}`
+    }
+    for (const q of obj.questions || []) {
+      if (!q.figure) continue
+      q.figure = Array.isArray(q.figure) ? q.figure.map(toDataUri) : toDataUri(q.figure)
+    }
   }
-  for (const q of obj.questions || []) {
-    if (!q.figure) continue
-    q.figure = Array.isArray(q.figure) ? q.figure.map(toDataUri) : toDataUri(q.figure)
-  }
-  sampleBank = JSON.stringify(obj, null, 2)
-  console.log(`配图内联：${inlined} 张${missing.length ? `，找不到 ${missing.length} 张（${missing.slice(0, 3).join(', ')}…）` : ''}`)
+  const key = obj.subject || bankPath
+  if (banks[key]) throw new Error(`两个 --bank 的 subject 相同：${key}`)
+  banks[key] = obj
+  bankOrder.push(key)
 }
-const bankConst = `const __EMBEDDED_BANK__ = ${JSON.stringify(sampleBank)};`
+if (inlineFigures) {
+  console.log(`配图内联：${inlinedFigures} 张${missingFigures.length ? `，找不到 ${missingFigures.length} 张（${missingFigures.slice(0, 3).join(', ')}…）` : ''}`)
+}
+
+const sampleBank = JSON.stringify(banks[bankOrder[0]], null, 2)
+const bankConst = `const __EMBEDDED_BANK__ = ${JSON.stringify(sampleBank)};\nconst __EMBEDDED_BANKS__ = ${JSON.stringify(
+  Object.fromEntries(bankOrder.map((k) => [k, JSON.stringify(banks[k])])),
+)};`
 
 // 方法论数据：把 tools/topics-*.json 里 schema 为 openstudy.topics/2 的全部塞进去。
 // 这样单文件产物里「方法论」标签页不用联网也能看。
@@ -129,6 +148,4 @@ mkdirSync(dirname(outPath), { recursive: true })
 writeFileSync(outPath, outHtml, 'utf8')
 
 const kb = (Buffer.byteLength(outHtml) / 1024).toFixed(1)
-let bankCount = '?'
-try { bankCount = JSON.parse(sampleBank).questions.length } catch {}
-console.log(`已生成 ${outPath}（${kb} KB，内嵌 ${bankCount} 道题，来自 ${bankPath}；方法论 ${Object.keys(fwDocs).length} 个学科）`)
+console.log(`已生成 ${outPath}（${kb} KB，内嵌 ${bankOrder.length} 个学科 ${bankOrder.map((k) => `${k} ${banks[k].questions?.length ?? 0} 题`).join(' / ')}；方法论 ${Object.keys(fwDocs).length} 个学科）`)
