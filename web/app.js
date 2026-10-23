@@ -17,6 +17,7 @@ import {
 import { renderMathText } from '../core/math.js'
 import { loadForTopic } from '../core/framework.js'
 import { DAILY_GOAL, xpForAnswer, levelOf, dayKey, settleSession, newBadges, withBadges, BADGES } from '../core/game.js'
+import { iconSVG, BADGE_ICONS } from './icons.js'
 import { mountMascot, mascotSay, mascotOnAnswer, mascotOnSessionStart, mascotOnSessionEnd, mascotSetActive, mascotGreetOnce } from './mascot.js'
 
 const $root = document.getElementById('root')
@@ -1732,7 +1733,7 @@ function gameStripHTML() {
     <div class="card gamecard">
       <div class="grow">
         <div class="lvbox">
-          <div class="lvnum">${lv.level}</div>
+          <div class="lvnum">${iconSVG('star', 12, 'lvstar')}<span>${lv.level}</span></div>
           <div class="lvtext">
             <b>等级 ${lv.level}</b>
             <div class="muted">${lv.into} / ${lv.need} XP 到下一级（累计 ${g.xp}）</div>
@@ -1746,14 +1747,14 @@ function gameStripHTML() {
             <circle cx="20" cy="20" r="16" class="ringbg"></circle>
             <circle cx="20" cy="20" r="16" class="ringfg" pathLength="100" style="stroke-dasharray:${goalPct} 100"></circle>
           </svg>
-          <span>${goalPct}%</span>
+          <span class="ringtxt">${done ? iconSVG('check', 14) : goalPct + '%'}</span>
         </div>
         <div class="goaltxt">
           <b>${done ? '今日达成' : `今日 ${g.todayXp}/${DAILY_GOAL}`}</b>
           <div class="muted">${done ? '明天再来一轮' : '再做几题就够'}</div>
         </div>
         <div class="streakbox" title="每天攒够 20 XP 算一天">
-          <span class="flame">🔥</span><b>${g.streak}</b><span class="muted">天连续</span>
+          <span class="flame">${iconSVG('flame', 16)}</span><b>${g.streak}</b><span class="muted">天连续</span>
         </div>
       </div>
     </div>`
@@ -1763,15 +1764,16 @@ function badgeWallHTML() {
   const got = app.game.badges
   const cells = BADGES.map((b) => {
     const on = Boolean(got[b.id])
-    return `<div class="badge ${on ? 'on' : ''}" title="${escapeHtml(b.desc)}${on ? '（' + got[b.id] + '）' : '（未解锁）'}">
-      <div class="bic">${on ? b.icon : '🔒'}</div>
+    const ic = on ? (BADGE_ICONS[b.id] || 'star') : 'lock'
+    return `<div class="badge ${on ? 'on' : ''}" title="${escapeHtml(b.desc)}${on ? '（' + got[b.id] + ' 解锁）' : '（未解锁）'}">
+      <div class="bmedal">${iconSVG(ic, 22)}</div>
       <div class="bname">${b.name}</div>
     </div>`
   }).join('')
   const n = BADGES.filter((b) => got[b.id]).length
   return `<div class="card">
     <div class="row" style="justify-content:space-between">
-      <b>成就墙</b><span class="muted">${n}/${BADGES.length}</span>
+      <b>成就墙</b><span class="muted">${n}/${BADGES.length} 已解锁</span>
     </div>
     <div class="badges">${cells}</div>
   </div>`
@@ -1796,11 +1798,11 @@ function xpPanelHTML() {
       </div>
       <div class="xpline" style="margin-top:10px">
         <div>今日目标 <b>${info.todayXp}/${info.goal}</b>（${goalPct}%）</div>
-        <div>连续 <span class="flame">🔥</span><b>${info.streak}</b> 天</div>
+        <div>连续 <span class="flame">${iconSVG('flame', 16)}</span><b>${info.streak}</b> 天</div>
       </div>
       ${fresh.length ? `<div class="newbadges">
         <b>新成就</b>
-        ${fresh.map((b) => `<span class="badgepill">${b.icon} ${b.name}</span>`).join('')}
+        ${fresh.map((b) => `<span class="badgepill">${iconSVG(BADGE_ICONS[b.id] || 'star', 15)} ${b.name}</span>`).join('')}
       </div>` : ''}
     </div>`
 }

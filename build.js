@@ -65,6 +65,7 @@ for (const f of CORE_ORDER) {
   parts.push(`// ===== core/${f} =====\n` + stripModuleSyntax(readFileSync(join(here, 'core', f), 'utf8'), `core/${f}`))
 }
 // mascot.js 放在 app.js 前面：它是 app.js 依赖的，内联后靠函数声明提升不够稳（有 const）
+parts.push('// ===== web/icons.js =====\n' + stripModuleSyntax(readFileSync(join(here, 'web', 'icons.js'), 'utf8'), 'web/icons.js'))
 parts.push('// ===== web/mascot.js =====\n' + stripModuleSyntax(readFileSync(join(here, 'web', 'mascot.js'), 'utf8'), 'web/mascot.js'))
 parts.push('// ===== web/app.js =====\n' + stripModuleSyntax(readFileSync(join(here, 'web', 'app.js'), 'utf8'), 'web/app.js'))
 

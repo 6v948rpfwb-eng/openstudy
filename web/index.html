@@ -377,6 +377,27 @@ sup, sub { font-size: .72em; line-height: 0; }
 .badge.on{opacity:1;background:#fff;border-color:#dbe4ff;box-shadow:0 4px 12px rgba(77,107,254,.10)}
 .bic{font-size:22px;line-height:1.2}
 .bname{font-size:12px;color:#5b6478;margin-top:2px}
+
+/* ---------- 图标与徽章（线性 SVG） ---------- */
+.ic{display:block}
+.lvnum{flex-direction:column;gap:1px;line-height:1}
+.lvnum .lvstar{opacity:.85;margin-top:2px}
+.lvnum span{font-size:17px;font-weight:800}
+.ringtxt{position:absolute;display:grid;place-items:center;font-size:11px;font-weight:700;color:#2b9c6b}
+.ringtxt .ic{color:#2b9c6b}
+.streakbox .flame{display:grid;place-items:center;color:#e07a1f}
+.badges{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:12px}
+.badge{background:transparent;border:none;padding:0;opacity:1}
+.bmedal{width:52px;height:52px;margin:0 auto;border-radius:16px;display:grid;place-items:center;
+  background:#f1f3f9;color:#9aa3b8;border:1px solid #e6eaf3;transition:.18s}
+.badge.on .bmedal{background:linear-gradient(145deg,#4d6bfe,#7c8bff);color:#fff;border-color:transparent;
+  box-shadow:0 8px 18px rgba(77,107,254,.28)}
+.badge.on .bmedal .ic{filter:drop-shadow(0 1px 0 rgba(0,0,0,.06))}
+.badge:hover .bmedal{transform:translateY(-2px)}
+.bname{font-size:12px;color:#68718a;margin-top:6px;text-align:center}
+.badge.on .bname{color:#33405c;font-weight:600}
+.badgepill{display:inline-flex;align-items:center;gap:6px}
+.badgepill .ic{color:#4d6bfe}
 </style>
 </head>
 <body>
