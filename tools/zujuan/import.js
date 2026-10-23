@@ -42,7 +42,7 @@ for (const q of grab.questions) {
     choices: a.choices || null,
     answer: { value: a.answer },
     solution: a.solution || '',
-    figures: (q.imgs || []).filter((u) => !/formula/.test(u)),
+    figure: (q.imgs || []).filter((u) => !/formula/.test(u)),
     confidence: a.confidence || 'mid',
     source: `${paperName} 第 ${q.no} 题（组卷网）`,
     sourceUrl: grab.url,
