@@ -132,48 +132,52 @@ const clickSel = (sel, idx = 0) => {
   return false
 }
 
-// ---- 方法论的学科数据（拿化学） ----
-const FW = { subject: 'chemistry' }
+// ---- 方法论（按题型）与知识图（纯知识点）----
 const tab = document.querySelectorAll('.tab')
 ok(tab.length >= 3, '标签页有 练习/方法论/知识图 三个')
 
-// 直接点「方法论」标签
+// 方法论第一层：四个组
 const fwTab = tab.find((t) => t.dataset.v === 'framework')
 ok(!!fwTab, '找到方法论标签')
 clickEl(fwTab, '.tab')
 let h = latest()
-ok(h.includes('四组方法论') || h.includes('全部组'), '方法论第一层：四个组')
-ok(h.includes('条件→方程') || h.includes('bcard'), '方法论第一层：有组卡片')
+ok(h.includes('按「题目长什么样」分类') || h.includes('全部题型') || h.includes('方法论'), '方法论第一层：按题型分类')
+ok(h.includes('data-g') || h.includes('bcard') || h.includes('物理'), '方法论第一层：有组卡片')
 
-// 进第一组
 ok(clickSel('[data-g]', 0), '能点进第一个组')
 h = latest()
-ok(h.includes('这一组的动作序列'), '方法论第二层：组里考点 + 组级动作序列')
-
-// 进第一个考点
-ok(clickSel('[data-t]', 0), '能点进第一个考点')
+ok(h.includes('类题') || h.includes('trow'), '方法论第二层：组里的题型列表')
+ok(clickSel('[data-m]', 0), '能点进第一个题型')
 h = latest()
-ok(h.includes('判据（表 1）') && h.includes('必查项'), '方法论第三层：三张表')
-ok(h.includes('crumb'), '有面包屑')
-ok(clickSel('[data-crumb]', 0), '面包屑能回到第一层')
-ok(latest().includes('四组方法论') || latest().includes('全部组'), '回到方法论第一层')
+ok(h.includes('什么时候用') && h.includes('动作序列') && h.includes('必查项'), '方法论第三层：触发/动作/必查')
+ok(h.includes('用到哪些知识点'), '方法论第三层：关联知识点')
+ok(clickSel('[data-jump]', 0), '能从方法跳到知识点')
+h = latest()
+ok(h.includes('要点') && h.includes('公式'), '跳转后落在知识点详情')
+ok(clickSel('[data-crumb]', 0), '面包屑能返回')
 
-// ---- 知识图 ----
+// 切回物理（知识点与方法论目前只有物理有内容）
+const physCard = document.querySelectorAll('.subjcard').find((c) => c.dataset.bank === 'physics')
+clickEl(physCard, '.subjcard')
+
+// 知识图第一层
 const mapTab = document.querySelectorAll('.tab').find((t) => t.dataset.v === 'map')
 clickEl(mapTab, '.tab')
 h = latest()
-ok(h.includes('看全图'), '知识图第一层：有「看全图」按钮')
-ok(h.includes('bcard') || h.includes('个考点'), '知识图第一层：有知识块卡片')
+if (process.env.NAV_DEBUG) console.log('KB_HEAD:', h.slice(0, 300), '| subject=', els.get('root') && 'x')
+ok(h.includes('这里只有知识点本身'), '知识图第一层：说明与练习/方法论的区别')
 ok(clickSel('[data-b]', 0), '能点进第一个知识块')
 h = latest()
-ok(h.includes('学这一块之前要先会') || h.includes('trow'), '知识图第二层：块里的考点')
-ok(clickSel('[data-t]', 0), '能点进块里的考点')
+ok(h.includes('个知识点') && h.includes('看全景图'), '知识图第二层：知识点列表 + 看全景图')
+ok(clickSel('[data-jump]', 0), '能点进一个知识点')
 h = latest()
-ok(h.includes('判据（表 1）'), '知识图第三层：考点细节')
+ok(h.includes('要点') && h.includes('要先会'), '知识图第三层：要点/前置')
 
-// 回第一层再进全图
+// 回第二层再进全景图
+clickSel('[data-crumb]', 0)
 clickSel('[data-crumb]', 0)
 clickEl(mapTab, '.tab')
+clickSel('[data-b]', 0)
 const fullBtn = els.get('fullmap')
 ok(!!fullBtn && typeof fullBtn.onclick === 'function', '有「看全图」按钮并绑定了事件')
 clickEl(fullBtn, '#fullmap')

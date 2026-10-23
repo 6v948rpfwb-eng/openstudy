@@ -172,6 +172,7 @@ function renderTabs() {
   bar.querySelectorAll('.tab').forEach((b) => {
     b.onclick = () => {
       if (app.view !== b.dataset.v) { app.view = b.dataset.v; navReset() }
+      else navReset() // 已经在这一页：再点一次回到最外层
       syncHash()
       render()
     }
@@ -179,7 +180,7 @@ function renderTabs() {
 }
 
 // ---------- 通用：状态、面包屑、小块 ----------
-function navReset() { app.nav.block = null; app.nav.topic = null }
+function navReset() { app.nav.block = null; app.nav.topic = null; app.kb.block = null; app.kb.node = null; app.mnav.group = null; app.mnav.method = null }
 
 function stateOfTopic(t) {
   return t.state === '✅' ? 'ok' : t.state === '🟡' ? 'mid' : t.state === '🔴' ? 'bad' : 'none'
@@ -246,94 +247,101 @@ function topicDetailHTML(doc, tid, extra = '') {
   </div>`
 }
 
-// ---------- 方法论视图：四组 → 组内考点 → 考点细节 ----------
-function renderFramework() {
-  if (app.bank && FW_DOCS[app.bank.subject] && app.bank.subject !== app.fw.subject) app.fw.subject = app.bank.subject
-  const doc = FW_DOCS[app.fw.subject]
-  if (!doc) { $root.innerHTML = '<div class="card">没有方法论数据</div>'; return }
-  const topics = doc.topics
-  const allIds = Object.keys(topics)
-  const nav = app.nav
+// ---------- 方法论视图：按题型（问题导向） ----------
+// 数据来源 tools/data/methods-*.json；每个方法 = 一类题的「触发特征 → 动作序列 → 必查项」
+function methodDocs() { return typeof __METHOD_DOCS__ !== 'undefined' ? __METHOD_DOCS__ : {} }
+function knowledgeDocs() { return typeof __KNOWLEDGE_DOCS__ !== 'undefined' ? __KNOWLEDGE_DOCS__ : {} }
+function curSubject() { return (app.bank && app.bank.subject) || app.fw.subject }
+function topicState(tid) {
+  const t = app.bank && app.bank.topics ? app.bank.topics[tid] : null
+  return t ? t.state : null
+}
+function knNodeById(doc, nid) { return (doc.nodes || {})[nid] || null }
 
-  const head = `<div class="card">
-    <div><strong>${fwEsc(doc.title || app.fw.subject)} · 四组方法论</strong></div>
-    <div class="muted" style="margin-top:4px">判据形状 / 动作序列 / 检验方式 三者相同才同组。点进去看组里的考点，再点考点看三张表。</div>
-  </div>`
-
-  // 第三层：考点细节
-  if (nav.topic && topics[nav.topic]) {
-    const g = topics[nav.topic].group
-    const gLabel = doc.groups[g]?.label || g
-    $root.innerHTML = crumbTrail([
-      { label: '全部组', go: () => { navReset(); render() } },
-      { label: `${g} ${gLabel}`, go: () => { nav.topic = null; nav.block = g; render() } },
-      { label: topics[nav.topic].name },
-    ]) + topicDetailHTML(doc, nav.topic)
-    bindCrumbs([
-      { go: () => { navReset(); render() } },
-      { go: () => { nav.topic = null; nav.block = g; render() } },
-    ])
+function renderMethods() {
+  const subj = curSubject()
+  const doc = methodDocs()[subj]
+  const m = app.mnav
+  if (!doc) {
+    $root.innerHTML = `<div class="card"><b>方法论</b><div class="muted" style="margin-top:6px">这一科按题型整理的方法还没写。物理已经有了，化学与技术待补。</div></div>`
     return
   }
+  const list = doc.methods || []
 
-  // 第二层：组里的考点
-  if (nav.block && doc.groups[nav.block]) {
-    const g = nav.block
-    const info = doc.groups[g]
-    const ids = allIds.filter((id) => topics[id].group === g)
-    const c = countStates(topics, ids)
-    const rows = ids.map((id) => {
-      const t = topics[id]
-      return `<button class="trow" data-t="${fwEsc(id)}">
-        <span class="tid">${fwEsc(t.alias || id)}</span>
-        <span class="tname">${fwEsc(t.name)}</span>
-        <span class="fst ${FST_CLASS(t.state)}">${fwEsc(t.state || '未测')}</span>
-      </button>`
-    }).join('')
-    $root.innerHTML = crumbTrail([
-      { label: '全部组', go: () => { navReset(); render() } },
-      { label: `${g} ${info.label}` },
-    ]) + `
+  // 第三层：一个方法的完整打法
+  if (m.method) {
+    const it = list.find((x) => x.id === m.method)
+    if (it) {
+      const kdoc = knowledgeDocs()[subj]
+      const chips = (it.topics || []).flatMap((tid) => {
+        const hit = kdoc ? Object.entries(kdoc.nodes).filter(([, n]) => n.topic === tid) : []
+        if (!hit.length) return [`<button class="kchip" disabled title="${fwEsc(tid)}">${fwEsc(tid)}</button>`]
+        return hit.map(([nid, n]) => `<button class="kchip" data-jump="${fwEsc(nid)}" title="${fwEsc(tid)}">${fwEsc(n.name)}</button>`)
+      }).join('')
+      $root.innerHTML = crumbTrail([
+        { label: '全部题型' },
+        { label: `${it.group} ${doc.groups[it.group]?.label || ''}`, go: () => { m.method = null; m.group = it.group; render() } },
+        { label: it.name },
+      ]) + `<div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div><span class="gbadge b${it.group}">${it.group}</span> <b>${fwEsc(it.name)}</b></div>
+          <span class="muted">${fwEsc(it.id)}</span>
+        </div>
+        <div class="muted" style="margin-top:12px">什么时候用（题面出现这些就归这一类）</div>
+        <ul class="mtight">${(it.trigger || []).map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ul>
+        <div class="muted" style="margin-top:12px">动作序列（照着做，别跳步）</div>
+        <ol class="mtight">${(it.steps || []).map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ol>
+        <div class="muted" style="margin-top:12px">必查项（做完逐条核对）</div>
+        <ul class="mtight">${(it.checks || []).map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ul>
+        <div class="muted" style="margin-top:12px">用到哪些知识点（点一下去知识图）</div>
+        <div class="kchips">${chips || '<span class="muted">没标</span>'}</div>
+      </div>`
+      bindCrumbs([null, { go: () => { m.method = null; m.group = it.group; render() } }])
+      $root.querySelectorAll('[data-jump]').forEach((b) => {
+        b.onclick = () => { app.view = 'map'; app.kb.block = null; app.kb.node = b.dataset.jump; render(); syncHash() }
+      })
+      return
+    }
+  }
+
+  // 第二层：某一组（A/B/C/D）里的题型
+  if (m.group) {
+    const g = m.group
+    const info = doc.groups[g] || {}
+    const items = list.filter((x) => x.group === g)
+    const rows = items.map((x) => `<button class="trow" data-m="${fwEsc(x.id)}">
+        <span class="tid">${fwEsc(x.id)}</span>
+        <span class="tname">${fwEsc(x.name)}</span>
+        <span class="muted tside">${(x.steps || []).length} 步</span>
+      </button>`).join('')
+    $root.innerHTML = crumbTrail([{ label: '全部题型' }, { label: `${g} ${info.label || ''}` }]) + `
       <div class="card">
         <div class="row" style="justify-content:space-between;align-items:center">
-          <div><span class="gbadge b${g}">${g}</span> <b>${fwEsc(info.label)}</b></div>
-          <span class="muted">${ids.length} 个考点</span>
+          <div><span class="gbadge b${g}">${g}</span> <b>${fwEsc(info.label || g)}</b></div>
+          <span class="muted">${items.length} 类题</span>
         </div>
-        <div style="margin-top:8px">${miniBar(c)} ${stateChips(c)}</div>
-        <div class="muted" style="margin-top:12px">这一组的动作序列（表 2，全线通用）</div>
-        <ol>${info.steps.map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ol>
-        <div class="muted" style="margin-top:10px">必查项（表 3）</div>
-        <ul>${info.checks.map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ul>
+        <div class="muted" style="margin-top:6px">${fwEsc(info.desc || '')}</div>
       </div>
       <div class="tlist">${rows}</div>`
-    bindCrumbs([{ go: () => { navReset(); render() } }])
-    $root.querySelectorAll('[data-t]').forEach((b) => {
-      b.onclick = () => { nav.topic = b.dataset.t; render() }
-    })
+    bindCrumbs([{ go: () => { m.group = null; render() } }])
+    $root.querySelectorAll('[data-m]').forEach((b) => { b.onclick = () => { m.method = b.dataset.m; render() } })
     return
   }
 
   // 第一层：四个组
-  const cards = Object.entries(doc.groups).map(([g, info]) => {
-    const ids = allIds.filter((id) => topics[id].group === g)
-    const c = countStates(topics, ids)
+  const cards = Object.entries(doc.groups || {}).map(([g, info]) => {
+    const n = list.filter((x) => x.group === g).length
     return `<button class="bcard" data-g="${g}">
       <span class="gbadge b${g} bbig">${g}</span>
-      <span class="btitle">${fwEsc(info.label)}</span>
-      <span class="muted">${ids.length} 个考点 · ${info.steps.length} 步动作</span>
-      ${miniBar(c)}
-      <span class="bchips">${stateChips(c)}</span>
+      <span class="btitle">${fwEsc(info.label || g)}</span>
+      <span class="muted">${n} 类题 · ${fwEsc(info.desc || '')}</span>
     </button>`
   }).join('')
-
-  $root.innerHTML = head + `
-    <div class="bgrid">${cards}</div>
-    <div class="card">
-      <div class="muted">三张表的关系：表 1 判据决定「这题归哪类」，表 2 给出「按什么顺序做」，表 3 收尾「必须核对什么」。缺一张就有一类错误反复出现。</div>
-    </div>`
-  $root.querySelectorAll('[data-g]').forEach((b) => {
-    b.onclick = () => { nav.block = b.dataset.g; nav.topic = null; render() }
-  })
+  $root.innerHTML = `<div class="card">
+      <div><strong>${fwEsc(doc.title || '方法论')}</strong></div>
+      <div class="muted" style="margin-top:4px">这里按「题目长什么样」分类。点进去看这一类题的触发特征、动作序列和必查项。</div>
+    </div><div class="bgrid">${cards}</div>`
+  $root.querySelectorAll('[data-g]').forEach((b) => { b.onclick = () => { m.group = b.dataset.g; m.method = null; render() } })
 }
 
 // ---------- 存档 ----------
@@ -460,207 +468,166 @@ async function tryAutoLoad() {
 // 列内自动连成一条向下的链；跨列画曲线。节点状态直接读考点表的 state。
 app.map = { cur: null, k: 1 }
 app.nav = { block: null, topic: null }
+app.kb = { block: null, node: null }
+app.mnav = { group: null, method: null }
 
-// ---------- 知识点图视图：知识块 → 块内考点 → 考点细节 / 全图 ----------
+// 考点按知识块分组（练习页第一层用）
 function blocksOf(doc) {
-  const graph = doc.graph
-  if (!graph || !graph.modules) return { blocks: [], extra: [] }
-  const inBlock = new Set(graph.modules.flatMap((m) => m.topics))
-  const extra = Object.keys(doc.topics).filter((id) => !inBlock.has(id) && id !== 'P-99' && id !== 'C-99' && id !== 'T-99')
-  return { blocks: graph.modules, extra }
+  const g = doc.graph || {}
+  const topics = doc.topics || {}
+  const blocks = (g.modules || []).map((m) => ({ id: m.id, label: m.label, topics: (m.topics || []).filter((t) => topics[t]) }))
+  const seen = new Set(blocks.flatMap((b) => b.topics))
+  const extra = Object.keys(topics).filter((t) => !seen.has(t))
+  return { blocks, extra }
 }
 
-function renderMap() {
-  if (app.bank && FW_DOCS[app.bank.subject] && app.bank.subject !== app.fw.subject) app.fw.subject = app.bank.subject
-  const doc = FW_DOCS[app.fw.subject]
-  const graph = doc && doc.graph
-  if (!doc || !graph || !graph.modules || !graph.modules.length) {
-    $root.innerHTML = '<div class="card">这个学科还没有知识点图</div>'
+// ---------- 知识点图视图：纯知识点（概念 / 公式 / 易混 / 前置） ----------
+function renderKnowledge() {
+  const subj = curSubject()
+  const doc = knowledgeDocs()[subj]
+  const kb = app.kb
+  if (!doc) {
+    $root.innerHTML = `<div class="card"><b>知识点图</b><div class="muted" style="margin-top:6px">这一科的知识点还没整理。物理已经有了，化学与技术待补。</div></div>`
     return
   }
-  const nav = app.nav
-  const { blocks, extra } = blocksOf(doc)
-  const topics = doc.topics
+  const nodes = doc.nodes || {}
 
-  // 考点细节
-  if (nav.topic && topics[nav.topic]) {
-    const blk = blocks.find((m) => m.topics.includes(nav.topic))
-    const pre = (graph.edges || []).filter(([a, b]) => b === nav.topic).map(([a]) => a)
-    const post = (graph.edges || []).filter(([a, b]) => a === nav.topic).map(([, b]) => b)
-    const rel = (ids, label) =>
-      ids.length
-        ? `<p class="muted" style="margin-top:10px">${label}：${ids
-            .map((id) => `<button class="linkbtn" data-jump="${fwEsc(id)}">${fwEsc(topics[id]?.name || id)}</button>`)
-            .join('、')}</p>`
-        : ''
+  // 第三层：一个知识点的内容
+  if (kb.node && nodes[kb.node]) {
+    const n = nodes[kb.node]
+    const st = topicState(n.topic)
+    const link = (id, cls) => {
+      const t = nodes[id]
+      return `<button class="kchip ${cls}" data-jump="${fwEsc(id)}">${fwEsc(t ? t.name : id)}</button>`
+    }
+    const nexts = Object.entries(nodes).filter(([, x]) => (x.prereq || []).includes(kb.node)).map(([id]) => id)
     $root.innerHTML = crumbTrail([
-      { label: '知识块', go: () => { navReset(); render() } },
-      { label: blk ? blk.label : '其它', go: () => { nav.topic = null; nav.block = blk ? blk.id : '__extra__'; render() } },
-      { label: topics[nav.topic].name },
-    ]) + topicDetailHTML(doc, nav.topic, rel(pre, '要先会') + rel(post, '学完可以接着看'))
-    bindCrumbs([
-      { go: () => { navReset(); render() } },
-      { go: () => { nav.topic = null; nav.block = blk ? blk.id : '__extra__'; render() } },
-    ])
-    $root.querySelectorAll('[data-jump]').forEach((b) => {
-      b.onclick = () => { nav.topic = b.dataset.jump; render() }
-    })
+      { label: '知识块' },
+      { label: (doc.blocks.find((b) => b.id === n.block) || {}).label || n.block, go: () => { kb.node = null; kb.block = n.block; render() } },
+      { label: n.name },
+    ]) + `<div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div><b>${fwEsc(n.name)}</b> <span class="muted">${fwEsc(n.topic || '')}</span></div>
+        <span class="fst ${FST_CLASS(st)}">${fwEsc(st || '未测')}</span>
+      </div>
+      <div class="muted" style="margin-top:12px">要点</div>
+      <ul class="mtight">${(n.core || []).map((x) => `<li>${renderMathText(x)}</li>`).join('')}</ul>
+      ${(n.formulas || []).length ? `<div class="muted" style="margin-top:12px">公式</div>
+        <div class="fbox">${(n.formulas || []).map((f) => `<div class="fml">${renderMathText(f)}</div>`).join('')}</div>` : ''}
+      ${(n.confusions || []).length ? `<div class="muted" style="margin-top:12px">最容易错的地方</div>
+        <ul class="mtight warn">${(n.confusions || []).map((x) => `<li>${renderMathText(x)}</li>`).join('')}</ul>` : ''}
+      <div class="muted" style="margin-top:12px">要先会</div>
+      <div class="kchips">${(n.prereq || []).map((id) => link(id, 'pre')).join('') || '<span class="muted">没有前置</span>'}</div>
+      <div class="muted" style="margin-top:10px">学会了才能学</div>
+      <div class="kchips">${nexts.map((id) => link(id, 'next')).join('') || '<span class="muted">没有后继</span>'}</div>
+    </div>`
+    bindCrumbs([null, { go: () => { kb.node = null; kb.block = n.block; render() } }])
+    $root.querySelectorAll('[data-jump]').forEach((b) => { b.onclick = () => { kb.node = b.dataset.jump; kb.block = nodes[b.dataset.jump].block; render() } })
     return
   }
 
-  // 块内考点
-  if (nav.block && nav.block !== '__graph__') {
-    const blk = blocks.find((m) => m.id === nav.block)
-    const ids = blk ? blk.topics : extra
-    const label = blk ? blk.label : '其它考点'
-    const c = countStates(topics, ids)
+  // 第二层：一个知识块里的知识点
+  if (kb.block) {
+    const blk = doc.blocks.find((b) => b.id === kb.block)
+    const ids = Object.keys(nodes).filter((id) => nodes[id].block === kb.block)
     const rows = ids.map((id) => {
-      const t = topics[id]
-      if (!t) return ''
-      return `<button class="trow" data-t="${fwEsc(id)}">
-        <span class="tid">${fwEsc(t.alias || id)}</span>
-        <span class="tname">${fwEsc(t.name)}</span>
-        <span class="fst ${FST_CLASS(t.state)}">${fwEsc(t.state || '未测')}</span>
+      const n = nodes[id]
+      const st = topicState(n.topic)
+      const first = (n.core || [])[0] || ''
+      return `<button class="trow" data-jump="${fwEsc(id)}">
+        <span class="tid">${fwEsc(id)}</span>
+        <span class="tname">${fwEsc(n.name)}
+          <span class="tsub">${fwEsc(first.length > 34 ? first.slice(0, 34) + '…' : first)}</span></span>
+        <span class="fst ${FST_CLASS(st)}">${fwEsc(st || '未测')}</span>
       </button>`
     }).join('')
-    const pres = (graph.edges || []).filter(([, b]) => ids.includes(b)).map(([a]) => a).filter((a) => !ids.includes(a))
-    $root.innerHTML = crumbTrail([
-      { label: '知识块', go: () => { navReset(); render() } },
-      { label },
-    ]) + `
+    $root.innerHTML = crumbTrail([{ label: '知识块' }, { label: blk ? blk.label : kb.block }]) + `
       <div class="card">
         <div class="row" style="justify-content:space-between;align-items:center">
-          <div><b>${fwEsc(label)}</b></div><span class="muted">${ids.length} 个考点</span>
+          <div><b>${fwEsc(blk ? blk.label : kb.block)}</b></div>
+          <span class="muted">${ids.length} 个知识点</span>
         </div>
-        <div style="margin-top:8px">${miniBar(c)} ${stateChips(c)}</div>
-        ${pres.length ? `<p class="muted" style="margin-top:10px">学这一块之前要先会：${pres.map((p) => fwEsc(topics[p]?.name || p)).join('、')}</p>` : ''}
+        <div class="muted" style="margin-top:6px">${fwEsc(blk ? blk.note : '')}</div>
+        <div style="margin-top:10px"><button class="btn ghost" id="fullmap">看全景图</button></div>
       </div>
-      <div class="tlist">${rows || '<div class="card muted">这一块还没有考点</div>'}</div>`
-    bindCrumbs([{ go: () => { navReset(); render() } }])
-    $root.querySelectorAll('[data-t]').forEach((b) => {
-      b.onclick = () => { nav.topic = b.dataset.t; render() }
-    })
+      <div class="tlist">${rows}</div>`
+    bindCrumbs([{ go: () => { kb.block = null; render() } }])
+    $root.querySelectorAll('[data-jump]').forEach((b) => { b.onclick = () => { kb.node = b.dataset.jump; render() } })
+    const fb = document.getElementById('fullmap')
+    if (fb) fb.onclick = () => renderKnowledgeFullMap(doc)
     return
   }
 
-  // 全图（可缩放）
-  if (nav.block === '__graph__') {
-    renderFullMap(doc)
-    return
-  }
-
-  // 第一层：知识块卡片
-  const cards = blocks.map((m) => {
-    const c = countStates(topics, m.topics)
-    return `<button class="bcard" data-b="${fwEsc(m.id)}">
-      <span class="btitle">${fwEsc(m.label)}</span>
-      <span class="muted">${m.topics.length} 个考点</span>
+  // 第一层：知识块
+  const cards = doc.blocks.map((b) => {
+    const ids = Object.keys(nodes).filter((id) => nodes[id].block === b.id)
+    const c = countStates(app.bank && app.bank.topics ? app.bank.topics : {}, ids.map((id) => nodes[id].topic).filter(Boolean))
+    return `<button class="bcard" data-b="${fwEsc(b.id)}">
+      <span class="btitle">${fwEsc(b.label)}</span>
+      <span class="muted">${ids.length} 个知识点</span>
       ${miniBar(c)}
       <span class="bchips">${stateChips(c)}</span>
     </button>`
   }).join('')
-  const exCard = extra.length
-    ? `<button class="bcard" data-b="__extra__">
-        <span class="btitle">其它考点</span><span class="muted">${extra.length} 个考点</span>
-        ${miniBar(countStates(topics, extra))}<span class="bchips">${stateChips(countStates(topics, extra))}</span>
-      </button>`
-    : ''
-  const total = countStates(topics, Object.keys(topics))
-  $root.innerHTML = `
-    <div class="card">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <div><b>${fwEsc(doc.title || app.fw.subject)} · 知识点图</b></div>
-        <button class="btn plain" id="fullmap">看全图</button>
-      </div>
-      <div class="muted" style="margin-top:6px">${blocks.length} 块 · ${Object.keys(topics).length} 个考点 · ${(graph.edges || []).length} 条跨块前提</div>
-      <div style="margin-top:8px">${miniBar(total)} ${stateChips(total)}</div>
-      <div class="muted" style="margin-top:8px">先挑一块进去看考点，点考点看它的判据、动作序列、必查项；想看整体结构就点右上「看全图」。</div>
-    </div>
-    <div class="bgrid">${cards}${exCard}</div>`
-  $root.querySelector('#fullmap').onclick = () => { nav.block = '__graph__'; nav.topic = null; render() }
-  $root.querySelectorAll('[data-b]').forEach((b) => {
-    b.onclick = () => { nav.block = b.dataset.b; nav.topic = null; render() }
-  })
+  $root.innerHTML = `<div class="card">
+      <div><strong>${fwEsc(doc.title || '知识点图')}</strong></div>
+      <div class="muted" style="margin-top:4px">这里只有知识点本身：定义、公式、易混点、前置关系。怎么解题去「方法论」。</div>
+    </div><div class="bgrid">${cards}</div>`
+  $root.querySelectorAll('[data-b]').forEach((b) => { b.onclick = () => { app.kb.block = b.dataset.b; app.kb.node = null; render() } })
 }
 
-/** 全图：可缩放、可拖动 */
-function renderFullMap(doc) {
-  const graph = doc.graph
-  const topics = doc.topics
-  const COL_W = 178, NODE_H = 44, GAP = 14, PAD = 12, TOP = 36, NW = 162
+// 全景图：每个知识块一列，前置关系画箭头
+function renderKnowledgeFullMap(doc) {
+  const nodes = doc.nodes || {}
+  const COL_W = 210, NODE_H = 40, GAP = 12, PAD = 14, TOP = 34, NW = 190
   const pos = new Map()
-  graph.modules.forEach((m, ci) => {
-    m.topics.forEach((tid, ri) => {
-      pos.set(tid, { x: PAD + ci * COL_W, y: TOP + ri * (NODE_H + GAP), module: m.id })
+  doc.blocks.forEach((b, ci) => {
+    Object.keys(nodes).filter((id) => nodes[id].block === b.id).forEach((id, ri) => {
+      pos.set(id, { x: PAD + ci * COL_W, y: TOP + ri * (NODE_H + GAP) })
     })
   })
-  const maxRows = Math.max(...graph.modules.map((m) => m.topics.length))
-  const W = PAD * 2 + graph.modules.length * COL_W
-  const H = TOP + maxRows * (NODE_H + GAP) + 20
-
+  const maxRows = Math.max(...doc.blocks.map((b) => Object.keys(nodes).filter((id) => nodes[id].block === b.id).length))
+  const W = PAD * 2 + doc.blocks.length * COL_W
+  const H = TOP + maxRows * (NODE_H + GAP) + 16
   let svg = `<svg class="kmap" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`
-  graph.modules.forEach((m, ci) => {
-    svg += `<text class="kmap-col" x="${PAD + ci * COL_W}" y="24">${fwEsc(m.label)}</text>`
-  })
-  graph.modules.forEach((m) => {
-    for (let i = 0; i + 1 < m.topics.length; i++) {
-      const a = pos.get(m.topics[i]), b = pos.get(m.topics[i + 1])
+  doc.blocks.forEach((b, ci) => { svg += `<text class="kmap-col" x="${PAD + ci * COL_W}" y="22">${fwEsc(b.label)}</text>` })
+  for (const [id, n] of Object.entries(nodes)) {
+    for (const pre of n.prereq || []) {
+      const a = pos.get(pre), b = pos.get(id)
       if (!a || !b) continue
-      svg += `<path class="kmap-link" d="M${a.x + NW / 2} ${a.y + NODE_H} L${b.x + NW / 2} ${b.y}"/>`
+      const x1 = a.x + NW, y1 = a.y + NODE_H / 2, x2 = b.x, y2 = b.y + NODE_H / 2
+      const dx = Math.max(30, Math.abs(x2 - x1) / 2)
+      svg += `<path class="kmap-edge" d="M${x1} ${y1} C${x1 + dx} ${y1} ${x2 - dx} ${y2} ${x2} ${y2}"/>`
     }
-  })
-  for (const [from, to] of graph.edges || []) {
-    const a = pos.get(from), b = pos.get(to)
-    if (!a || !b) continue
-    const x1 = a.x + (b.x > a.x ? NW : NW / 2), y1 = a.y + NODE_H / 2
-    const x2 = b.x + (b.x > a.x ? 0 : NW / 2), y2 = b.y + NODE_H / 2
-    const dx = Math.max(40, Math.abs(x2 - x1) / 2)
-    svg += `<path class="kmap-edge${b.x > a.x ? '' : ' back'}" d="M${x1} ${y1} C${x1 + dx} ${y1} ${x2 - dx} ${y2} ${x2} ${y2}"/>`
   }
-  for (const [tid, p] of pos) {
-    const t = topics[tid]
-    if (!t) continue
-    const st = stateOfTopic(t)
-    const full = String(t.name || tid)
-    const maxLen = 14
-    const label = full.length > maxLen ? full.slice(0, maxLen) + '…' : full
-    svg += `<g class="knode g${t.group || 'x'} st-${st}" data-t="${fwEsc(tid)}" transform="translate(${p.x},${p.y})">`
-    svg += `<rect class="kbox" width="${NW}" height="${NODE_H}" rx="10"/>`
-    svg += `<text class="kid" x="10" y="16">${fwEsc(tid)}</text>`
-    svg += `<text class="kname" x="10" y="33">${fwEsc(label)}</text>`
-    if (st !== 'none') svg += `<circle class="kdot" cx="${NW - 12}" cy="12" r="4"/>`
-    svg += `</g>`
+  for (const [id, p] of pos) {
+    const n = nodes[id]
+    const st = topicState(n.topic)
+    const s = st === '✅' ? 'ok' : st === '🟡' ? 'mid' : st === '🔴' ? 'bad' : 'none'
+    const label = n.name.length > 16 ? n.name.slice(0, 16) + '…' : n.name
+    svg += `<g class="knode st-${s}" data-jump="${fwEsc(id)}" transform="translate(${p.x},${p.y})">
+      <rect class="kbox" width="${NW}" height="${NODE_H}" rx="9"/>
+      <text class="kid" x="9" y="15">${fwEsc(id)}</text>
+      <text class="kname" x="9" y="30">${fwEsc(label)}</text>
+    </g>`
   }
   svg += '</svg>'
-
-  const legend = `<div class="klegend">
-    <span><i class="lg gA"></i>A 条件→方程</span><span><i class="lg gB"></i>B 证据→判断</span>
-    <span><i class="lg gC"></i>C 触发→复现</span><span><i class="lg gD"></i>D 骨架→成文</span>
-    <span class="sep"></span><span><i class="dot ok"></i>已会</span><span><i class="dot mid"></i>待确认</span>
-    <span><i class="dot bad"></i>没做出来</span><span><i class="dot none"></i>没测</span></div>`
-
-  $root.innerHTML = crumbTrail([{ label: '知识块', go: () => { navReset(); render() } }, { label: '全图' }]) + `
-    <div class="card">
-      <div class="maptools">
-        <button class="mbtn" id="mzOut" title="缩小">−</button>
-        <span class="mzoom" id="mzVal">100%</span>
-        <button class="mbtn" id="mzIn" title="放大">+</button>
-        <button class="mbtn wide" id="mzFit">适应宽度</button>
-        <button class="mbtn wide" id="mzOne">100%</button>
-        <span class="muted" style="margin-left:6px;font-size:12px">滚轮滚动 · 按住拖动 · 双指捏合缩放 · 点方块看细节</span>
+  $root.innerHTML = `<div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <b>${fwEsc(doc.title || '')} · 全景图</b>
+        <button class="btn ghost" id="backlist">返回列表</button>
       </div>
-      ${legend}
+      <div class="mztools">
+        <button class="mzbtn" id="mzOut">−</button><span class="mzpct" id="mzpct">100%</span>
+        <button class="mzbtn" id="mzIn">+</button><button class="mzbtn" id="mzFit">适应宽度</button>
+        <button class="mzbtn" id="mzReset">100%</button>
+        <span class="muted">滚轮滚动 · 按住拖动 · 双指捏合缩放</span>
+      </div>
       <div class="mapwrap" id="mapwrap">${svg}</div>
     </div>`
-  bindCrumbs([{ go: () => { navReset(); render() } }])
-  $root.querySelectorAll('.knode').forEach((g) => {
-    g.onclick = () => {
-      if (mapDragMoved) return
-      app.nav.topic = g.dataset.t
-      render()
-    }
-  })
+  document.getElementById('backlist').onclick = () => render()
   setupMapZoom()
+  $root.querySelectorAll('.knode').forEach((g) => { g.onclick = () => { app.kb.node = g.dataset.jump; render() } })
 }
 
 function setupMapZoom() {
@@ -734,8 +701,8 @@ function render() {
   mascotSetActive(app.phase === 'practice')
   renderSubjects()
   renderTabs()
-  if (app.view === 'framework') return renderFramework()
-  if (app.view === 'map') return renderMap()
+  if (app.view === 'framework') return renderMethods()
+  if (app.view === 'map') return renderKnowledge()
   if (app.phase === 'load') return renderLoad()
   if (app.phase === 'ready') return renderReady()
   if (app.phase === 'practice') return renderPractice()

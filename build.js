@@ -138,7 +138,26 @@ if (existsSync(toolsDir)) {
 }
 const fwConst = `const __FRAMEWORK_DOCS__ = ${JSON.stringify(fwDocs)};`
 
-const bundle = `(function(){\n"use strict";\n${bankConst}\n${fwConst}\n${parts.join('\n\n')}\n})();`
+// 知识点图数据（openstudy.knowledge/1）与方法论数据（openstudy.methods/1）
+const dataDir = join(here, 'tools', 'data')
+const kDocs = {}
+const mDocs = {}
+if (existsSync(dataDir)) {
+  for (const f of readdirSync(dataDir)) {
+    if (!/\.json$/.test(f)) continue
+    try {
+      const d = JSON.parse(readFileSync(join(dataDir, f), 'utf8'))
+      if (typeof d.schema !== 'string') continue
+      if (d.schema.startsWith('openstudy.knowledge/')) kDocs[d.subject || f] = d
+      if (d.schema.startsWith('openstudy.methods/')) mDocs[d.subject || f] = d
+    } catch (e) {
+      console.warn(`跳过 data/${f}：${e.message}`)
+    }
+  }
+}
+const kConst = `const __KNOWLEDGE_DOCS__ = ${JSON.stringify(kDocs)};\nconst __METHOD_DOCS__ = ${JSON.stringify(mDocs)};`
+
+const bundle = `(function(){\n"use strict";\n${bankConst}\n${fwConst}\n${kConst}\n${parts.join('\n\n')}\n})();`
 
 const html = readFileSync(join(here, 'web', 'index.html'), 'utf8')
 const marker = '<script type="module" src="./app.js"></script>'
