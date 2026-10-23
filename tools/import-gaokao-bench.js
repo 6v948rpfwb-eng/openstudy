@@ -190,7 +190,7 @@ function classify(stem) {
 }
 
 // 数据集自带一些小错字，顺手改掉
-const TYPO = [[/坚直/g, '竖直'], [/㲴核/g, '氚核'], [/平衝/g, '平衡'], [/飽和/g, '饱和']]
+const TYPO = [[/坚直/g, '竖直'], [/㲴核/g, '氘核'], [/平衝/g, '平衡'], [/飽和/g, '饱和']]
 const cleanStem = (t) =>
   t.replace(/^\s*\d+\s*[.．]\s*/, '')
    .replace(/[（(]\s*\d+\s*分\s*[）)]/g, '')
@@ -281,8 +281,13 @@ for (const it of items) {
     // 原文（未去 LaTeX）留一份，渲染时优先用它。注意 rawQ 已经被 deTeX 过，这里必须回到 it.question
     const rawSrc = String(it.question || '')
     const rawSplit = kind === 'mcq' ? splitChoices(rawSrc) : { stem: rawSrc, choices: null }
-    q.stemTex = String(rawSplit.stem || rawSrc).trim()
+    // TeX 原文也要过一遍清洗（去掉「1.（6 分）」这类前缀与已知错字），否则页面上会把题号排进公式区
+    let texStem = String(rawSplit.stem || rawSrc).trim()
+    for (const [re, to] of TYPO) texStem = texStem.replace(re, to)
+    q.stemTex = cleanStem(texStem)
     if (rawSplit.choices) q.choicesTex = rawSplit.choices.map((c) => String(c.text).trim())
+    const rawSol = String(it.analysis || '')
+    if (/[$]/.test(rawSol)) q.solutionTex = rawSol.trim()
   }
   if (choices) {
     q.choices = choices.map((c) => c.text)
