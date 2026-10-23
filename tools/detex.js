@@ -97,19 +97,44 @@ export function deTeX(src) {
   s = s.replace(/\\%/g, '%').replace(/\\#/g, '#').replace(/\\&/g, '&').replace(/\\_/g, '_')
   s = s.replace(/\\[{}]/g, (m) => (m === '\\{' ? LBRACE : RBRACE))
 
-  // 分段函数 / 方程组
-  s = s.replace(/\\begin\{(cases|array|aligned|gathered|tabular[*]?)(\}\{[^}]*\})?([\s\S]*?)\\end\{\1\}/g, (_, env, spec, body) => {
-    const rows = String(body || '')
-      .split(/\\\\/)
-      .map((r) => {
-        const cells = r.replace(/\\hline/g, '').split('&').map((x) => x.trim()).filter(Boolean)
-        if (env.startsWith('tabular')) return cells.filter((c) => !/^[clr|]+$/.test(c)).join('｜')
-        if (cells.length >= 2) return `${cells[0]}（${cells.slice(1).join('，')}）`
-        return cells.join(' ')
-      })
-      .filter(Boolean)
-    return rows.join('；')
-  })
+  // \text{…} 先取内容，表格里大量用到
+  s = s.replace(/\\text\s*\{([^{}]*)\}/g, '$1')
+  s = s.replace(/\\mathrm\s*\{([^{}]*)\}/g, '$1')
+
+  // array：带竖线的是小表格（行用 ；，列用 ｜）；不带竖线的只是换行包装（用空格接）
+  for (let i = 0; i < 6; i++) {
+    const next = s.replace(/\\begin\s*\{\s*array\s*\}\s*\{([^{}]*)\}([\s\S]*?)\\end\s*\{\s*array\s*\}/g, (_, spec, body) => {
+      const bordered = String(spec).includes('|')
+      const rows = String(body).replace(/\\?hline/g, '').split(/\\\\/)
+        .map((r) => r.split('&').map((x) => x.trim().replace(/^[|]+|[|]+$/g, '').trim()).filter(Boolean))
+        .filter((cells) => cells.length)
+      if (bordered) return rows.map((cells) => cells.join('｜')).join('；')
+      return rows.map((cells) => cells.join(' ')).join(' ')
+    })
+    if (next === s) break
+    s = next
+  }
+
+  // 方程组 / 分段函数
+  s = s.replace(/\\begin\s*\{\s*(cases|aligned|gathered)\s*\}([\s\S]*?)\\end\s*\{\s*\1\s*\}/g, (_, env, body) =>
+    String(body).split(/\\\\/).map((r) => {
+      const cells = r.split('&').map((x) => x.trim()).filter(Boolean)
+      return cells.length >= 2 ? `${cells[0]}（${cells.slice(1).join('，')}）` : cells.join(' ')
+    }).filter(Boolean).join('；'))
+
+  // tabular：一行一条，单元格用 ｜ 分隔
+  for (let i = 0; i < 4; i++) {
+    const next = s.replace(/\\begin\s*\{\s*tabular[*]?\s*\}(\{[^{}]*\})?([\s\S]*?)\\end\s*\{\s*tabular[*]?\s*\}/g, (_, spec, body) => {
+      const rows = String(body).replace(/\\\\?hline/g, '').split(/\\\\/)
+        .map((r) => r.split('&').map((x) => x.trim()).filter(Boolean).filter((c) => !/^[|clr]+$/.test(c)))
+        .filter((cells) => cells.length)
+        .map((cells) => cells.join(' ｜ '))
+      return '\n' + rows.join('\n')
+    })
+    if (next === s) break
+    s = next
+  }
+
   s = s.replace(/\\\\/g, ' ')               // 行内换行
 
   // 根式：\sqrt[n]{x}
@@ -153,6 +178,9 @@ export function deTeX(src) {
   // 早期被改坏的字
   s = s.replace(/椟|桉|棪|㭹/g, '浓')
   s = s.replace(/→{2,}/g, '→')
+  s = s.replace(/\^\s*\(\s*([^()]{1,4})\s*\)/g, (_, a) => renderSup(a))
+  s = s.replace(/\^\s*\(\s*[′']\s*\)/g, '′')
+  s = s.replace(/\^\s*\(\s*″\s*\)/g, '″')
   s = s.replace(/浓\./g, '浓')
   // 命令名（先吃掉纯间距命令，再处理符号，最后兜底）
   s = s.replace(/\\[,;:! ]/g, '')
@@ -170,6 +198,9 @@ export function deTeX(src) {
   s = s.replace(/[ \t]{2,}/g, ' ')
   s = s.replace(/\s*\n\s*/g, '\n')
   s = s.replace(/\n{3,}/g, '\n\n')
+  // 表格转换后的残渣（arrayl/arrayc/hline 等）
+  s = s.replace(/(^|[^A-Za-z])(?:array[clr]?|hline)(?=[\s｜；]|$|(?=[^A-Za-z]))/g, '$1')
+
   return s.trim()
 }
 

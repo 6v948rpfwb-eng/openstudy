@@ -20,7 +20,7 @@ const TEX = /\\{1,2}[a-zA-Z]+|\$|\}\}|\{\{|tabular/
 const NUCLIDE = /[_^]\s*\{?[A-Za-z0-9]{1,3}\}?\s*[_^]?\s*[A-Z][a-z]?(?![a-z])/
 const NUCLIDE_SUBJECTS = new Set(['physics', 'chemistry'])
 // 图片 markdown、被改坏的汉字、残留的 ^(…) 也要走一遍
-const JUNK = /!\[[^\]]*\]\(|棪|椟|桉|㭹|\^\s*\(/
+const JUNK = /!\[[^\]]*\]\(|棪|椟|桉|㭹|\^\s*\(|\barray[clr]?\b|\bhline\b/
 const FIELDS = ['stem', 'solution', 'reference', 'explain']
 
 function legacyWords(text) {
