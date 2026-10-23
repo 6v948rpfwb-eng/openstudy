@@ -228,22 +228,44 @@ function mathThen(tex, plainText) {
   return h == null ? stemToHtml(plainText) : `<div class="texblock">${h}</div>`
 }
 
+
+/** 原文里的断行与零散空格：汉字之间直接吞掉，汉字与字母/数字之间留一个空格 */
+function tidyText(input) {
+  const isCJK = (ch) => !!ch && /[\u4e00-\u9fff]/.test(ch)
+  let t = String(input ?? '').replace(/\r/g, '')
+  t = t.replace(/\s*\n\s*/g, (m, off, str) => {
+    const prev = str[off - 1] || ''
+    const next = str[off + m.length] || ''
+    return (isCJK(prev) && isCJK(next)) ? '' : ' '
+  })
+  t = t.replace(/[ \t]{2,}/g, ' ')
+  t = t.replace(/([\u4e00-\u9fff])[ \t]+(?=[\u4e00-\u9fff])/g, '$1')
+  t = t.replace(/[ \t]+([，。、；：？！“”‘’（）《》])/g, '$1')
+  t = t.replace(/([，。、；：？！“”‘’（）《》])[ \t]+/g, '$1')
+  return t.trim()
+}
+
+/** m_A 这种字母下标：换成真正的下标标签，和数字下标（detex 已转成 ₁）不冲突 */
+function subify(html) {
+  return String(html).replace(/([A-Za-zΑ-ω])_([A-Za-z0-9]{1,3})(?![<\w])/g, '$1<sub>$2</sub>')
+}
+
 function stemToHtml(text) {
-  const raw = String(text ?? '').replace(/\r/g, '')
+  const raw = tidyText(text)
   const tokens = raw.split(/；(?=[^；]{0,60}｜)|；(?!)/).flatMap((x) => x.split('\n'))
     .map((x) => x.trim()).filter(Boolean)
   const out = []
   let table = null
   const flush = () => {
     if (!table) return
-    const rows = table.map((cells) => `<tr>${cells.map((c) => `<td>${renderMathText(c)}</td>`).join('')}</tr>`).join('')
+    const rows = table.map((cells) => `<tr>${cells.map((c) => `<td>${subify(renderMathText(c))}</td>`).join('')}</tr>`).join('')
     out.push(`<div class="tblwrap"><table class="stemtable">${rows}</table></div>`)
     table = null
   }
   let prose = []
   const flushProse = () => {
     if (!prose.length) return
-    out.push(`<p class="sp">${renderMathText(prose.join('；'))}</p>`)
+    out.push(`<p class="sp">${subify(renderMathText(prose.join('；')))}</p>`)
     prose = []
   }
   for (const tk of tokens) {
@@ -1394,7 +1416,7 @@ function renderPractice() {
         if (correct) cls += ' right'
         else if (c.picked === i) cls += ' wrong'
       } else if (c.picked === i) cls += ' picked'
-      return `<button class="${cls}" data-i="${i}" ${c.graded ? 'disabled' : ''}>${'ABCDEFG'[i]}. ${(q.choicesTex && q.choicesTex[i] ? (texMixed(q.choicesTex[i]) ?? renderMathText(ch)) : renderMathText(ch))}</button>`
+      return `<button class="${cls}" data-i="${i}" ${c.graded ? 'disabled' : ''}>${'ABCDEFG'[i]}. ${subify(q.choicesTex && q.choicesTex[i] ? (texMixed(q.choicesTex[i]) ?? renderMathText(ch)) : renderMathText(ch))}</button>`
     }).join('')
   } else {
     inputArea = `<textarea id="ans" rows="4" placeholder="写下你的思路"

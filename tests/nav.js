@@ -254,5 +254,13 @@ ok(/app\.answers\[app\.index\] = \{/.test(appSrc), 'recordAnswer 按题号写入
 ok(!/app\.answers\.push\(\{/.test(appSrc), '没有残留的 app.answers.push')
 ok(/app\.current\.graded\.self === b\.dataset\.self/.test(appSrc), '同一题重复自评会被拦下')
 
+// ---- 题干空格与字母下标（截图里「m_A」「都 是」这类问题）----
+const tidy = (q) => A.stemToHtml(q)
+ok(tidy('质量为 m_A 和 m_B，且 m_A>m_B').includes('<sub>A</sub>'), 'm_A 渲染成下标')
+ok(tidy('质量为 m_A，且 m_A>m_B').includes('<sub>B</sub>'), 'm_B 也渲染成下标')
+ok(!tidy('设所有碰撞都 是弹性的').includes('都 是'), '汉字之间的空格被吞掉')
+ok(tidy('在释放处的下方\n与释放处距离为 H 的地方').includes('下方与释放处'), '断行处的汉字直接接上')
+ok(tidy('碰撞后 B 上升的最大高度').includes(' B '), '汉字与字母之间保留一个空格')
+
 console.log(`${pass} 项通过` + (bad.length ? `，${bad.length} 项失败：\n- ` + bad.join('\n- ') : ''))
 if (bad.length) process.exit(1)
