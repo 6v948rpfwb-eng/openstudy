@@ -43,6 +43,7 @@ def guess(text):
 
 
 added = 0
+skipped_noans = 0
 for i, q in enumerate(qdoc['questions']):
     ans = next((r for r in adoc['rows'] if r['index'] == i + 1), None)
     qid = ans['qid'] if ans else None
@@ -67,6 +68,9 @@ for i, q in enumerate(qdoc['questions']):
         if fetch(u, os.path.join(figdir, name)):
             figure = f'figures/{subject}/{name}'; break
     letter = (ans or {}).get('letter')
+    if not letter and not (ans or {}).get('img'):
+        skipped_noans += 1
+        continue
     idx = 'ABCDEFGH'.index(letter[0]) if letter and len(opts) > 1 else -1
     e = {
         'id': f'xk-{tag}-{i+1}', 'topic': guess(stem + ''.join(opts)),
@@ -84,4 +88,4 @@ for i, q in enumerate(qdoc['questions']):
         bank['questions'].append(e); added += 1
 
 json.dump(bank, open(bank_path, 'w', encoding='utf8'), ensure_ascii=False, indent=1)
-print(f'新增 {added} 题，题库 {len(bank["questions"])} 题')
+print(f'新增 {added} 题（跳过无答案解析的 {skipped_noans} 题），题库 {len(bank["questions"])} 题')

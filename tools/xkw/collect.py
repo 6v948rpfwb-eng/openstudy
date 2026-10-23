@@ -23,17 +23,31 @@ def ocr(path):
     return r.stdout.strip()
 
 
+PRE = '13'
+
+
 def answer_url(qid):
-    """打开单题页，从 performance 里取答案图 URL。"""
-    grab.subprocess.run(['open', '-a', 'Safari', f'https://zujuan.xkw.com/13q{qid}.html'], check=True)
-    time.sleep(5)
+    """在当前标签页里导航到单题页，从 performance 里取答案图 URL。"""
+    target = f'{PRE}q{qid}'
+    url = f'https://zujuan.xkw.com/{target}.html'
+    try:
+        grab.run_js(f'location.href="{url}"')
+    except Exception:
+        grab.subprocess.run(['open', '-a', 'Safari', url], check=True)
     js = ('JSON.stringify(performance.getEntriesByType("resource").map(e=>e.name)'
           '.filter(u=>/getAnswerAndParse/.test(u)).slice(-1))')
-    for _ in range(4):
+    for _ in range(30):
+        time.sleep(1.2)
+        try:
+            href = grab.run_js('location.href') or ''
+        except Exception:
+            href = ''
+        if target not in href:
+            continue
         out = grab.run_js(js)
         if out and out != '[]':
             return json.loads(out)[0]
-        time.sleep(2)
+    # 最后一次机会：直接在页面里读答案区块是否已渲染
     return None
 
 
@@ -41,14 +55,17 @@ def main():
     url = sys.argv[1]
     subject = sys.argv[sys.argv.index('--subject') + 1] if '--subject' in sys.argv else 'physics'
     out_path = sys.argv[sys.argv.index('--out') + 1] if '--out' in sys.argv else '/tmp/xk-paper.json'
-    tag = re.search(r'/1[0-9]p(\d+)\.html', url).group(1)
+    global PRE
+    m = re.search(r'/(\d+)p(\d+)\.html', url)
+    PRE, tag = m.group(1), m.group(2)
+    print(f'前缀 {PRE}q，卷号 {tag}')
     figdir = os.path.join(FIG_ROOT, subject)
     os.makedirs(figdir, exist_ok=True)
 
     grab.subprocess.run(['open', '-a', 'Safari', url], check=True)
     time.sleep(7)
     qids = json.loads(grab.run_js(
-        'JSON.stringify([...new Set((document.documentElement.innerHTML.match(/13q(\\d{6,})/g)||[]).map(s=>s.slice(3)))])'))
+        f'JSON.stringify([...new Set((document.documentElement.innerHTML.match(/{PRE}q(\\d{{6,}})/g)||[]).map(s=>s.slice({len(PRE)+1})))])'))
     print(f'题目 {len(qids)} 道')
 
     rows = []
