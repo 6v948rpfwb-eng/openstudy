@@ -1515,6 +1515,9 @@ function renderPractice() {
   document.querySelectorAll('[data-self]').forEach((b) => {
     b.onclick = () => {
       const g = grade({ type: 'text' }, b.dataset.self)
+      // 同一题允许改判：重复点只是把这一格的结论换成新的，不会多记一次
+      if (app.current.graded && app.current.graded.self === b.dataset.self) return
+      g.self = b.dataset.self
       app.current.graded = g
       // 文字题不参与 θ 更新（无法可靠判分），只记录
       recordAnswer(g, false)
@@ -1538,12 +1541,14 @@ function doSubmit() {
 
 function recordAnswer(g, countsForTheta) {
   const q = app.paper.questions[app.index]
-  app.answers.push({
+  // 按「第几题」写，不是 push：之前用 push，同一题反复点自评会多插几条，
+  // 题号条第 i 格就串到别的题上，看起来「后面全错」。同一题再判就覆盖，不重复计数。
+  app.answers[app.index] = {
     question: q,
     correct: g.correct === true,
     countsForTheta,
     input: app.current.input,
-  })
+  }
   if (isEndless()) settleEndless()
 }
 

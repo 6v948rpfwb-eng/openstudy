@@ -248,5 +248,11 @@ ok((subCase.match(/class="sp sub"/g) || []).length === 2, '小问 (1)(2) 各自�
 const plain = A.stemToHtml('一段没有表格的题干，含公式 v²=2ax')
 ok(plain.includes('一段没有表格的题干') && !plain.includes('<table'), '普通题干不受影响')
 
+// ── 作答记录按题号写（防止「同一题点几下自评，后面全错」回归） ────────
+const appSrc = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8')
+ok(/app\.answers\[app\.index\] = \{/.test(appSrc), 'recordAnswer 按题号写入而不是 push')
+ok(!/app\.answers\.push\(\{/.test(appSrc), '没有残留的 app.answers.push')
+ok(/app\.current\.graded\.self === b\.dataset\.self/.test(appSrc), '同一题重复自评会被拦下')
+
 console.log(`${pass} 项通过` + (bad.length ? `，${bad.length} 项失败：\n- ` + bad.join('\n- ') : ''))
 if (bad.length) process.exit(1)
