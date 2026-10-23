@@ -17,6 +17,7 @@ import { createHash } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { guessTopics } from '../core/framework.js'
+import { deTeX as detex } from './detex.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const args = process.argv.slice(2)
@@ -47,45 +48,8 @@ const FALLBACK = { physics: 'P-99', chemistry: 'C-99', technology: 'T-99', math:
 const fallbackTopic = FALLBACK[subject] || 'P-99'
 
 // ---------- LaTeX → 纯文本 ----------
-const GREEK = {
-  alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', varepsilon: 'ε', zeta: 'ζ', eta: 'η',
-  theta: 'θ', lambda: 'λ', mu: 'μ', nu: 'ν', xi: 'ξ', pi: 'π', rho: 'ρ', sigma: 'σ', tau: 'τ',
-  phi: 'φ', varphi: 'φ', chi: 'χ', psi: 'ψ', omega: 'ω',
-  Gamma: 'Γ', Delta: 'Δ', Theta: 'Θ', Lambda: 'Λ', Pi: 'Π', Sigma: 'Σ', Phi: 'Φ', Psi: 'Ψ', Omega: 'Ω',
-}
-const SYM = {
-  rightleftharpoons: '⇌', leftrightarrows: '⇌', rightarrow: '→', leftarrow: '←', to: '→',
-  times: '×', cdot: '·', div: '÷', pm: '±', mp: '∓', leq: '≤', le: '≤', geq: '≥', ge: '≥',
-  neq: '≠', ne: '≠', approx: '≈', equiv: '≡', infty: '∞', angle: '∠', perp: '⊥', parallel: '∥',
-  triangle: '△', circ: '°', degree: '°', percent: '%', sim: '∽', because: '∵', therefore: '∴',
-  uparrow: '↑', downarrow: '↓', sum: 'Σ', int: '∫', sqrt: '√', in: '∈', notin: '∉', subset: '⊂',
-  cup: '∪', cap: '∩', emptyset: '∅', forall: '∀', exists: '∃', Rightarrow: '⇒', Leftarrow: '⇐',
-}
-
-export function deTeX(src) {
-  let s = String(src ?? '')
-  s = s.replace(/\\%|\\#|\\&/g, (m) => m[1])
-  // \frac{a}{b} → (a)/(b)：先处理一层，嵌套靠循环
-  for (let i = 0; i < 6; i++) {
-    const next = s.replace(/\\[dt]?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, (_, a, b) => `(${a.trim()})/(${b.trim()})`)
-    if (next === s) break
-    s = next
-  }
-  s = s.replace(/\\sqrt\s*\{([^{}]*)\}/g, (_, a) => `√(${a.trim()})`)
-  s = s.replace(/\\(?:mathrm|mathbf|mathit|mathsf|mathtt|mathcal|text|textbf|textit|ce|pu|rm|bf)\s*/g, '')
-  s = s.replace(/\\(?:left|right|big|Big|bigg|Bigg|displaystyle|limits|nonumber|quad|qquad)\b/g, '')
-  s = s.replace(/\\([A-Za-z]+)/g, (m, name) => SYM[name] ?? GREEK[name] ?? (name.length === 1 ? name : ''))
-  s = s.replace(/\\[,;:! ]/g, ' ')
-  s = s.replace(/\\\{|\\\}/g, (m) => m[1])
-  s = s.replace(/\$\$?/g, '')
-  s = s.replace(/([_^])\s*\{([^{}]*)\}/g, (_, op, a) => `${op}${a.trim()}`)
-  s = s.replace(/([_^])\s*([A-Za-z0-9+\-])/g, (_, op, a) => `${op}${a}`)
-  s = s.replace(/[{}]/g, '')
-  s = s.replace(/~+/g, ' ')
-  s = s.replace(/[ \t]{2,}/g, ' ')
-  s = s.replace(/\n{3,}/g, '\n\n')
-  return s.trim()
-}
+// LaTeX → 纯文本的转换器在 tools/detex.js（单独文件，方便修符号规则）
+const deTeX = detex
 
 // ---------- 拆题干与选项 ----------
 const LETTER = ['A', 'B', 'C', 'D', 'E', 'F']
