@@ -103,6 +103,7 @@ function syncHash() {
   const parts = []
   if (app.view === 'framework') parts.push('framework')
   else if (app.view === 'map') parts.push('map')
+  else if (app.view === 'history') parts.push('history')
   const sub = app.bank ? app.bank.subject : ''
   if (sub) parts.push('subject=' + encodeURIComponent(sub))
   try { history.replaceState(null, '', '#' + parts.join('&')) } catch (e) { /* file:// 某些情况不让改，忽略 */ }
@@ -112,7 +113,8 @@ if (typeof window !== 'undefined') {
   window.addEventListener('hashchange', () => {
     const h = pageParams()
     const v = (h.framework || h.view === 'framework') ? 'framework'
-      : (h.map || h.view === 'map') ? 'map' : 'practice'
+      : (h.map || h.view === 'map') ? 'map'
+      : (h.history || h.view === 'history') ? 'history' : 'practice'
     if (h.subject && BANKS && BANKS[h.subject] && app.bank && app.bank.subject !== h.subject) {
       switchBank(h.subject)
       return
@@ -292,7 +294,8 @@ function renderTabs() {
     ${canBack ? `<button class="tab backbtn" id="backbtn" title="返回上一级">↩</button>` : ''}
     <button class="tab ${app.view === 'practice' ? 'on' : ''}" data-v="practice">练习</button>
     <button class="tab ${app.view === 'framework' ? 'on' : ''}" data-v="framework">方法论</button>
-    <button class="tab ${app.view === 'map' ? 'on' : ''}" data-v="map">知识图</button>`
+    <button class="tab ${app.view === 'map' ? 'on' : ''}" data-v="map">知识图</button>
+    <button class="tab ${app.view === 'history' ? 'on' : ''}" data-v="history">记录</button>`
   const bb = bar.querySelector('#backbtn')
   if (bb) bb.onclick = () => { goBack() }
   bar.querySelectorAll('.tab[data-v]').forEach((b) => {
@@ -1109,10 +1112,126 @@ function render() {
   renderTabs()
   if (app.view === 'framework') return renderMethods()
   if (app.view === 'map') return renderKnowledge()
+  if (app.view === 'history') return renderHistory()
   if (app.phase === 'load') return renderLoad()
   if (app.phase === 'ready') return renderReady()
   if (app.phase === 'practice') return renderPractice()
   if (app.phase === 'done') return isEndless() ? renderEndlessDone() : renderDone()
+}
+
+
+// ---------- 做题记录 ----------
+// 记录来源是 state.seen：每道题的 times/correct/lastAt/lastCorrect，跳过的另有 skippedAt。
+// 只读这些字段，不改动判定逻辑。
+
+/** 跳过一题：只记时间，不计入做题次数，方便之后单独重做 */
+function markSkipped(q) {
+  if (!q || !app.state) return
+  if (!app.state.seen) app.state.seen = {}
+  const r = app.state.seen[q.id] || (app.state.seen[q.id] = { times: 0, correct: 0, lastAt: null, lastCorrect: null })
+  r.skippedAt = Date.now()
+  saveState()
+}
+
+/** 把一道题的记录归类：done 做过 / wrong 最近一次答错 / skipped 只跳过没做 */
+function histKind(r) {
+  if (!r) return null
+  if ((r.times || 0) > 0) return r.lastCorrect === false ? 'wrong' : 'done'
+  if (r.skippedAt) return 'skipped'
+  return null
+}
+
+function relTime(ts) {
+  if (!ts) return ''
+  const d = Date.now() - ts
+  if (d < 60e3) return '刚刚'
+  if (d < 3600e3) return Math.floor(d / 60e3) + ' 分钟前'
+  if (d < 86400e3) return Math.floor(d / 3600e3) + ' 小时前'
+  const n = Math.floor(d / 86400e3)
+  return n === 1 ? '昨天' : n + ' 天前'
+}
+
+function historyRows() {
+  const seen = (app.state && app.state.seen) || {}
+  const rows = []
+  for (const q of (app.bank.questions || [])) {
+    const r = seen[q.id]
+    const kind = histKind(r)
+    if (!kind) continue
+    rows.push({ q, r, kind, at: kind === 'skipped' ? (r.skippedAt || 0) : (r.lastAt || 0) })
+  }
+  rows.sort((a, b) => b.at - a.at)
+  return rows
+}
+
+const HIST_LABEL = { all: '全部', done: '做对过', wrong: '最近答错', skipped: '跳过的' }
+
+function renderHistory() {
+  if (!app.hist) app.hist = { filter: 'all' }
+  const all = historyRows()
+  const rows = app.hist.filter === 'all' ? all : all.filter((x) => x.kind === app.hist.filter)
+  const cnt = { all: all.length, done: 0, wrong: 0, skipped: 0 }
+  for (const x of all) cnt[x.kind]++
+  const topicName = (id) => (app.bank.topics[id] || {}).name || id
+  const chips = Object.keys(HIST_LABEL).map((k) =>
+    `<button class="chip ${app.hist.filter === k ? 'on' : ''}" data-hf="${k}">${HIST_LABEL[k]} ${cnt[k]}</button>`).join('')
+  const skippedIds = all.filter((x) => x.kind === 'skipped').map((x) => x.q.id)
+  const wrongIds = all.filter((x) => x.kind === 'wrong').map((x) => x.q.id)
+  const list = rows.length ? rows.map(({ q, r, kind, at }) => `
+      <div class="hrow">
+        <div class="hmain">
+          <div class="htitle">${fwEsc(String(q.source || q.id)).slice(0, 46)}</div>
+          <div class="hmeta">${fwEsc(topicName(q.topic))} · ${kind === 'skipped' ? '跳过' : ((r.times || 0) > 1 ? `做过 ${r.times} 次` : '做过 1 次')}${kind === 'wrong' ? ' · 最近一次答错' : ''} · ${relTime(at)}</div>
+        </div>
+        <button class="btn plain small" data-redo="${fwEsc(q.id)}">重做</button>
+      </div>`).join('')
+    : `<p class="muted" style="margin:16px 0">还没有记录。去做几道题，这里会按时间倒序列出来。</p>`
+
+  $root.innerHTML = `
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div><b style="font-size:17px">做题记录</b> <span class="muted">共 ${all.length} 题有记录</span></div>
+        <div class="row" style="gap:8px">
+          ${skippedIds.length ? `<button class="btn plain small" id="redoSkip">重做全部跳过（${skippedIds.length}）</button>` : ''}
+          ${wrongIds.length ? `<button class="btn plain small" id="redoWrong">重做全部错题（${wrongIds.length}）</button>` : ''}
+        </div>
+      </div>
+      <div class="chips" style="margin-top:14px">${chips}</div>
+      <div class="hlist">${list}</div>
+    </div>`
+
+  $root.querySelectorAll('[data-hf]').forEach((b) => {
+    b.onclick = () => { app.hist.filter = b.dataset.hf; render() }
+  })
+  $root.querySelectorAll('[data-redo]').forEach((b) => {
+    b.onclick = () => startRedoSession([b.dataset.redo])
+  })
+  const rs = document.getElementById('redoSkip')
+  if (rs) rs.onclick = () => startRedoSession(skippedIds)
+  const rw = document.getElementById('redoWrong')
+  if (rw) rw.onclick = () => startRedoSession(wrongIds)
+}
+
+/** 从记录里点「重做」：只拿指定的这几道题组一场，不计入 θ 之外的任何自动筛选 */
+function startRedoSession(ids) {
+  const want = new Set(ids)
+  const qs = (app.bank.questions || []).filter((q) => want.has(q.id))
+  if (!qs.length) { mascotSay('这几道题现在题库里找不到了', 'think', 5); return }
+  app.sessionXp = 0
+  app.correctStreak = 0
+  app.bestStreak = 0
+  app.gameInfo = null
+  app.mode = 'paper'
+  app.paper = {
+    questions: qs,
+    meta: { requested: qs.length, actual: qs.length, theta: app.state.theta, widenedBand: false, difficultySpread: null, redo: true },
+  }
+  app.index = 0
+  app.answers = []
+  app.phase = 'practice'
+  app.current = { input: '', picked: null, selfGrade: null, graded: null }
+  syncHash()
+  render()
 }
 
 function renderLoad() {
@@ -1700,7 +1819,7 @@ function renderPractice() {
 
   document.getElementById('submit')?.addEventListener('click', doSubmit)
   const sf = document.getElementById('skipfig')
-  if (sf) sf.onclick = () => { app.index = Math.min(app.index + 1, app.paper.questions.length - 1); app.current = { input: '', picked: null, selfGrade: null, graded: null }; render() }
+  if (sf) sf.onclick = () => { markSkipped(app.paper.questions[app.index]); app.index = Math.min(app.index + 1, app.paper.questions.length - 1); app.current = { input: '', picked: null, selfGrade: null, graded: null }; render() }
   $root.querySelectorAll('[data-q]').forEach((b) => {
     b.onclick = () => jumpTo(Number(b.dataset.q))
   })
