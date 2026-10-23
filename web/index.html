@@ -5,6 +5,17 @@
 <title>开卷 · 练习引擎</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>
+  /* 能力水平后面的小提示点 */
+  .infowrap{position:relative;display:inline-block;margin-left:6px;vertical-align:middle}
+  .infodot{width:14px;height:14px;padding:0;border-radius:50%;border:1px solid #c9d1e4;
+    background:#fff;color:#8a93a8;font:600 10px/1 system-ui;cursor:help}
+  .infodot:hover{border-color:var(--accent,#4d6bfe);color:var(--accent,#4d6bfe)}
+  .infopop{display:none;position:absolute;left:50%;transform:translateX(-50%);top:20px;width:300px;
+    background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(30,50,90,.18);
+    padding:10px 12px;font:13px/1.65 system-ui;color:#33405a;z-index:30;text-align:left}
+  .infowrap:hover .infopop,.infodot:focus + .infopop,.infodot:focus-visible + .infopop{display:block}
+  .infopop ul{margin:6px 0 0;padding-left:16px}
+  .infopop li{margin:3px 0}
   /* 问大肥鱼按钮与面板 */
   #askfloat{position:fixed;left:18px;bottom:18px;width:52px;height:52px;border-radius:50%;
     border:none;background:var(--accent,#4d6bfe);color:#fff;font:600 16px/1 system-ui;

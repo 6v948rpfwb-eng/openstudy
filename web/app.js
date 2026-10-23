@@ -850,6 +850,23 @@ function wireAskFloat() {
   }
 }
 
+
+// ---------- 小提示点：能力水平后面那个 ⓘ ----------
+const THETA_HELP = [
+  '每道题有难度 b，你的能力记作 θ，两者都在 0–1 之间。',
+  '这道题你大概几成会：θ 和 b 相等是五成；θ 比 b 高 0.25 是七成，低 0.25 是三成。',
+  '答完一题会挪 θ：答对往上加，答错往下减；这题本来就不该会却做对了，加得多。',
+  '同一道题第二次做对只算一半证据，第三次算三分之一；答错永远算满。',
+  '想涨得快：做没做过的题，难度比自己现在高一点点。',
+]
+
+function infoDot(title, lines) {
+  const body = lines.map((x) => `<li>${escapeHtml(x)}</li>`).join('')
+  return `<span class="infowrap">`
+    + `<button class="infodot" type="button" title="${escapeAttr(title)}" aria-label="${escapeAttr(title)}">i</button>`
+    + `<span class="infopop" role="note"><b>${escapeHtml(title)}</b><ul>${body}</ul></span></span>`
+}
+
 // ---------- 渲染 ----------
 function render() {
   mountMascot()
@@ -1043,7 +1060,7 @@ function renderReady() {
         <button class="btn plain" id="reset">重置进度</button>
       </div>
       <div class="stat">
-        <div><b>${state.theta.toFixed(2)}</b>能力 θ</div>
+        <div><b>${state.theta.toFixed(2)}</b>能力 θ${infoDot('能力水平怎么算', THETA_HELP)}</div>
         <div><b>${describeTheta(state.theta)}</b>水平</div>
         <div><b>${state.log.length}</b>练过场次</div>
         <div><b>${due.length}</b>到期考点</div>
@@ -1485,7 +1502,7 @@ function renderDone() {
       <div class="stat">
         <div><b>${r.correct}/${r.asked}</b>答对</div>
         <div><b>${Math.round(r.accuracy * 100)}%</b>正确率</div>
-        <div><b>${r.thetaBefore} → ${r.thetaAfter}</b>能力</div>
+        <div><b>${r.thetaBefore} → ${r.thetaAfter}</b>能力${infoDot('能力水平怎么算', THETA_HELP)}</div>
         <div><b>${r.level}</b>水平</div>
       </div>
     </div>
@@ -1532,7 +1549,7 @@ function renderEndlessDone() {
       <div class="stat">
         <div><b>${e.correct}/${e.asked}</b>答对</div>
         <div><b>${acc}%</b>正确率</div>
-        <div><b>${e.thetaStart} → ${app.state.theta}</b>能力</div>
+        <div><b>${e.thetaStart} → ${app.state.theta}</b>能力${infoDot('能力水平怎么算', THETA_HELP)}</div>
         <div><b>${describeTheta(app.state.theta)}</b>水平</div>
       </div>
       <p class="muted" style="margin:10px 0 0">
