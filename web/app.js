@@ -114,6 +114,8 @@ const SUBJECT_STYLE = {
   chemistry: { glyph: '化', name: '化学', bg: 'linear-gradient(160deg,#7b6cf6,#5a49d6)' },
   technology: { glyph: '技', name: '技术', bg: 'linear-gradient(160deg,#f0a44b,#d9842a)' },
   math: { glyph: '数', name: '数学', bg: 'linear-gradient(160deg,#6a83ff,#4356e0)' },
+  english: { glyph: '英', name: '英语', bg: 'linear-gradient(160deg,#38b6c4,#1f8b98)' },
+  chinese: { glyph: '语', name: '语文', bg: 'linear-gradient(160deg,#e0705f,#c14e3d)' },
   default: { glyph: '科', name: '学科', bg: 'linear-gradient(160deg,#9aa6c4,#77839f)' },
 }
 

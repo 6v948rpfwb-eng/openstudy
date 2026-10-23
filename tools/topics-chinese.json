@@ -1,0 +1,529 @@
+{
+  "schema": "openstudy.topics/2",
+  "subject": "chinese",
+  "title": "高中语文",
+  "groups": {
+    "A": {
+      "label": "A 条件 → 方程 → 边界",
+      "steps": [
+        "把题给条件逐条写成等式或不等式（含取值范围）",
+        "把目标量也写成含未知量的式子",
+        "联立消元，得到只含一个未知量的方程",
+        "解出后回代，逐个核对定义域与题给范围"
+      ],
+      "checks": [
+        "定义域是否漏（分母、根号、对数真数）",
+        "等号能否取到（端点是否含）",
+        "是否多解需要舍去"
+      ]
+    },
+    "B": {
+      "label": "B 证据 → 判断",
+      "steps": [
+        "圈出题干中给数据与要求的那句话",
+        "分辨哪个数据是干扰项",
+        "按定义或公式直接算，不凭印象",
+        "把结果代回情境解释一遍"
+      ],
+      "checks": [
+        "数据有没有换单位",
+        "是不是把百分数当成了数值",
+        "结论是否回答了被问的那一量"
+      ]
+    },
+    "C": {
+      "label": "C 触发 → 精确复现",
+      "steps": [
+        "认出这一步考的是哪条定义或公式",
+        "按标准形式写出，不省步",
+        "对答案做一次快速验算"
+      ],
+      "checks": [
+        "符号（正负、共轭、补集）",
+        "定义域与端点",
+        "答案形式是否符合要求（最简、区间、集合）"
+      ]
+    },
+    "D": {
+      "label": "D 骨架 → 成文",
+      "steps": [
+        "写清要证/要求的是什么",
+        "给出中间结论并说明依据（哪条定理、哪个条件）",
+        "把每步连成因果链，结尾回到结论"
+      ],
+      "checks": [
+        "每一步是否都有依据",
+        "是否有该讨论的情形漏掉",
+        "结论句是否完整"
+      ]
+    }
+  },
+  "topics": {
+    "Y-01": {
+      "alias": null,
+      "name": "现代文·内容理解",
+      "group": "B",
+      "cues": [
+        "理解",
+        "分析",
+        "不正确",
+        "正确"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-02": {
+      "alias": null,
+      "name": "现代文·推断分析",
+      "group": "B",
+      "cues": [
+        "推断",
+        "概括",
+        "依据"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-03": {
+      "alias": null,
+      "name": "现代文·补写语句",
+      "group": "D",
+      "cues": [
+        "补写",
+        "填入",
+        "根据原文"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-04": {
+      "alias": null,
+      "name": "现代文·概括与推断",
+      "group": "B",
+      "cues": [
+        "概括",
+        "可能是什么",
+        "体现"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-05": {
+      "alias": null,
+      "name": "现代文·材料对比",
+      "group": "D",
+      "cues": [
+        "材料二",
+        "教材",
+        "对比"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-06": {
+      "alias": null,
+      "name": "现代文·艺术特色鉴赏",
+      "group": "B",
+      "cues": [
+        "小说",
+        "散文",
+        "艺术特色",
+        "鉴赏"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-07": {
+      "alias": null,
+      "name": "现代文·句子意蕴",
+      "group": "D",
+      "cues": [
+        "画线句",
+        "意蕴",
+        "为什么"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-08": {
+      "alias": null,
+      "name": "现代文·观点分析",
+      "group": "D",
+      "cues": [
+        "作者",
+        "观点",
+        "心理",
+        "续写"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-09": {
+      "alias": null,
+      "name": "文言文·断句",
+      "group": "B",
+      "cues": [
+        "断句",
+        "斜线",
+        "停顿"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-10": {
+      "alias": null,
+      "name": "文言实词虚词句式",
+      "group": "C",
+      "cues": [
+        "加点",
+        "意义和用法",
+        "句式"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-11": {
+      "alias": null,
+      "name": "文言内容理解",
+      "group": "B",
+      "cues": [
+        "不正确",
+        "概括",
+        "叙述"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-12": {
+      "alias": null,
+      "name": "文言翻译",
+      "group": "D",
+      "cues": [
+        "翻译",
+        "句子"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-13": {
+      "alias": null,
+      "name": "文言思辨",
+      "group": "D",
+      "cues": [
+        "评价",
+        "看法",
+        "结合"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-14": {
+      "alias": null,
+      "name": "诗歌综合选择",
+      "group": "B",
+      "cues": [
+        "诗句",
+        "手法",
+        "情感"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-15": {
+      "alias": null,
+      "name": "诗歌鉴赏",
+      "group": "D",
+      "cues": [
+        "意象",
+        "情感",
+        "比较"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-16": {
+      "alias": null,
+      "name": "修辞与标点",
+      "group": "C",
+      "cues": [
+        "修辞",
+        "借喻",
+        "谐音",
+        "标点"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-17": {
+      "alias": null,
+      "name": "词语运用",
+      "group": "C",
+      "cues": [
+        "成语",
+        "词语",
+        "填入"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-18": {
+      "alias": null,
+      "name": "病句与衔接",
+      "group": "C",
+      "cues": [
+        "病句",
+        "修改",
+        "衔接",
+        "补写"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-19": {
+      "alias": null,
+      "name": "图文转换与拟写",
+      "group": "D",
+      "cues": [
+        "图文",
+        "剪纸",
+        "提纲",
+        "词条"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-20": {
+      "alias": null,
+      "name": "错别字辨析",
+      "group": "C",
+      "cues": [
+        "错别字",
+        "改正"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-21": {
+      "alias": null,
+      "name": "作文·材料类型",
+      "group": "D",
+      "cues": [
+        "材料作文",
+        "材料"
+      ],
+      "prio": 0.8,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-22": {
+      "alias": null,
+      "name": "作文·审题",
+      "group": "D",
+      "cues": [
+        "审题",
+        "立意方向"
+      ],
+      "prio": 0.9,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-23": {
+      "alias": null,
+      "name": "作文·立意",
+      "group": "D",
+      "cues": [
+        "立意",
+        "中心"
+      ],
+      "prio": 0.9,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-24": {
+      "alias": null,
+      "name": "作文·基本要求",
+      "group": "D",
+      "cues": [
+        "字数",
+        "结构",
+        "要求"
+      ],
+      "prio": 0.8,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y-25": {
+      "alias": null,
+      "name": "作文·关键能力",
+      "group": "D",
+      "cues": [
+        "论证",
+        "思辨",
+        "表达"
+      ],
+      "prio": 0.8,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    },
+    "Y99": {
+      "alias": null,
+      "name": "未分类",
+      "group": null,
+      "cues": [],
+      "prio": 0,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    }
+  },
+  "graph": {
+    "modules": [
+      {
+        "id": "modern",
+        "label": "现代文阅读",
+        "topics": [
+          "Y-01",
+          "Y-02",
+          "Y-03",
+          "Y-04",
+          "Y-05",
+          "Y-06",
+          "Y-07",
+          "Y-08"
+        ]
+      },
+      {
+        "id": "classic",
+        "label": "古诗文阅读",
+        "topics": [
+          "Y-09",
+          "Y-10",
+          "Y-11",
+          "Y-12",
+          "Y-13",
+          "Y-14",
+          "Y-15"
+        ]
+      },
+      {
+        "id": "languse",
+        "label": "语言文字运用",
+        "topics": [
+          "Y-16",
+          "Y-17",
+          "Y-18",
+          "Y-19",
+          "Y-20"
+        ]
+      },
+      {
+        "id": "writing",
+        "label": "写作",
+        "topics": [
+          "Y-21",
+          "Y-22",
+          "Y-23",
+          "Y-24",
+          "Y-25"
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "from": "Y-01",
+        "to": "Y-02"
+      },
+      {
+        "from": "Y-09",
+        "to": "Y-10"
+      },
+      {
+        "from": "Y-10",
+        "to": "Y-11"
+      },
+      {
+        "from": "Y-11",
+        "to": "Y-12"
+      },
+      {
+        "from": "Y-21",
+        "to": "Y-22"
+      },
+      {
+        "from": "Y-22",
+        "to": "Y-23"
+      }
+    ]
+  }
+}

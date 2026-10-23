@@ -30,6 +30,8 @@ const file = arg('file')
 const bankPath = arg('bank')
 const kind = arg('kind', 'mcq')
 const keepFigure = args.includes('--keep-figure')
+const splitMulti = args.includes('--split-multi')
+const forceTopic = arg('topic', '')  // 整份文件强制归某个考点
 if (!file || !bankPath) {
   console.error('用法：--subject physics --file x.json --bank y.bank.json [--kind mcq|open] [--keep-figure]')
   process.exit(1)
@@ -41,7 +43,7 @@ if (!existsSync(topicsFile)) {
   process.exit(1)
 }
 const topicsDoc = JSON.parse(readFileSync(topicsFile, 'utf8'))
-const FALLBACK = { physics: 'P-99', chemistry: 'C-99', technology: 'T-99', math: 'M-99' }
+const FALLBACK = { physics: 'P-99', chemistry: 'C-99', technology: 'T-99', math: 'M-99', english: 'E-99', chinese: 'Y-99' }
 const fallbackTopic = FALLBACK[subject] || 'P-99'
 
 // ---------- LaTeX → 纯文本 ----------
@@ -198,6 +200,7 @@ for (const [tid, t] of Object.entries(topicsDoc.topics)) {
   CUE_TOKENS.set(tid, (t.cues || []).filter((c) => String(c).trim().length >= 2))
 }
 function classify(stem) {
+  if (forceTopic && topicsDoc.topics[forceTopic]) return forceTopic
   const text = stem.toLowerCase()
   // 先看硬关键词：命中最多的那个考点直接用
   let hintBest = null
@@ -229,6 +232,17 @@ const cleanStem = (t) =>
    .replace(/\s{2,}/g, ' ')
    .trim()
 
+// 一段材料带多个小问（英语阅读、语文现代文）：按题号切开，材料复制到每题前面
+function splitMultiQuestions(text, n) {
+  const re = /^[ \t]*(\d{1,3})[ \t]*[.．、][ \t]*/gm
+  const hits = [...text.matchAll(re)]
+  if (hits.length < 2 || hits.length !== n) return null
+  const passage = text.slice(0, hits[0].index).trim()
+  if (passage.length < 40) return null
+  const blocks = hits.map((h, i) => text.slice(h.index, i + 1 < hits.length ? hits[i + 1].index : text.length))
+  return { passage, blocks }
+}
+
 const stemKey = (s) => createHash('sha1').update(s.replace(/\s+/g, '')).digest('hex').slice(0, 16)
 const isFigureQuestion = (s) => /如图|图甲|图乙|图丙|图示|图所示|如下图|左图|右图/.test(s)
 
@@ -239,7 +253,7 @@ const bank = JSON.parse(readFileSync(bankPath, 'utf8'))
 bank.questions ||= []
 const seen = new Set(bank.questions.map((q) => stemKey(q.stem || '')))
 
-let added = 0, skippedFigure = 0, skippedDup = 0, noAnswer = 0, skippedNoIndex = 0
+let added = 0, skippedFigure = 0, skippedDup = 0, noAnswer = 0, skippedNoIndex = 0, skippedMulti = 0
 const byTopic = {}
 
 for (const it of items) {
@@ -248,6 +262,36 @@ for (const it of items) {
   if (!keepFigure && isFigureQuestion(rawQ)) { skippedFigure++; continue }
   const answers = parseAnswer(it.answer)
   if (!answers.length) { noAnswer++; continue }
+  if (answers.length > 1) {
+    if (!splitMulti) { skippedMulti++; continue }
+    const sm = splitMultiQuestions(rawQ, answers.length)
+    if (!sm) { skippedMulti++; continue }
+    for (let i = 0; i < sm.blocks.length; i++) {
+      const piece = deTeX(sm.blocks[i])
+      const parsed = splitChoices(piece)
+      if (!parsed.choices || parsed.choices.length < 2) { continue }
+      const full = sm.passage.replace(/\s+/g, ' ') + '\n\n' + cleanStem(parsed.stem)
+      const key2 = stemKey(full)
+      if (seen.has(key2)) { skippedDup++; continue }
+      seen.add(key2)
+      const idx2 = LETTER.indexOf(String(answers[i]).trim().slice(0, 1).toUpperCase())
+      if (idx2 < 0 || idx2 >= parsed.choices.length) { skippedNoIndex++; continue }
+      bank.questions.push({
+        id: `gk-${subject}-${key2}`,
+        topic: classify(full),
+        type: 'choice',
+        difficulty: estimateDifficulty(it.score, full),
+        stem: full,
+        choices: parsed.choices.map((c) => c.text),
+        answer: { value: [idx2] },
+        source: `GAOKAO-Bench 高考真题 ${it.year || ''} ${String(it.category || '').replace(/[（）]/g, '')}（第 ${i + 1} 小问）`,
+        sourceUrl: 'https://github.com/OpenLMLab/GAOKAO-Bench',
+      })
+      byTopic[bank.questions[bank.questions.length - 1].topic] = (byTopic[bank.questions[bank.questions.length - 1].topic] || 0) + 1
+      added++
+    }
+    continue
+  }
 
   let { stem, choices } = kind === 'mcq' ? splitChoices(rawQ) : { stem: rawQ, choices: null }
   for (const [re, to] of TYPO) stem = stem.replace(re, to)
@@ -292,6 +336,6 @@ const named = Object.entries(byTopic)
   .map(([t, n]) => `${t}(${topicsDoc.topics[t]?.name || '?'}) ${n}`)
 console.log(
   `${subject} ${kind}：新增 ${added} 题 → ${bankPath}\n` +
-  `跳过：图形题 ${skippedFigure}、重复 ${skippedDup}、无答案 ${noAnswer}、答案下标对不上 ${skippedNoIndex}\n` +
+  `跳过：图形题 ${skippedFigure}、重复 ${skippedDup}、无答案 ${noAnswer}、答案下标对不上 ${skippedNoIndex}、多小问未拆 ${skippedMulti}\n` +
   `归属：${named.join('、') || '无'}`
 )

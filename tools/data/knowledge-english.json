@@ -1,0 +1,348 @@
+{
+ "schema": "openstudy.knowledge/1",
+ "subject": "english",
+ "title": "高中英语 · 知识点图",
+ "blocks": [
+  {
+   "id": "grammar",
+   "label": "语法基础",
+   "nodes": [
+    "Ke-01",
+    "Ke-02",
+    "Ke-03",
+    "Ke-04",
+    "Ke-05",
+    "Ke-06"
+   ]
+  },
+  {
+   "id": "syntax",
+   "label": "从句与特殊句式",
+   "nodes": [
+    "Ke-07",
+    "Ke-08",
+    "Ke-09",
+    "Ke-10",
+    "Ke-11"
+   ]
+  },
+  {
+   "id": "discourse",
+   "label": "语篇与写作",
+   "nodes": [
+    "Ke-12",
+    "Ke-13",
+    "Ke-14",
+    "Ke-15"
+   ]
+  }
+ ],
+ "nodes": {
+  "Ke-01": {
+   "name": "时态体系",
+   "block": "grammar",
+   "topic": "E-01",
+   "core": [
+    "一般现在表习惯与真理，现在进行表此刻，现在完成表影响至今",
+    "过去完成＝过去的过去，常与 by the time/before 连用",
+    "将来完成表到将来某时已完成"
+   ],
+   "formulas": [
+    "have/has done",
+    "had done",
+    "will have done"
+   ],
+   "confusions": [
+    "现在完成与一般过去混用（有明确过去时间点用过去式）",
+    "主将从现：时间/条件状语从句用一般现在"
+   ],
+   "prereq": []
+  },
+  "Ke-02": {
+   "name": "被动语态",
+   "block": "grammar",
+   "topic": "E-01",
+   "core": [
+    "被动＝be + 过去分词",
+    "只有及物动词有被动",
+    "情态动词被动是 情态 + be + done"
+   ],
+   "formulas": [
+    "is done",
+    "was done",
+    "must be done"
+   ],
+   "confusions": [
+    "不及物动词硬套被动",
+    "完成时被动漏 been"
+   ],
+   "prereq": [
+    "Ke-01"
+   ]
+  },
+  "Ke-03": {
+   "name": "非谓语三形式",
+   "block": "grammar",
+   "topic": "E-02",
+   "core": [
+    "doing 表主动或进行，done 表被动或完成，to do 表目的或将来",
+    "作状语时看逻辑主语与动词的关系",
+    "作定语时看与所修饰名词的关系"
+   ],
+   "formulas": [
+    "doing / done / to do"
+   ],
+   "confusions": [
+    "悬垂结构：状语逻辑主语与主句主语不一致",
+    "不定式与动名词作主语的区别"
+   ],
+   "prereq": [
+    "Ke-02"
+   ]
+  },
+  "Ke-04": {
+   "name": "构词法",
+   "block": "grammar",
+   "topic": "E-08",
+   "core": [
+    "前缀改意思（un-, re-, dis-），后缀改词性（-tion, -ful, -ly）",
+    "语法填空看到括号里的词，先判词性再变形"
+   ],
+   "formulas": [
+    "un-/re-/dis- + 词根",
+    "-ment/-ness/-tion/-ful/-less"
+   ],
+   "confusions": [
+    "只改词性不看语境单复数",
+    "形容词与副词混用"
+   ],
+   "prereq": [
+    "Ke-03"
+   ]
+  },
+  "Ke-05": {
+   "name": "冠词、代词、介词",
+   "block": "grammar",
+   "topic": "E-09",
+   "core": [
+    "a/an 泛指，the 特指或独一无二",
+    "代词要看指代对象与数",
+    "介词搭配靠固定组合记忆"
+   ],
+   "formulas": [
+    "a/an/the",
+    "it/that/one 的区别"
+   ],
+   "confusions": [
+    "可数名词单数裸用",
+    "which 与 that 在定语从句中的取舍"
+   ],
+   "prereq": [
+    "Ke-04"
+   ]
+  },
+  "Ke-06": {
+   "name": "主谓一致",
+   "block": "grammar",
+   "topic": "E-10",
+   "core": [
+    "主语是 each/every/neither 时谓语用单数",
+    "there be 就近原则",
+    "a number of 复数，the number of 单数"
+   ],
+   "formulas": [
+    "each of + 复数名词 + 单数谓语"
+   ],
+   "confusions": [
+    "把 a number of 当单数",
+    "并列主语被插入语干扰"
+   ],
+   "prereq": [
+    "Ke-05"
+   ]
+  },
+  "Ke-07": {
+   "name": "定语从句",
+   "block": "syntax",
+   "topic": "E-03",
+   "core": [
+    "关系代词 who/whom/which/that/whose，关系副词 when/where/why",
+    "先行词在从句中作宾语时关系代词可省",
+    "非限制性定语从句用逗号隔开，不用 that"
+   ],
+   "formulas": [
+    "the man who...",
+    "the house whose roof..."
+   ],
+   "confusions": [
+    "介词后不能用 that",
+    "非限制性从句用 that"
+   ],
+   "prereq": []
+  },
+  "Ke-08": {
+   "name": "名词性从句",
+   "block": "syntax",
+   "topic": "E-04",
+   "core": [
+    "主语/宾语/表语/同位语从句都由连接词引导",
+    "that 只起连接不作成分，whether 表是否",
+    "从句用陈述语序"
+   ],
+   "formulas": [
+    "what he said",
+    "whether it works"
+   ],
+   "confusions": [
+    "从句用疑问语序",
+    "that 与 what 混（what 在从句中作成分）"
+   ],
+   "prereq": [
+    "Ke-07"
+   ]
+  },
+  "Ke-09": {
+   "name": "状语从句",
+   "block": "syntax",
+   "topic": "E-05",
+   "core": [
+    "时间、条件、原因、让步、目的、结果、比较、方式",
+    "主将从现",
+    "让步常用 although/though/even if"
+   ],
+   "formulas": [
+    "although..., ...",
+    "so that...",
+    "as long as..."
+   ],
+   "confusions": [
+    "although 与 but 连用",
+    "because 与 so 连用"
+   ],
+   "prereq": [
+    "Ke-08"
+   ]
+  },
+  "Ke-10": {
+   "name": "虚拟语气",
+   "block": "syntax",
+   "topic": "E-06",
+   "core": [
+    "与现在事实相反：if + 过去式，主句 would do",
+    "与过去相反：if + had done，主句 would have done",
+    "should 型虚拟：suggest/insist/demand 后从句用 (should) do"
+   ],
+   "formulas": [
+    "If I were you, I would..."
+   ],
+   "confusions": [
+    "混合虚拟时时间状语对不上",
+    "suggest 表「暗示」时不用虚拟"
+   ],
+   "prereq": [
+    "Ke-09"
+   ]
+  },
+  "Ke-11": {
+   "name": "倒装与强调",
+   "block": "syntax",
+   "topic": "E-07",
+   "core": [
+    "否定词置句首要部分倒装",
+    "only + 状语置句首部分倒装",
+    "强调句 It is/was ... that ..."
+   ],
+   "formulas": [
+    "Never have I...",
+    "It was in 2010 that..."
+   ],
+   "confusions": [
+    "倒装时助动词与主语顺序错",
+    "强调句与定语从句混（去掉 It is...that 后句子是否完整）"
+   ],
+   "prereq": [
+    "Ke-10"
+   ]
+  },
+  "Ke-12": {
+   "name": "语篇衔接",
+   "block": "discourse",
+   "topic": "E-13",
+   "core": [
+    "七选五看空位前后的逻辑词与代词指代",
+    "完形靠上下文复现与搭配",
+    "段首句通常是主题句"
+   ],
+   "formulas": [
+    "however/therefore/besides/for example"
+   ],
+   "confusions": [
+    "只看单句不看上下文",
+    "忽略代词指代对象"
+   ],
+   "prereq": []
+  },
+  "Ke-13": {
+   "name": "阅读题型",
+   "block": "discourse",
+   "topic": "E-12",
+   "core": [
+    "细节题回原文定位，主旨题看首尾段与各段主题句",
+    "推断题不能选原文原句",
+    "词义猜测看上下文线索"
+   ],
+   "formulas": [
+    "main idea",
+    "infer",
+    "the author implies"
+   ],
+   "confusions": [
+    "把细节当主旨",
+    "推断题选了原文原话"
+   ],
+   "prereq": [
+    "Ke-12"
+   ]
+  },
+  "Ke-14": {
+   "name": "应用文格式",
+   "block": "discourse",
+   "topic": "E-15",
+   "core": [
+    "书信/通知/演讲稿各有固定格式与开头结尾",
+    "三段：说明来意、正文细节、期待回复",
+    "要点齐全优先于华丽表达"
+   ],
+   "formulas": [
+    "Dear ..., I am writing to ..."
+   ],
+   "confusions": [
+    "漏要点",
+    "称呼与落款格式错"
+   ],
+   "prereq": [
+    "Ke-13"
+   ]
+  },
+  "Ke-15": {
+   "name": "读后续写",
+   "block": "discourse",
+   "topic": "E-16",
+   "core": [
+    "先读原文抓人物、冲突、伏笔",
+    "两段各有一个动作推进点",
+    "结尾要回到原文主题"
+   ],
+   "formulas": [
+    "第一段承接冲突，第二段解决"
+   ],
+   "confusions": [
+    "情节与原文人物设定冲突",
+    "只写景不推进情节"
+   ],
+   "prereq": [
+    "Ke-14"
+   ]
+  }
+ }
+}
