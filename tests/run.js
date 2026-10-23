@@ -77,7 +77,7 @@ line('=== 6. 校验器自身的测试 ===')
 const bad = validateBank({
   subject: 'x',
   topics: { A: { name: 'a' } },
-  questions: [{ id: 'q1', topic: 'A', type: 'numeric', difficulty: 2, stem: 'x', answer: { value: 1 } }],
+  questions: [{ id: 'q1', topic: 'A', type: 'numeric', difficulty: 2, stem: 'x', answer: { value: 1 }, source: 'tests/run.js 夹具' }],
 })
 line(`故意给一个难度=2、无来源的题 → ok=${bad.ok}`)
 for (const e of bad.errors) line('  ✗ ' + e)
