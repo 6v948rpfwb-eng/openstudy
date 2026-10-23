@@ -398,6 +398,11 @@ sup, sub { font-size: .72em; line-height: 0; }
 .badge.on .bname{color:#33405c;font-weight:600}
 .badgepill{display:inline-flex;align-items:center;gap:6px}
 .badgepill .ic{color:#4d6bfe}
+
+/* 下标 / 上标：默认太小，这里调大一点并压紧行高 */
+.stem sub, .stem sup, .choice sub, .choice sup { font-size:.74em; line-height:0 }
+.stem sub { vertical-align:-.3em }
+.stem sup { vertical-align:.45em }
 </style>
 </head>
 <body>
