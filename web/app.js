@@ -109,6 +109,13 @@ const BANKS = (typeof __EMBEDDED_BANKS__ !== 'undefined' && __EMBEDDED_BANKS__) 
 const BANK_KEYS = BANKS ? Object.keys(BANKS) : []
 const SUBJECT_LABEL = { physics: '物理', chemistry: '化学', technology: '技术', math: '数学', chinese: '语文', english: '英语' }
 
+const SUBJECT_STYLE = {
+  physics: { glyph: '物', name: '物理', bg: 'linear-gradient(160deg,#6a83ff,#4356e0)' },
+  chemistry: { glyph: '化', name: '化学', bg: 'linear-gradient(160deg,#41c08a,#26996a)' },
+  technology: { glyph: '技', name: '技术', bg: 'linear-gradient(160deg,#f0a44b,#d9842a)' },
+  default: { glyph: '科', name: '学科', bg: 'linear-gradient(160deg,#9aa6c4,#77839f)' },
+}
+
 function bankTitle(key) {
   try { return JSON.parse(BANKS[key]).title || SUBJECT_LABEL[key] || key } catch (e) { return SUBJECT_LABEL[key] || key }
 }
@@ -118,8 +125,13 @@ function renderSubjects() {
   if (!box) return
   if (BANK_KEYS.length < 2) { box.innerHTML = ''; return }
   const cur = app.bank ? app.bank.subject : ''
-  box.innerHTML = BANK_KEYS.map((k) =>
-    `<button class="subj ${k === cur ? 'on' : ''}" data-bank="${k}">${bankTitle(k)}</button>`).join('')
+  box.innerHTML = BANK_KEYS.map((k) => {
+    const c = SUBJECT_STYLE[k] || SUBJECT_STYLE.default
+    return `<button class="subjcard ${k === cur ? 'on' : ''}" data-bank="${k}" title="${bankTitle(k)}">
+      <span class="subjicon" style="background:${c.bg}">${c.glyph}</span>
+      <span class="subjlabel">${c.name}</span>
+    </button>`
+  }).join('')
   box.querySelectorAll('[data-bank]').forEach((b) => {
     b.onclick = () => switchBank(b.dataset.bank)
   })

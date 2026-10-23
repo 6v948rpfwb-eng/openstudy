@@ -143,11 +143,18 @@ sup, sub { font-size: .72em; line-height: 0; }
   .fchip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
   /* ---- 右上角学科切换 ---- */
   .topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
-  #subjects { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; padding-top: 6px; }
-  .subj { appearance: none; border: 1px solid var(--line); background: #fff; color: var(--ink);
-          border-radius: 10px; padding: 7px 16px; font-size: 14px; font-family: inherit; cursor: pointer; }
-  .subj.on { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .subj:not(.on):hover { border-color: var(--accent); color: var(--accent); }
+  /* 学科选择：大图标 + 文字，像手机 App 的学科选择 */
+  .subjbar { display: flex; gap: 20px; flex-wrap: wrap; margin: 18px 0 6px; }
+  .subjcard { appearance: none; border: 0; background: none; padding: 0; cursor: pointer;
+              display: flex; flex-direction: column; align-items: center; gap: 7px; }
+  .subjicon { width: 66px; height: 66px; border-radius: 20px; display: grid; place-items: center;
+              font-size: 27px; font-weight: 700; color: #fff; letter-spacing: 0;
+              box-shadow: 0 2px 6px rgba(20,28,54,.14); transition: transform .12s ease, box-shadow .12s ease; }
+  .subjcard:hover .subjicon { transform: translateY(-1px); box-shadow: 0 5px 12px rgba(20,28,54,.18); }
+  .subjlabel { font-size: 13px; color: var(--muted); line-height: 1.2; white-space: nowrap; }
+  .subjcard.on .subjicon { box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--accent), 0 4px 10px rgba(77,107,254,.28); }
+  .subjcard.on .subjlabel { color: var(--accent); font-weight: 600; }
+  .subjcard:not(.on) .subjicon { filter: saturate(.72); opacity: .9; }
   /* ---- 大肥鱼（页角看护人） ---- */
   .mascot { position: fixed; right: 18px; bottom: 14px; width: 92px; height: 92px;
             z-index: 50; cursor: pointer; user-select: none; }
@@ -238,8 +245,8 @@ sup, sub { font-size: .72em; line-height: 0; }
       <h1>开卷</h1>
       <div class="sub">可验证的练习引擎 —— 学科是数据，引擎是代码</div>
     </div>
-    <div id="subjects"></div>
   </div>
+  <div id="subjects" class="subjbar"></div>
   <div id="tabs"></div>
   <script>
     // 出错就直接显示在页面上，别只留在控制台（单文件双击打开时看不到控制台）
