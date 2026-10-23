@@ -98,7 +98,7 @@ if (typeof window !== 'undefined') {
       switchBank(h.subject)
       return
     }
-    if (v !== app.view) { app.view = v; render() }
+    if (v !== app.view) { app.view = v; navReset(); render() }
   })
 }
 
@@ -146,6 +146,7 @@ function renderSubjects() {
 /** 换学科：题库、存档、做卷进度全部换掉，方法论视图跟着切 */
 function switchBank(key) {
   if (!BANKS || !BANKS[key]) return
+  navReset()
   if (app.bank && app.bank.subject === key) return
   app.paper = null
   app.index = 0
@@ -170,90 +171,168 @@ function renderTabs() {
     <button class="tab ${app.view === 'map' ? 'on' : ''}" data-v="map">知识图</button>`
   bar.querySelectorAll('.tab').forEach((b) => {
     b.onclick = () => {
-      app.view = b.dataset.v
+      if (app.view !== b.dataset.v) { app.view = b.dataset.v; navReset() }
       syncHash()
       render()
     }
   })
 }
 
+// ---------- 通用：状态、面包屑、小块 ----------
+function navReset() { app.nav.block = null; app.nav.topic = null }
+
+function stateOfTopic(t) {
+  return t.state === '✅' ? 'ok' : t.state === '🟡' ? 'mid' : t.state === '🔴' ? 'bad' : 'none'
+}
+function countStates(topics, ids) {
+  const c = { ok: 0, mid: 0, bad: 0, none: 0, total: 0 }
+  for (const id of ids) {
+    const t = topics[id]
+    if (!t) continue
+    c[stateOfTopic(t)]++
+    c.total++
+  }
+  return c
+}
+function stateChips(c) {
+  return [
+    c.ok ? `<span class="chip ok">已会 ${c.ok}</span>` : '',
+    c.mid ? `<span class="chip mid">待确认 ${c.mid}</span>` : '',
+    c.bad ? `<span class="chip bad">错的 ${c.bad}</span>` : '',
+    c.none ? `<span class="chip none">没测 ${c.none}</span>` : '',
+  ].join('')
+}
+function miniBar(c) {
+  const n = c.total || 1
+  const seg = (k, cls) => (c[k] ? `<i class="${cls}" style="flex:${c[k] / n}"></i>` : '')
+  return `<span class="bar">${seg('ok', 'ok')}${seg('mid', 'mid')}${seg('bad', 'bad')}${seg('none', 'none')}</span>`
+}
+function crumbTrail(parts) {
+  return `<div class="crumbs">${parts
+    .map((p, i) =>
+      i === parts.length - 1
+        ? `<span class="crumb-cur">${fwEsc(p.label)}</span>`
+        : `<button class="crumb" data-crumb="${i}">${fwEsc(p.label)}</button><i>›</i>`
+    )
+    .join('')}</div>`
+}
+function bindCrumbs(parts) {
+  $root.querySelectorAll('[data-crumb]').forEach((b) => {
+    b.onclick = () => {
+      const p = parts[Number(b.dataset.crumb)]
+      if (p && p.go) p.go()
+    }
+  })
+}
+/** 一个考点的细节卡：判据 / 动作序列 / 必查项 */
+function topicDetailHTML(doc, tid, extra = '') {
+  const t = doc.topics[tid]
+  const view = loadForTopic(doc, tid)
+  const cues = t.cues && t.cues.length ? t.cues.map((c) => `<span class="cue">${fwEsc(c)}</span>`).join('') : '<span class="muted">还没写判据词</span>'
+  return `<div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div><span class="tid">${fwEsc(t.alias || tid)}</span> <b>${fwEsc(t.name)}</b></div>
+      <span class="fst ${FST_CLASS(t.state)}">${fwEsc(t.state || '未测')}</span>
+    </div>
+    <div class="muted" style="margin-top:8px">属于 <span class="gbadge b${t.group}">${t.group}</span> ${fwEsc(doc.groups[t.group]?.label || '')}</div>
+    <div class="muted" style="margin-top:10px">判据（表 1）——看到这些词就该想到这个考点</div>
+    <div class="cues">${cues}</div>
+    <div class="muted" style="margin-top:12px">动作序列（表 2）= 组级 ${view ? view.steps.length - (t.extraSteps || []).length : 0} 步 + 本题补充</div>
+    <ol>${(view ? view.steps : []).map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ol>
+    <div class="muted" style="margin-top:12px">必查项（表 3）</div>
+    <ul>${(view ? view.checks : []).map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ul>
+    ${t.errorType ? `<p class="muted" style="margin-top:10px">上次的错误类型：${fwEsc(t.errorType)}${t.stateDetail ? ' · ' + fwEsc(t.stateDetail) : ''}</p>` : ''}
+    ${extra}
+  </div>`
+}
+
+// ---------- 方法论视图：四组 → 组内考点 → 考点细节 ----------
 function renderFramework() {
-  // 默认看本页题库所属学科的方法论（物理页先给物理，化学页先给化学）
   if (app.bank && FW_DOCS[app.bank.subject] && app.bank.subject !== app.fw.subject) app.fw.subject = app.bank.subject
   const doc = FW_DOCS[app.fw.subject]
   if (!doc) { $root.innerHTML = '<div class="card">没有方法论数据</div>'; return }
+  const topics = doc.topics
+  const allIds = Object.keys(topics)
+  const nav = app.nav
 
-  const topics = Object.entries(doc.topics)
-  const byGroup = {}
-  let tested = 0
-  for (const [, t] of topics) {
-    byGroup[t.group] = (byGroup[t.group] || 0) + 1
-    if (t.state) tested++
+  const head = `<div class="card">
+    <div><strong>${fwEsc(doc.title || app.fw.subject)} · 四组方法论</strong></div>
+    <div class="muted" style="margin-top:4px">判据形状 / 动作序列 / 检验方式 三者相同才同组。点进去看组里的考点，再点考点看三张表。</div>
+  </div>`
+
+  // 第三层：考点细节
+  if (nav.topic && topics[nav.topic]) {
+    const g = topics[nav.topic].group
+    const gLabel = doc.groups[g]?.label || g
+    $root.innerHTML = crumbTrail([
+      { label: '全部组', go: () => { navReset(); render() } },
+      { label: `${g} ${gLabel}`, go: () => { nav.topic = null; nav.block = g; render() } },
+      { label: topics[nav.topic].name },
+    ]) + topicDetailHTML(doc, nav.topic)
+    bindCrumbs([
+      { go: () => { navReset(); render() } },
+      { go: () => { nav.topic = null; nav.block = g; render() } },
+    ])
+    return
   }
 
-  const subjectChips = FW_SUBJECTS.length > 1
-    ? `<div class="fchips">${FW_SUBJECTS.map((k) => `<button class="fchip ${k === app.fw.subject ? 'on' : ''}" data-sub="${k}">${fwEsc(FW_DOCS[k].title || k)}</button>`).join('')}</div>`
-    : ''
+  // 第二层：组里的考点
+  if (nav.block && doc.groups[nav.block]) {
+    const g = nav.block
+    const info = doc.groups[g]
+    const ids = allIds.filter((id) => topics[id].group === g)
+    const c = countStates(topics, ids)
+    const rows = ids.map((id) => {
+      const t = topics[id]
+      return `<button class="trow" data-t="${fwEsc(id)}">
+        <span class="tid">${fwEsc(t.alias || id)}</span>
+        <span class="tname">${fwEsc(t.name)}</span>
+        <span class="fst ${FST_CLASS(t.state)}">${fwEsc(t.state || '未测')}</span>
+      </button>`
+    }).join('')
+    $root.innerHTML = crumbTrail([
+      { label: '全部组', go: () => { navReset(); render() } },
+      { label: `${g} ${info.label}` },
+    ]) + `
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div><span class="gbadge b${g}">${g}</span> <b>${fwEsc(info.label)}</b></div>
+          <span class="muted">${ids.length} 个考点</span>
+        </div>
+        <div style="margin-top:8px">${miniBar(c)} ${stateChips(c)}</div>
+        <div class="muted" style="margin-top:12px">这一组的动作序列（表 2，全线通用）</div>
+        <ol>${info.steps.map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ol>
+        <div class="muted" style="margin-top:10px">必查项（表 3）</div>
+        <ul>${info.checks.map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ul>
+      </div>
+      <div class="tlist">${rows}</div>`
+    bindCrumbs([{ go: () => { navReset(); render() } }])
+    $root.querySelectorAll('[data-t]').forEach((b) => {
+      b.onclick = () => { nav.topic = b.dataset.t; render() }
+    })
+    return
+  }
 
-  const groups = Object.entries(doc.groups).map(([g, info]) => `
-    <details class="gcard">
-      <summary><span class="gbadge b${g}">${g}</span>${fwEsc(info.label)}
-        <span class="muted">${byGroup[g] || 0} 个考点</span></summary>
-      <div class="muted" style="margin-top:8px">动作序列（表 2）</div>
-      <ol>${info.steps.map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ol>
-      <div class="muted" style="margin-top:8px">必查项（表 3）</div>
-      <ul>${info.checks.map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ul>
-    </details>`).join('')
-
-  const GROUPS = [['all', '全部组'], ['A', 'A 条件→方程→边界'], ['B', 'B 证据→判断'], ['C', 'C 触发→精确复现'], ['D', 'D 骨架→成文']]
-  const ONLYS = [['all', '全部状态'], ['tested', '只看已测'], ['bad', '只看未掌握']]
-  const chips = (items, cur, kind) => items.map(([k, label]) =>
-    `<button class="fchip ${cur === k ? 'on' : ''}" data-${kind}="${k}">${label}</button>`).join('')
-
-  const rows = topics.filter(([, t]) => {
-    if (app.fw.group !== 'all' && t.group !== app.fw.group) return false
-    if (app.fw.only === 'tested' && !t.state) return false
-    if (app.fw.only === 'bad' && t.state !== '🔴') return false
-    return true
-  }).map(([id, t]) => {
-    const view = loadForTopic(doc, id)
-    const steps = view ? view.steps : []
-    const checks = view ? view.checks : []
-    return `
-      <details class="fwcard">
-        <summary><span class="gbadge b${t.group}">${t.group}</span>${fwEsc(t.name)}
-          <span class="fst ${FST_CLASS(t.state)}">${t.state || '未测'}</span>
-          ${t.errorType ? `<span class="tag">${fwEsc(t.errorType)}</span>` : ''}
-          <span class="muted">${fwEsc(t.alias || id)}</span></summary>
-        ${t.cues && t.cues.length ? `<div class="cues">${t.cues.map((c) => `<span class="cue">${fwEsc(c)}</span>`).join('')}</div>` : ''}
-        <div class="muted" style="margin-top:8px">动作序列</div>
-        <ol>${steps.map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ol>
-        <div class="muted" style="margin-top:8px">必查项</div>
-        <ul>${checks.map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ul>
-      </details>`
+  // 第一层：四个组
+  const cards = Object.entries(doc.groups).map(([g, info]) => {
+    const ids = allIds.filter((id) => topics[id].group === g)
+    const c = countStates(topics, ids)
+    return `<button class="bcard" data-g="${g}">
+      <span class="gbadge b${g} bbig">${g}</span>
+      <span class="btitle">${fwEsc(info.label)}</span>
+      <span class="muted">${ids.length} 个考点 · ${info.steps.length} 步动作</span>
+      ${miniBar(c)}
+      <span class="bchips">${stateChips(c)}</span>
+    </button>`
   }).join('')
 
-  $root.innerHTML = `
+  $root.innerHTML = head + `
+    <div class="bgrid">${cards}</div>
     <div class="card">
-      <div><strong>${fwEsc(doc.title || app.fw.subject)} · 四组方法论与三张表</strong></div>
-      <div class="muted" style="margin-top:4px">考点 ${topics.length} · 已测 ${tested} · 判据形状 / 动作序列 / 检验方式 三者相同才同组</div>
-      <div class="muted" style="margin-top:4px">A 条件→方程→边界 · B 证据→判断 · C 触发→精确复现 · D 骨架→成文</div>
-      ${subjectChips}
-    </div>
-    ${groups}
-    <div class="fchips">${chips(GROUPS, app.fw.group, 'group')}</div>
-    <div class="fchips">${chips(ONLYS, app.fw.only, 'only')}</div>
-    ${rows || '<div class="card muted">没有符合条件的考点</div>'}
-    <p class="muted" style="margin-top:16px">点标题展开动作序列与必查项；必查项里带具体错题坑的，是从你的真实错题补的。</p>`
-
-  $root.querySelectorAll('[data-sub]').forEach((b) => {
-    b.onclick = () => { app.fw.subject = b.dataset.sub; render() }
-  })
-  $root.querySelectorAll('[data-group]').forEach((b) => {
-    b.onclick = () => { app.fw.group = b.dataset.group; render() }
-  })
-  $root.querySelectorAll('[data-only]').forEach((b) => {
-    b.onclick = () => { app.fw.only = b.dataset.only; render() }
+      <div class="muted">三张表的关系：表 1 判据决定「这题归哪类」，表 2 给出「按什么顺序做」，表 3 收尾「必须核对什么」。缺一张就有一类错误反复出现。</div>
+    </div>`
+  $root.querySelectorAll('[data-g]').forEach((b) => {
+    b.onclick = () => { nav.block = b.dataset.g; nav.topic = null; render() }
   })
 }
 
@@ -380,18 +459,135 @@ async function tryAutoLoad() {
 //   edges   = [[起点, 终点], …]                跨列的前提关系
 // 列内自动连成一条向下的链；跨列画曲线。节点状态直接读考点表的 state。
 app.map = { cur: null, k: 1 }
+app.nav = { block: null, topic: null }
+
+// ---------- 知识点图视图：知识块 → 块内考点 → 考点细节 / 全图 ----------
+function blocksOf(doc) {
+  const graph = doc.graph
+  if (!graph || !graph.modules) return { blocks: [], extra: [] }
+  const inBlock = new Set(graph.modules.flatMap((m) => m.topics))
+  const extra = Object.keys(doc.topics).filter((id) => !inBlock.has(id) && id !== 'P-99' && id !== 'C-99' && id !== 'T-99')
+  return { blocks: graph.modules, extra }
+}
 
 function renderMap() {
   if (app.bank && FW_DOCS[app.bank.subject] && app.bank.subject !== app.fw.subject) app.fw.subject = app.bank.subject
   const doc = FW_DOCS[app.fw.subject]
   const graph = doc && doc.graph
-  if (!graph || !graph.modules || !graph.modules.length) {
+  if (!doc || !graph || !graph.modules || !graph.modules.length) {
     $root.innerHTML = '<div class="card">这个学科还没有知识点图</div>'
     return
   }
-
-  const COL_W = 178, NODE_H = 44, GAP = 14, PAD = 12, TOP = 36, NW = 162
+  const nav = app.nav
+  const { blocks, extra } = blocksOf(doc)
   const topics = doc.topics
+
+  // 考点细节
+  if (nav.topic && topics[nav.topic]) {
+    const blk = blocks.find((m) => m.topics.includes(nav.topic))
+    const pre = (graph.edges || []).filter(([a, b]) => b === nav.topic).map(([a]) => a)
+    const post = (graph.edges || []).filter(([a, b]) => a === nav.topic).map(([, b]) => b)
+    const rel = (ids, label) =>
+      ids.length
+        ? `<p class="muted" style="margin-top:10px">${label}：${ids
+            .map((id) => `<button class="linkbtn" data-jump="${fwEsc(id)}">${fwEsc(topics[id]?.name || id)}</button>`)
+            .join('、')}</p>`
+        : ''
+    $root.innerHTML = crumbTrail([
+      { label: '知识块', go: () => { navReset(); render() } },
+      { label: blk ? blk.label : '其它', go: () => { nav.topic = null; nav.block = blk ? blk.id : '__extra__'; render() } },
+      { label: topics[nav.topic].name },
+    ]) + topicDetailHTML(doc, nav.topic, rel(pre, '要先会') + rel(post, '学完可以接着看'))
+    bindCrumbs([
+      { go: () => { navReset(); render() } },
+      { go: () => { nav.topic = null; nav.block = blk ? blk.id : '__extra__'; render() } },
+    ])
+    $root.querySelectorAll('[data-jump]').forEach((b) => {
+      b.onclick = () => { nav.topic = b.dataset.jump; render() }
+    })
+    return
+  }
+
+  // 块内考点
+  if (nav.block && nav.block !== '__graph__') {
+    const blk = blocks.find((m) => m.id === nav.block)
+    const ids = blk ? blk.topics : extra
+    const label = blk ? blk.label : '其它考点'
+    const c = countStates(topics, ids)
+    const rows = ids.map((id) => {
+      const t = topics[id]
+      if (!t) return ''
+      return `<button class="trow" data-t="${fwEsc(id)}">
+        <span class="tid">${fwEsc(t.alias || id)}</span>
+        <span class="tname">${fwEsc(t.name)}</span>
+        <span class="fst ${FST_CLASS(t.state)}">${fwEsc(t.state || '未测')}</span>
+      </button>`
+    }).join('')
+    const pres = (graph.edges || []).filter(([, b]) => ids.includes(b)).map(([a]) => a).filter((a) => !ids.includes(a))
+    $root.innerHTML = crumbTrail([
+      { label: '知识块', go: () => { navReset(); render() } },
+      { label },
+    ]) + `
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div><b>${fwEsc(label)}</b></div><span class="muted">${ids.length} 个考点</span>
+        </div>
+        <div style="margin-top:8px">${miniBar(c)} ${stateChips(c)}</div>
+        ${pres.length ? `<p class="muted" style="margin-top:10px">学这一块之前要先会：${pres.map((p) => fwEsc(topics[p]?.name || p)).join('、')}</p>` : ''}
+      </div>
+      <div class="tlist">${rows || '<div class="card muted">这一块还没有考点</div>'}</div>`
+    bindCrumbs([{ go: () => { navReset(); render() } }])
+    $root.querySelectorAll('[data-t]').forEach((b) => {
+      b.onclick = () => { nav.topic = b.dataset.t; render() }
+    })
+    return
+  }
+
+  // 全图（可缩放）
+  if (nav.block === '__graph__') {
+    renderFullMap(doc)
+    return
+  }
+
+  // 第一层：知识块卡片
+  const cards = blocks.map((m) => {
+    const c = countStates(topics, m.topics)
+    return `<button class="bcard" data-b="${fwEsc(m.id)}">
+      <span class="btitle">${fwEsc(m.label)}</span>
+      <span class="muted">${m.topics.length} 个考点</span>
+      ${miniBar(c)}
+      <span class="bchips">${stateChips(c)}</span>
+    </button>`
+  }).join('')
+  const exCard = extra.length
+    ? `<button class="bcard" data-b="__extra__">
+        <span class="btitle">其它考点</span><span class="muted">${extra.length} 个考点</span>
+        ${miniBar(countStates(topics, extra))}<span class="bchips">${stateChips(countStates(topics, extra))}</span>
+      </button>`
+    : ''
+  const total = countStates(topics, Object.keys(topics))
+  $root.innerHTML = `
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div><b>${fwEsc(doc.title || app.fw.subject)} · 知识点图</b></div>
+        <button class="btn plain" id="fullmap">看全图</button>
+      </div>
+      <div class="muted" style="margin-top:6px">${blocks.length} 块 · ${Object.keys(topics).length} 个考点 · ${(graph.edges || []).length} 条跨块前提</div>
+      <div style="margin-top:8px">${miniBar(total)} ${stateChips(total)}</div>
+      <div class="muted" style="margin-top:8px">先挑一块进去看考点，点考点看它的判据、动作序列、必查项；想看整体结构就点右上「看全图」。</div>
+    </div>
+    <div class="bgrid">${cards}${exCard}</div>`
+  $root.querySelector('#fullmap').onclick = () => { nav.block = '__graph__'; nav.topic = null; render() }
+  $root.querySelectorAll('[data-b]').forEach((b) => {
+    b.onclick = () => { nav.block = b.dataset.b; nav.topic = null; render() }
+  })
+}
+
+/** 全图：可缩放、可拖动 */
+function renderFullMap(doc) {
+  const graph = doc.graph
+  const topics = doc.topics
+  const COL_W = 178, NODE_H = 44, GAP = 14, PAD = 12, TOP = 36, NW = 162
   const pos = new Map()
   graph.modules.forEach((m, ci) => {
     m.topics.forEach((tid, ri) => {
@@ -424,11 +620,11 @@ function renderMap() {
   for (const [tid, p] of pos) {
     const t = topics[tid]
     if (!t) continue
-    const st = t.state === '✅' ? 'ok' : t.state === '🟡' ? 'mid' : t.state === '🔴' ? 'bad' : 'none'
+    const st = stateOfTopic(t)
     const full = String(t.name || tid)
     const maxLen = 14
     const label = full.length > maxLen ? full.slice(0, maxLen) + '…' : full
-    svg += `<g class="knode g${t.group || 'x'} st-${st}${app.map.cur === tid ? ' on' : ''}" data-t="${fwEsc(tid)}" transform="translate(${p.x},${p.y})">`
+    svg += `<g class="knode g${t.group || 'x'} st-${st}" data-t="${fwEsc(tid)}" transform="translate(${p.x},${p.y})">`
     svg += `<rect class="kbox" width="${NW}" height="${NODE_H}" rx="10"/>`
     svg += `<text class="kid" x="10" y="16">${fwEsc(tid)}</text>`
     svg += `<text class="kname" x="10" y="33">${fwEsc(label)}</text>`
@@ -437,51 +633,36 @@ function renderMap() {
   }
   svg += '</svg>'
 
-  const cur = app.map.cur && topics[app.map.cur] ? app.map.cur : null
-  const detail = cur ? `
-    <div class="card kdetail">
-      <div class="row"><b>${fwEsc(cur)} · ${fwEsc(topics[cur].name)}</b>
-        <span class="fst ${FST_CLASS(topics[cur].state)}">${fwEsc(topics[cur].state || '未测')}</span></div>
-      <div class="muted" style="margin-top:6px">判据（表 1）：${(topics[cur].cues || []).length ? fwEsc((topics[cur].cues || []).join('、')) : '还没写'}</div>
-      <div class="muted" style="margin-top:8px">动作序列（表 2 = 组级 + 本题补充）</div>
-      <ol>${groupStepsFor(doc, cur).map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ol>
-      <div class="muted" style="margin-top:8px">必查项（表 3）</div>
-      <ul>${checksFor(doc, cur).map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ul>
-    </div>` : `<div class="muted" style="margin:10px 0 0 2px">点方块看它的判据、动作序列、必查项。</div>`
-
   const legend = `<div class="klegend">
     <span><i class="lg gA"></i>A 条件→方程</span><span><i class="lg gB"></i>B 证据→判断</span>
     <span><i class="lg gC"></i>C 触发→复现</span><span><i class="lg gD"></i>D 骨架→成文</span>
     <span class="sep"></span><span><i class="dot ok"></i>已会</span><span><i class="dot mid"></i>待确认</span>
     <span><i class="dot bad"></i>没做出来</span><span><i class="dot none"></i>没测</span></div>`
 
-  $root.innerHTML = `<div class="card">
-      <div class="row"><b>${fwEsc(doc.title || app.fw.subject)} · 知识点图</b>
-        <span class="muted">${graph.modules.length} 块、${pos.size} 个考点、${(graph.edges || []).length} 条跨块连线</span></div>
-      ${legend}
+  $root.innerHTML = crumbTrail([{ label: '知识块', go: () => { navReset(); render() } }, { label: '全图' }]) + `
+    <div class="card">
       <div class="maptools">
         <button class="mbtn" id="mzOut" title="缩小">−</button>
         <span class="mzoom" id="mzVal">100%</span>
         <button class="mbtn" id="mzIn" title="放大">+</button>
         <button class="mbtn wide" id="mzFit">适应宽度</button>
         <button class="mbtn wide" id="mzOne">100%</button>
-        <span class="muted" style="margin-left:6px;font-size:12px">滚轮滚动 · 按住拖动 · 双指捏合缩放</span>
+        <span class="muted" style="margin-left:6px;font-size:12px">滚轮滚动 · 按住拖动 · 双指捏合缩放 · 点方块看细节</span>
       </div>
+      ${legend}
       <div class="mapwrap" id="mapwrap">${svg}</div>
-    </div>${detail}`
-
+    </div>`
+  bindCrumbs([{ go: () => { navReset(); render() } }])
   $root.querySelectorAll('.knode').forEach((g) => {
     g.onclick = () => {
       if (mapDragMoved) return
-      app.map.cur = g.dataset.t
-      renderMap()
+      app.nav.topic = g.dataset.t
+      render()
     }
   })
   setupMapZoom()
 }
 
-/** 知识图缩放/拖动：只改 svg 的显示宽高，矢量放大不糊；滚动容器自己滚 */
-let mapDragMoved = false
 function setupMapZoom() {
   const wrap = $root.querySelector('#mapwrap')
   const svg = wrap && wrap.querySelector('svg.kmap')
@@ -609,17 +790,103 @@ function renderReady() {
   const { bank, state } = app
   const mastered = masteredView(bank)
   const due = dueTopics(state, bank)
-  const topicRows = Object.entries(bank.topics).map(([id, t]) => {
-    const rec = state.topics[id]
-    const kb = t.state === '✅' ? '✅ 已会' : t.state === '🔴' ? '🔴 错的' : t.state === '🟡' ? '🟡 待确认' : '⬜ 没测'
-    return `<tr>
-      <td>${id}</td><td>${t.name}</td>
-      <td class="muted" title="${(t.stateDetail || '').replace(/"/g, '')}">${kb}</td>
-      <td>${rec ? `${rec.correct}/${rec.attempts}` : '—'}</td>
-      <td>${rec ? Math.round(topicMastery(rec) * 100) + '%' : '—'}</td>
-      <td>${rec?.dueAt ? daysUntil(rec.dueAt) : '—'}</td>
-    </tr>`
+  const nav = app.nav
+  const doc = FW_DOCS[bank.subject]
+  const { blocks, extra } = doc ? blocksOf(doc) : { blocks: [], extra: [] }
+  const inBlock = new Set(blocks.flatMap((m) => m.topics))
+  const bused = Object.keys(bank.topics).filter((id) => !inBlock.has(id))
+  const perTopic = {}
+  for (const q of bank.questions) perTopic[q.topic] = (perTopic[q.topic] || 0) + 1
+  const qOf = (ids) => ids.reduce((n, id) => n + (perTopic[id] || 0), 0)
+  const topics = bank.topics
+
+  // 第三层：单个考点
+  if (nav.topic && topics[nav.topic]) {
+    const t = topics[nav.topic]
+    const rec = state.topics[nav.topic]
+    const backBlock = blocks.find((m) => m.topics.includes(nav.topic))
+    const stats = `
+      <div class="stat" style="margin-top:12px">
+        <div><b>${perTopic[nav.topic] || 0}</b>题库题数</div>
+        <div><b>${rec ? `${rec.correct}/${rec.attempts}` : '—'}</b>对/做</div>
+        <div><b>${rec ? Math.round(topicMastery(rec) * 100) + '%' : '—'}</b>掌握度</div>
+        <div><b>${rec?.dueAt ? daysUntil(rec.dueAt) : '—'}</b>下次复习</div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="drillOne" ${perTopic[nav.topic] ? '' : 'disabled'}>只练这个考点（最多 10 题）</button>
+      </div>`
+    $root.innerHTML = crumbTrail([
+      { label: bank.title || '练习', go: () => { navReset(); render() } },
+      { label: backBlock ? backBlock.label : '其它', go: () => { nav.topic = null; nav.block = backBlock ? backBlock.id : '__extra__'; render() } },
+      { label: t.name },
+    ]) + topicDetailHTML(doc || { topics: {}, groups: {} }, nav.topic, stats)
+    bindCrumbs([
+      { go: () => { navReset(); render() } },
+      { go: () => { nav.topic = null; nav.block = backBlock ? backBlock.id : '__extra__'; render() } },
+    ])
+    const b = $root.querySelector('#drillOne')
+    if (b) b.onclick = () => startTopicSession(nav.topic)
+    return
+  }
+
+  // 第二层：一块里的考点
+  if (nav.block) {
+    const blk = blocks.find((m) => m.id === nav.block)
+    const ids = blk ? blk.topics.filter((id) => topics[id]) : bused
+    const label = blk ? blk.label : '其它考点'
+    const c = countStates(topics, ids)
+    const rows = ids.map((id) => {
+      const t = topics[id]
+      const rec = state.topics[id]
+      return `<button class="trow" data-t="${fwEsc(id)}">
+        <span class="tid">${fwEsc(t.alias || id)}</span>
+        <span class="tname">${fwEsc(t.name)}</span>
+        <span class="fst ${FST_CLASS(t.state)}">${fwEsc(t.state || '未测')}</span>
+        <span class="tmeta">${perTopic[id] || 0} 题</span>
+      </button>`
+    }).join('')
+    $root.innerHTML = crumbTrail([
+      { label: bank.title || '练习', go: () => { navReset(); render() } },
+      { label },
+    ]) + `
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div><b>${fwEsc(label)}</b></div><span class="muted">${ids.length} 个考点 · ${qOf(ids)} 道题</span>
+        </div>
+        <div style="margin-top:8px">${miniBar(c)} ${stateChips(c)}</div>
+      </div>
+      <div class="tlist">${rows || '<div class="card muted">这一块没有题</div>'}</div>`
+    bindCrumbs([{ go: () => { navReset(); render() } }])
+    $root.querySelectorAll('[data-t]').forEach((b) => {
+      b.onclick = () => { nav.topic = b.dataset.t; render() }
+    })
+    return
+  }
+
+  // 第一层：概览 + 知识块卡片
+  const all = countStates(topics, Object.keys(topics))
+  const cards = blocks.map((m) => {
+    const ids = m.topics.filter((id) => topics[id])
+    const c = countStates(topics, ids)
+    return `<button class="bcard" data-b="${fwEsc(m.id)}">
+      <span class="btitle">${fwEsc(m.label)}</span>
+      <span class="muted">${ids.length} 个考点 · ${qOf(ids)} 题</span>
+      ${miniBar(c)}
+      <span class="bchips">${stateChips(c)}</span>
+    </button>`
   }).join('')
+  const exCard = bused.length
+    ? `<button class="bcard" data-b="__extra__">
+        <span class="btitle">其它考点</span>
+        <span class="muted">${bused.length} 个考点 · ${qOf(bused)} 题</span>
+        ${miniBar(countStates(topics, bused))}<span class="bchips">${stateChips(countStates(topics, bused))}</span>
+      </button>`
+    : ''
+  const other = due.length
+    ? `<div class="card"><b>该复习了</b>
+        <p class="muted" style="margin:6px 0 0">${due.map((d) => `<span class="tag due">${d.name} 逾期 ${d.lateDays} 天</span>`).join('')}</p>
+      </div>`
+    : ''
 
   $root.innerHTML = `
     <div class="card">
@@ -636,15 +903,9 @@ function renderReady() {
         <div><b>${state.log.length}</b>练过场次</div>
         <div><b>${due.length}</b>到期考点</div>
       </div>
-      ${app.warnings.length ? `<p class="muted" style="margin-top:12px">题库提醒：${app.warnings.slice(0, 3).join('；')}${app.warnings.length > 3 ? ' …' : ''}</p>` : ''}
+      <div style="margin-top:12px">${miniBar(all)} ${stateChips(all)}</div>
+      ${app.warnings.length ? `<p class="muted" style="margin-top:12px">题库提醒：${app.warnings.slice(0, 2).join('；')}${app.warnings.length > 2 ? ' …' : ''}</p>` : ''}
     </div>
-
-    ${due.length ? `<div class="card">
-      <b>该复习了</b>
-      <p class="muted" style="margin:6px 0 0">
-        ${due.map((d) => `<span class="tag due">${d.name} 逾期 ${d.lateDays} 天</span>`).join('')}
-      </p>
-    </div>` : ''}
 
     <div class="card">
       <div class="row">
@@ -662,16 +923,13 @@ function renderReady() {
         <span>只为没掌握的考点出题</span>
       </label>
       <p class="muted" style="margin:6px 0 0">
-        依据《知识状态库》：已掌握 ${mastered.topics.length} 个考点（${mastered.questions.length} 道题）默认不出；
-        当时没做出来的（🔴）照样出，🟡 待确认的也出。
+        依据《知识状态库》：已掌握 ${mastered.topics.length} 个考点（${mastered.questions.length} 道题）默认不出；🔴 照样出。
       </p>
     </div>
 
-    <div class="card">
-      <b>各考点</b>
-      <table><thead><tr><th>编号</th><th>考点</th><th>知识状态</th><th>对/做</th><th>掌握度</th><th>下次</th></tr></thead>
-      <tbody>${topicRows}</tbody></table>
-    </div>`
+    ${other}
+    <div class="muted" style="margin:18px 0 8px 2px">按知识块看考点（点进去还能只练这个考点）</div>
+    <div class="bgrid">${cards}${exCard}</div>`
 
   document.getElementById('start').onclick = () => startSession(Number(document.getElementById('n').value))
   const skip = document.getElementById('skipMastered')
@@ -682,6 +940,31 @@ function renderReady() {
     app.state = emptyState(bank.subject)
     render()
   }
+  $root.querySelectorAll('[data-b]').forEach((b) => {
+    b.onclick = () => { nav.block = b.dataset.b; nav.topic = null; render() }
+  })
+}
+
+/** 只练一个考点：把题库缩到该考点的题，再走正常组卷 */
+function startTopicSession(tid, n = 10) {
+  const pool = app.bank.questions.filter((q) => q.topic === tid)
+  if (!pool.length) { mascotSay('这个考点题库里没题', 'think', 5); return }
+  const sub = { ...app.bank, questions: pool }
+  const { picked, meta } = composePaper(sub, {
+    theta: app.state.theta,
+    n: Math.min(n, pool.length),
+    progress: app.state,
+    skipMastered: false,
+    band: 0.95,
+  })
+  if (!picked.length) { mascotSay('这个考点暂时抽不出题', 'think', 5); return }
+  app.mode = 'paper'
+  app.paper = { questions: picked, meta }
+  app.index = 0
+  app.answers = []
+  app.phase = 'practice'
+  mascotOnSessionStart()
+  nextQuestion()
 }
 
 function startSession(n) {
