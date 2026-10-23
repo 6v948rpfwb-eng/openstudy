@@ -32,14 +32,17 @@ function round3(x) {
 }
 
 /** 解析命令行 */
+let KEEP_TEX = true   // 是否保留原文 LaTeX（页面上用 KaTeX 排）
+
 function parseArgv(argv) {
-  const opts = { topics: null, out: null, files: [], excludeFigure: false, dryRun: false }
+  const opts = { topics: null, out: null, files: [], excludeFigure: false, dryRun: false, keepTex: false }
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     if (a === '--topics') opts.topics = argv[++i]
     else if (a === '--out') opts.out = argv[++i]
     else if (a === '--exclude-figure') opts.excludeFigure = true
     else if (a === '--dry-run') opts.dryRun = true
+    else if (a === '--keep-tex') opts.keepTex = true
     else if (a === '--figures') opts.figures = argv[++i]
     else if (a.startsWith('--')) throw new Error(`不认识的参数：${a}`)
     else opts.files.push(a)
@@ -208,6 +211,7 @@ function parsePaper(text, filePath, rules) {
       continue
     }
 
+    const rawStem = body            // 未经整理的原文字符串（含 $…$）
     const hasSubParts = /（\s*1\s*）/.test(body)
     const choices = extractChoices(body)
     const letters = ans.inline.replace(/[\s\u3000，,、；;]/g, '')
@@ -245,12 +249,16 @@ function parsePaper(text, filePath, rules) {
     const topic = topicOf(body, rules)
     const solution = ans.explain || ''
 
+    const hasMath = (x) => typeof x === 'string' && (/\$/.test(x) || /\\[a-zA-Z]{2,}/.test(x))
     questions.push({
       id,
       topic,
       type,
       difficulty: difficultyOf(num),
       stem,
+      ...(KEEP_TEX && hasMath(stem) ? { stemTex: stem } : {}),
+      ...(KEEP_TEX && choices && hasMath(choices.join(' ')) ? { choicesTex: choices } : {}),
+      ...(KEEP_TEX && hasMath(solution || '') ? { solutionTex: solution } : {}),
       ...(type === 'choice' ? { choices } : {}),
       answer,
       solution,
@@ -287,6 +295,7 @@ function parsePaper(text, filePath, rules) {
 
 function main() {
   const opts = parseArgv(process.argv.slice(2))
+  KEEP_TEX = opts.keepTex
 
   if (!opts.topics) throw new Error('必须用 --topics 指定考点表文件（见 tools/topics-physics.json）')
   if (opts.files.length === 0) throw new Error('至少要给一个真题 Markdown 文件')
