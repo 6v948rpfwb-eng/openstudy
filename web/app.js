@@ -745,12 +745,30 @@ function renderKnowledge() {
         <div><b>${fwEsc(n.name)}</b> <span class="muted">${fwEsc(n.topic || '')}</span></div>
         <span class="fst ${FST_CLASS(st)}">${fwEsc(st || '未测')}</span>
       </div>
-      <div class="muted" style="margin-top:12px">要点</div>
-      <ul class="mtight">${(n.core || []).map((x) => `<li>${renderMathText(x)}</li>`).join('')}</ul>
-      ${(n.formulas || []).length ? `<div class="muted" style="margin-top:12px">公式</div>
-        <div class="fbox">${(n.formulas || []).map((f) => `<div class="fml">${renderMathText(f)}</div>`).join('')}</div>` : ''}
-      ${(n.confusions || []).length ? `<div class="muted" style="margin-top:12px">最容易错的地方</div>
-        <ul class="mtight warn">${(n.confusions || []).map((x) => `<li>${renderMathText(x)}</li>`).join('')}</ul>` : ''}
+      <div class="qfront">
+        <div class="qlabel">先自己想 10 秒</div>
+        <div class="qtext">这个知识点是什么？什么时候用？最容易错在哪里？</div>
+      </div>
+      <details class="qans"${kb.open === kb.node ? ' open' : ''}>
+        <summary>看答案</summary>
+        <div class="muted" style="margin-top:12px">要点</div>
+        <ul class="mtight">${(n.core || []).map((x) => `<li>${renderMathText(x)}</li>`).join('')}</ul>
+        ${(n.formulas || []).length ? `<div class="muted" style="margin-top:12px">公式</div>
+          <div class="fbox">${(n.formulas || []).map((f) => `<div class="fml">${renderMathText(f)}</div>`).join('')}</div>` : ''}
+        ${(n.confusions || []).length ? `<div class="muted" style="margin-top:12px">最容易错的地方</div>
+          <ul class="mtight warn">${(n.confusions || []).map((x) => `<li>${renderMathText(x)}</li>`).join('')}</ul>` : ''}
+      </details>
+      ${(() => {
+        const qs = (app.bank && app.bank.questions || []).filter((q) => q.topic === n.topic)
+        const rec = (app.state && app.state.topics && app.state.topics[n.topic]) || {}
+        const tries = rec.attempts || 0
+        const miss = Math.max(0, tries - (rec.correct || 0))
+        return `<div class="qstats">
+          <span>题库 ${qs.length} 题</span><span>考点 ${fwEsc(n.topic || '—')}</span>
+          <span>做过 ${tries} 次</span><span class="${miss ? 'bad' : ''}">错 ${miss} 次</span>
+          ${qs.length ? `<button class="btn ghost small" id="drill">直接练这 ${Math.min(3, qs.length)} 题</button>` : '<span class="muted">这科还没收这个考点的题</span>'}
+        </div>`
+      })()}
       <div class="muted" style="margin-top:12px">要先会</div>
       <div class="kchips">${(n.prereq || []).map((id) => link(id, 'pre')).join('') || '<span class="muted">没有前置</span>'}</div>
       <div class="muted" style="margin-top:10px">学会了才能学</div>
@@ -758,6 +776,10 @@ function renderKnowledge() {
     </div>`
     bindCrumbs([null, { go: () => { kb.node = null; kb.block = n.block; render() } }])
     $root.querySelectorAll('[data-jump]').forEach((b) => { b.onclick = () => { kb.node = b.dataset.jump; kb.block = nodes[b.dataset.jump].block; render() } })
+    const qa = $root.querySelector('.qans')
+    if (qa) qa.ontoggle = () => { kb.open = qa.open ? kb.node : null }
+    const drill = document.getElementById('drill')
+    if (drill) drill.onclick = () => startTopicSession(n.topic, 3)
     return
   }
 
@@ -804,11 +826,27 @@ function renderKnowledge() {
       <span class="bchips">${stateChips(c)}</span>
     </button>`
   }).join('')
+  const pairs = (doc.pairs || []).filter((q) => nodes[q.a] && nodes[q.b])
+  const pairsHtml = pairs.length ? `<div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div><strong>易混对比</strong></div><span class="muted">${pairs.length} 组</span>
+      </div>
+      <div class="muted" style="margin-top:4px">成对摆在一起看：一样在哪、差在哪、什么信号用哪个。</div>
+    </div>
+    <div class="pairs">${pairs.map((q, i) => `<details class="paircard">
+      <summary><span class="ptitle">${fwEsc(q.title)}</span><span class="parrow">对比</span></summary>
+      <div class="prow"><span class="pk">一样</span><span>${renderMathText(q.same || '')}</span></div>
+      <div class="prow"><span class="pk">差在</span><span>${renderMathText(q.diff || '')}</span></div>
+      <div class="prow"><span class="pk">用哪个</span><span>${renderMathText(q.use || '')}</span></div>
+      <div class="kchips"><button class="kchip" data-jump="${fwEsc(q.a)}">${fwEsc(nodes[q.a].name)}</button>
+        <button class="kchip" data-jump="${fwEsc(q.b)}">${fwEsc(nodes[q.b].name)}</button></div>
+    </details>`).join('')}</div>` : ''
   $root.innerHTML = `<div class="card">
       <div><strong>${fwEsc(doc.title || '知识点图')}</strong></div>
       <div class="muted" style="margin-top:4px">这里只有知识点本身：定义、公式、易混点、前置关系。怎么解题去「方法论」。</div>
-    </div><div class="bgrid">${cards}</div>`
+    </div><div class="bgrid">${cards}</div>${pairsHtml}`
   $root.querySelectorAll('[data-b]').forEach((b) => { b.onclick = () => { app.kb.block = b.dataset.b; app.kb.node = null; render() } })
+  $root.querySelectorAll('[data-jump]').forEach((b) => { b.onclick = () => { app.kb.node = b.dataset.jump; app.kb.block = nodes[b.dataset.jump].block; render() } })
 }
 
 // 全景图：每个知识块一列，前置关系画箭头
@@ -835,6 +873,16 @@ function renderKnowledgeFullMap(doc) {
       svg += `<path class="kmap-edge" d="M${x1} ${y1} C${x1 + dx} ${y1} ${x2 - dx} ${y2} ${x2} ${y2}"/>`
     }
   }
+  // 第二种关系：易混对比（虚线，无箭头，蓝色偏紫）
+  const pairSeen = new Set()
+  for (const q of (doc.pairs || [])) {
+    const a = pos.get(q.a), b = pos.get(q.b)
+    if (!a || !b || q.a === q.b || pairSeen.has(q.a + '|' + q.b)) continue
+    pairSeen.add(q.a + '|' + q.b)
+    const x1 = a.x + NW, y1 = a.y + NODE_H / 2, x2 = b.x, y2 = b.y + NODE_H / 2
+    const dx = Math.max(24, Math.abs(x2 - x1) / 2)
+    svg += `<path class="kmap-pair" d="M${x1} ${y1} C${x1 + dx} ${y1} ${x2 - dx} ${y2} ${x2} ${y2}"/>`
+  }
   for (const [id, p] of pos) {
     const n = nodes[id]
     const st = topicState(n.topic)
@@ -857,6 +905,7 @@ function renderKnowledgeFullMap(doc) {
         <button class="mzbtn" id="mzIn">+</button><button class="mzbtn" id="mzFit">适应宽度</button>
         <button class="mzbtn" id="mzReset">100%</button>
         <span class="muted">滚轮滚动 · 按住拖动 · 双指捏合缩放</span>
+        <span class="klegend"><i class="lg-pre"></i>前置 <i class="lg-pair"></i>易混对比</span>
       </div>
       <div class="mapwrap" id="mapwrap">${svg}</div>
     </div>`
@@ -1305,6 +1354,37 @@ function startSession(n) {
     return
   }
   app.paper = { questions: picked, meta }
+  app.index = 0
+  app.answers = []
+  app.phase = 'practice'
+  mascotOnSessionStart()
+  nextQuestion()
+}
+
+// 只练某一个考点的题（从知识点详情直接进）
+function startTopicSession(topicId, n) {
+  const qs = (app.bank.questions || []).filter((q) => q.topic === topicId)
+  if (!qs.length) { mascotSay('这个考点还没收题', 'think', 5); return }
+  const rec = (app.state.topics && app.state.topics[topicId]) || {}
+  const rank = (q) => {
+    const r = (app.state.questions && app.state.questions[q.id]) || {}
+    return (r.attempts || 0) * 10 + Math.abs((q.difficulty ?? 0.5) - app.state.theta)
+  }
+  const picked = qs.slice().sort((a, b) => rank(a) - rank(b)).slice(0, n)
+  app.sessionXp = 0
+  app.correctStreak = 0
+  app.bestStreak = 0
+  app.gameInfo = null
+  app.mode = 'paper'
+  app.paper = {
+    questions: picked,
+    meta: {
+      requested: n, actual: picked.length, theta: app.state.theta,
+      widenedBand: false, difficultySpread: null,
+      topicUse: { [topicId]: picked.length },
+      pickedFresh: picked.length, pickedRepeat: 0, drill: true,
+    },
+  }
   app.index = 0
   app.answers = []
   app.phase = 'practice'

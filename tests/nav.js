@@ -17,6 +17,7 @@ const targetPath = process.argv[2]
   : join(here, '..', 'openstudy-data', 'openstudy.html')
 const html = readFileSync(targetPath, 'utf8')
 const blocks = [...html.matchAll(/<script>\n?([\s\S]*?)\n?<\/script>/g)].map((m) => m[1])
+const source = blocks.sort((a, b) => b.length - a.length)[0]
 const script = blocks.sort((a, b) => b.length - a.length)[0]
 if (!script) throw new Error(`${targetPath} 里没有内联脚本`)
 
@@ -170,12 +171,25 @@ clickEl(mapTab, '.tab')
 h = latest()
 if (process.env.NAV_DEBUG) console.log('KB_HEAD:', h.slice(0, 300), '| subject=', els.get('root') && 'x')
 ok(h.includes('这里只有知识点本身'), '知识图第一层：说明与练习/方法论的区别')
+const hMapRoot = h
 ok(clickSel('[data-b]', 0), '能点进第一个知识块')
 h = latest()
 ok(h.includes('个知识点') && h.includes('看全景图'), '知识图第二层：知识点列表 + 看全景图')
 ok(clickSel('[data-jump]', 0), '能点进一个知识点')
 h = latest()
 ok(h.includes('要点') && h.includes('要先会'), '知识图第三层：要点/前置')
+ok(h.includes('qfront') && h.includes('先自己想 10 秒'), '知识点详情：先给问题（问答卡）')
+ok(h.includes('class="qans"'), '知识点详情：答案默认折叠')
+ok(!/<details class="qans" open/.test(h), '知识点详情：默认不展开答案')
+ok(h.includes('qstats') && h.includes('题库') && h.includes('做过'), '知识点详情：题库题数/做过/错次')
+// 第一层应出现「易混对比」
+ok(hMapRoot.includes('易混对比') && hMapRoot.includes('paircard'), '知识图第一层：有易混对比区')
+ok(hMapRoot.includes('一样') && hMapRoot.includes('差在') && hMapRoot.includes('用哪个'), '对比卡三行齐全')
+const drillEl = document.getElementById('drill')
+ok(!!drillEl && typeof drillEl.onclick === 'function', '知识点详情：有「直接练这 N 题」并绑定事件')
+// 点击行为由源码级断言兜底（桩里 startTopicSession 依赖真实 state，不做端到端模拟）
+ok(source.includes('function startTopicSession('), '源码：存在只练某考点的会话语义')
+ok(source.includes("drill.onclick = () => startTopicSession(n.topic, 3)"), '源码：按钮绑定到 startTopicSession')
 
 // 回第二层再进全景图
 clickSel('[data-crumb]', 0)
