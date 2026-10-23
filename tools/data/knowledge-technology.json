@@ -1,0 +1,1202 @@
+{
+ "schema": "openstudy.knowledge/1",
+ "subject": "technology",
+ "title": "高中技术 · 知识点图",
+ "blocks": [
+  {
+   "id": "info",
+   "label": "信息与数据",
+   "note": ""
+  },
+  {
+   "id": "code",
+   "label": "数字编码",
+   "note": ""
+  },
+  {
+   "id": "algo",
+   "label": "算法与程序",
+   "note": ""
+  },
+  {
+   "id": "ds",
+   "label": "数据结构",
+   "note": ""
+  },
+  {
+   "id": "is",
+   "label": "信息系统与网络",
+   "note": ""
+  },
+  {
+   "id": "design",
+   "label": "设计与图样",
+   "note": ""
+  },
+  {
+   "id": "struct",
+   "label": "结构与流程",
+   "note": ""
+  },
+  {
+   "id": "system",
+   "label": "系统与控制",
+   "note": ""
+  },
+  {
+   "id": "elec",
+   "label": "电子控制",
+   "note": ""
+  }
+ ],
+ "nodes": {
+  "Kt-01": {
+   "name": "数据、信息、知识的关系",
+   "block": "info",
+   "topic": "T-01",
+   "core": [
+    "数据是符号记录；信息是加工后有意义的内容；知识是规律化、可指导决策的认知",
+    "三者由低到高：数据→信息→知识"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把「数据量大」当成信息量大"
+   ],
+   "prereq": []
+  },
+  "Kt-02": {
+   "name": "信息的特征",
+   "block": "info",
+   "topic": "T-02",
+   "core": [
+    "载体依附性、时效性、共享性、可加工性、价值性",
+    "同一个信息可以有多种载体"
+   ],
+   "formulas": [],
+   "confusions": [
+    "认为信息可以脱离载体传递"
+   ],
+   "prereq": []
+  },
+  "Kt-03": {
+   "name": "大数据的特征",
+   "block": "info",
+   "topic": "T-03",
+   "core": [
+    "数据量大、类型多样、速度快、价值密度低",
+    "处理思想是全体而非抽样"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把「数据多」等同于大数据"
+   ],
+   "prereq": []
+  },
+  "Kt-04": {
+   "name": "人工智能三大流派",
+   "block": "info",
+   "topic": "T-04",
+   "core": [
+    "符号主义（推理）、联结主义（神经网络）、行为主义（感知-动作）",
+    "人工智能不等于机器人"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把算法程序都叫人工智能"
+   ],
+   "prereq": []
+  },
+  "Kt-05": {
+   "name": "进制转换",
+   "block": "code",
+   "topic": "T-05",
+   "core": [
+    "二/八/十六进制与十进制互转：按位权展开、除基取余",
+    "二进制到十六进制每四位一组"
+   ],
+   "formulas": [],
+   "confusions": [
+    "按位权展开时把指数算错一位"
+   ],
+   "prereq": []
+  },
+  "Kt-06": {
+   "name": "ASCII 与汉字编码",
+   "block": "code",
+   "topic": "T-06",
+   "core": [
+    "ASCII 用 7 位表示 128 个字符，'0'=48、'A'=65、'a'=97",
+    "汉字用国标码/内码，一个汉字占 2 字节"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把 ASCII 码值记成大写与小写相同"
+   ],
+   "prereq": []
+  },
+  "Kt-07": {
+   "name": "字符与图像容量计算",
+   "block": "code",
+   "topic": "T-07",
+   "core": [
+    "存储容量 = 像素数 × 每像素位数 ÷ 8（字节）",
+    "字符容量 = 字符数 × 每字符字节数"
+   ],
+   "formulas": [],
+   "confusions": [
+    "忘记除以 8 就从位变成字节"
+   ],
+   "prereq": []
+  },
+  "Kt-08": {
+   "name": "图像数字化",
+   "block": "code",
+   "topic": "T-08",
+   "core": [
+    "采样决定分辨率，量化决定颜色数（位深度）",
+    "位深度 n → 颜色数 2^n"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把分辨率与位深度互换"
+   ],
+   "prereq": []
+  },
+  "Kt-09": {
+   "name": "声音数字化",
+   "block": "code",
+   "topic": "T-09",
+   "core": [
+    "采样频率、量化位数、声道数共同决定文件大小",
+    "采样频率越高越接近原声"
+   ],
+   "formulas": [],
+   "confusions": [
+    "漏乘声道数"
+   ],
+   "prereq": []
+  },
+  "Kt-10": {
+   "name": "视频与帧",
+   "block": "code",
+   "topic": "T-10",
+   "core": [
+    "视频 = 连续帧 + 帧率，文件大小与帧率、时长成正比",
+    "视频压缩常用帧间压缩"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把帧率当分辨率"
+   ],
+   "prereq": []
+  },
+  "Kt-11": {
+   "name": "文件格式与压缩",
+   "block": "code",
+   "topic": "T-11",
+   "core": [
+    "无损压缩可完全还原，有损压缩不可还原",
+    "常见格式：BMP 无压缩、JPG 有损、GIF 支持动画"
+   ],
+   "formulas": [],
+   "confusions": [
+    "认为 JPG 是无损压缩"
+   ],
+   "prereq": []
+  },
+  "Kt-12": {
+   "name": "数据可视化",
+   "block": "code",
+   "topic": "T-12",
+   "core": [
+    "柱状图比大小、折线图看趋势、饼图看占比",
+    "选错图表类型会误导"
+   ],
+   "formulas": [],
+   "confusions": [
+    "用饼图比较趋势"
+   ],
+   "prereq": []
+  },
+  "Kt-13": {
+   "name": "算法的三种基本结构",
+   "block": "algo",
+   "topic": "T-13",
+   "core": [
+    "顺序、选择、循环三种结构可以组合出任何算法",
+    "循环必须有终止条件"
+   ],
+   "formulas": [],
+   "confusions": [
+    "循环缺少终止条件"
+   ],
+   "prereq": []
+  },
+  "Kt-14": {
+   "name": "流程图符号",
+   "block": "algo",
+   "topic": "T-14",
+   "core": [
+    "圆角矩形=起止、平行四边形=输入输出、矩形=处理、菱形=判断",
+    "流程线带箭头表示执行方向"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把判断框画成矩形"
+   ],
+   "prereq": []
+  },
+  "Kt-15": {
+   "name": "流程图补全",
+   "block": "algo",
+   "topic": "T-15",
+   "core": [
+    "按已有步骤反推缺失框的内容与位置",
+    "判断框的两个分支要写清条件"
+   ],
+   "formulas": [],
+   "confusions": [
+    "分支条件写反"
+   ],
+   "prereq": []
+  },
+  "Kt-16": {
+   "name": "Python 基础语法",
+   "block": "algo",
+   "topic": "T-16",
+   "core": [
+    "缩进表示语句块",
+    "变量无需声明，类型随值"
+   ],
+   "formulas": [],
+   "confusions": [
+    "混用空格与 Tab 导致缩进错误"
+   ],
+   "prereq": []
+  },
+  "Kt-17": {
+   "name": "内置函数与字符串方法",
+   "block": "algo",
+   "topic": "T-17",
+   "core": [
+    "len、range、int、str、float 常用",
+    "字符串方法 split/join/find/slice 不改变原串"
+   ],
+   "formulas": [],
+   "confusions": [
+    "认为字符串方法会原地修改"
+   ],
+   "prereq": []
+  },
+  "Kt-18": {
+   "name": "列表",
+   "block": "algo",
+   "topic": "T-18",
+   "core": [
+    "列表可变，索引从 0 开始",
+    "切片 s[a:b] 取 a 到 b−1"
+   ],
+   "formulas": [],
+   "confusions": [
+    "切片右端被误当包含"
+   ],
+   "prereq": []
+  },
+  "Kt-19": {
+   "name": "字符串处理",
+   "block": "algo",
+   "topic": "T-19",
+   "core": [
+    "遍历、计数、拼接、查找是四类基本操作",
+    "字符串不可变，拼接产生新串"
+   ],
+   "formulas": [],
+   "confusions": [
+    "在循环里反复拼接长字符串（效率低）"
+   ],
+   "prereq": []
+  },
+  "Kt-20": {
+   "name": "队列",
+   "block": "ds",
+   "topic": "T-20",
+   "core": [
+    "先进先出，只在队尾入队、队头出队",
+    "用列表模拟时注意队头位置"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把队列当成先进后出"
+   ],
+   "prereq": []
+  },
+  "Kt-21": {
+   "name": "栈",
+   "block": "ds",
+   "topic": "T-21",
+   "core": [
+    "后进先出，只在栈顶入栈出栈",
+    "适合括号匹配、表达式求值"
+   ],
+   "formulas": [],
+   "confusions": [
+    "混淆入栈出栈顺序"
+   ],
+   "prereq": []
+  },
+  "Kt-22": {
+   "name": "链表",
+   "block": "ds",
+   "topic": "T-22",
+   "core": [
+    "每个结点存数据与指向下一结点的指针",
+    "插入删除不需移动元素，查找需从头遍历"
+   ],
+   "formulas": [],
+   "confusions": [
+    "认为链表能随机访问"
+   ],
+   "prereq": []
+  },
+  "Kt-23": {
+   "name": "树与二叉树",
+   "block": "ds",
+   "topic": "T-23",
+   "core": [
+    "树是层次结构，每个结点只有一个前驱",
+    "二叉树每个结点最多两个子结点"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把二叉树的度当成任意"
+   ],
+   "prereq": []
+  },
+  "Kt-24": {
+   "name": "二叉树基本操作",
+   "block": "ds",
+   "topic": "T-24",
+   "core": [
+    "遍历：先序（根左右）、中序（左根右）、后序（左右根）",
+    "完全二叉树可用数组顺序存储"
+   ],
+   "formulas": [],
+   "confusions": [
+    "遍历顺序写错父子位置"
+   ],
+   "prereq": []
+  },
+  "Kt-25": {
+   "name": "排序算法",
+   "block": "ds",
+   "topic": "T-25",
+   "core": [
+    "冒泡、选择、插入是 O(n²)；快排平均 O(n log n)",
+    "排序稳定性指相等元素相对次序不变"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把冒泡的比较次数算错"
+   ],
+   "prereq": []
+  },
+  "Kt-26": {
+   "name": "查找与递归",
+   "block": "ds",
+   "topic": "T-26",
+   "core": [
+    "顺序查找 O(n)，二分查找要求有序、O(log n)",
+    "递归要有终止条件与递推关系"
+   ],
+   "formulas": [],
+   "confusions": [
+    "二分查找用在无序表上"
+   ],
+   "prereq": []
+  },
+  "Kt-27": {
+   "name": "算法综合设计",
+   "block": "ds",
+   "topic": "T-27",
+   "core": [
+    "先理清输入输出，再定数据结构，最后写步骤",
+    "用具体小例子手工模拟验证"
+   ],
+   "formulas": [],
+   "confusions": [
+    "直接写代码不先模拟"
+   ],
+   "prereq": []
+  },
+  "Kt-28": {
+   "name": "信息系统的组成",
+   "block": "is",
+   "topic": "T-28",
+   "core": [
+    "硬件、软件、数据、通信网络、用户五要素",
+    "缺任何一项都不构成完整系统"
+   ],
+   "formulas": [],
+   "confusions": [
+    "漏掉「用户」这一要素"
+   ],
+   "prereq": []
+  },
+  "Kt-29": {
+   "name": "传感器、智能终端与执行器",
+   "block": "is",
+   "topic": "T-29",
+   "core": [
+    "传感器把物理量转为电信号；执行器把控制信号转为动作",
+    "智能终端负责采集与初步处理"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把传感器与执行器功能互换"
+   ],
+   "prereq": []
+  },
+  "Kt-30": {
+   "name": "信息系统的功能与局限",
+   "block": "is",
+   "topic": "T-30",
+   "core": [
+    "功能：输入、处理、存储、输出、控制",
+    "局限性：依赖网络与电力、存在安全风险"
+   ],
+   "formulas": [],
+   "confusions": [
+    "认为系统功能越多越好"
+   ],
+   "prereq": []
+  },
+  "Kt-31": {
+   "name": "网络基础",
+   "block": "is",
+   "topic": "T-31",
+   "core": [
+    "按覆盖范围分局域网、城域网、广域网",
+    "IP 地址标识主机，DNS 把域名解析为 IP"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把 IP 与域名混为一谈"
+   ],
+   "prereq": []
+  },
+  "Kt-32": {
+   "name": "网络资源共享与传输",
+   "block": "is",
+   "topic": "T-32",
+   "core": [
+    "资源共享包括硬件、软件、数据",
+    "带宽越大传输越快，时延还受路径影响"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把带宽当成时延"
+   ],
+   "prereq": []
+  },
+  "Kt-33": {
+   "name": "数据库基础",
+   "block": "is",
+   "topic": "T-33",
+   "core": [
+    "关系数据库用二维表存储，主键唯一标识记录",
+    "字段是列、记录是行"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把主键与外键混淆"
+   ],
+   "prereq": []
+  },
+  "Kt-34": {
+   "name": "SQL 查询",
+   "block": "is",
+   "topic": "T-34",
+   "core": [
+    "SELECT … FROM … WHERE … 是最基本结构",
+    "ORDER BY 排序、GROUP BY 分组"
+   ],
+   "formulas": [],
+   "confusions": [
+    "WHERE 与 HAVING 用混"
+   ],
+   "prereq": []
+  },
+  "Kt-35": {
+   "name": "信息安全与防护",
+   "block": "is",
+   "topic": "T-35",
+   "core": [
+    "威胁来源：病毒、木马、钓鱼、撞库",
+    "防护：强密码、加密、备份、权限控制"
+   ],
+   "formulas": [],
+   "confusions": [
+    "认为装了杀毒软件就绝对安全"
+   ],
+   "prereq": []
+  },
+  "Kt-36": {
+   "name": "信息社会责任",
+   "block": "is",
+   "topic": "T-36",
+   "core": [
+    "尊重知识产权、保护个人隐私、不传播虚假信息",
+    "使用他人作品要授权并注明出处"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把「网上能搜到」当可自由使用"
+   ],
+   "prereq": []
+  },
+  "Kt-37": {
+   "name": "物联网系统搭建",
+   "block": "is",
+   "topic": "T-37",
+   "core": [
+    "感知层—网络层—应用层三层结构",
+    "数据从传感器经网关上传到平台"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把网关当服务器"
+   ],
+   "prereq": []
+  },
+  "Kt-38": {
+   "name": "服务器端程序",
+   "block": "is",
+   "topic": "T-38",
+   "core": [
+    "接收请求、处理数据、返回响应",
+    "常用框架负责路由与数据交互"
+   ],
+   "formulas": [],
+   "confusions": [
+    "认为前端能直接读写数据库"
+   ],
+   "prereq": []
+  },
+  "Kt-39": {
+   "name": "数据处理实战",
+   "block": "is",
+   "topic": "T-39",
+   "core": [
+    "流程：采集→清洗→分析→可视化",
+    "清洗包括缺失值、异常值处理"
+   ],
+   "formulas": [],
+   "confusions": [
+    "跳过清洗直接分析"
+   ],
+   "prereq": []
+  },
+  "Kt-40": {
+   "name": "技术的性质",
+   "block": "design",
+   "topic": "T-40",
+   "core": [
+    "目的性、创新性、综合性、两面性、专利性",
+    "技术具有两面性，使用要考虑负面影响"
+   ],
+   "formulas": [],
+   "confusions": [
+    "只讲技术好处不讲风险"
+   ],
+   "prereq": []
+  },
+  "Kt-41": {
+   "name": "技术与人、社会、自然",
+   "block": "design",
+   "topic": "T-41",
+   "core": [
+    "技术推动社会发展，也带来环境与伦理问题",
+    "评价技术要看整体影响"
+   ],
+   "formulas": [],
+   "confusions": [
+    "认为技术进步必然带来好处"
+   ],
+   "prereq": []
+  },
+  "Kt-42": {
+   "name": "人机关系",
+   "block": "design",
+   "topic": "T-42",
+   "core": [
+    "高效、健康、舒适、安全是四个目标",
+    "人机关系要考虑人的生理与心理特点"
+   ],
+   "formulas": [],
+   "confusions": [
+    "只考虑效率忽略安全"
+   ],
+   "prereq": []
+  },
+  "Kt-43": {
+   "name": "设计的一般原则",
+   "block": "design",
+   "topic": "T-43",
+   "core": [
+    "实用、创新、经济、美观、道德、技术规范、可持续发展",
+    "原则之间可能冲突，要权衡"
+   ],
+   "formulas": [],
+   "confusions": [
+    "认为所有原则同等优先"
+   ],
+   "prereq": []
+  },
+  "Kt-44": {
+   "name": "设计分析",
+   "block": "design",
+   "topic": "T-44",
+   "core": [
+    "从物、人、环境三方面分析",
+    "找出主要矛盾与限制条件"
+   ],
+   "formulas": [],
+   "confusions": [
+    "漏掉环境因素"
+   ],
+   "prereq": []
+  },
+  "Kt-45": {
+   "name": "材料的性能",
+   "block": "design",
+   "topic": "T-45",
+   "core": [
+    "强度、硬度、韧性、耐腐蚀性等",
+    "选材要匹配受力与使用环境"
+   ],
+   "formulas": [],
+   "confusions": [
+    "只看强度不看韧性"
+   ],
+   "prereq": []
+  },
+  "Kt-46": {
+   "name": "设计的一般过程",
+   "block": "design",
+   "topic": "T-46",
+   "core": [
+    "发现与明确问题→制定方案→制作模型→测试评价→优化",
+    "评价后要回到前面的环节迭代"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把过程当单向一次完成"
+   ],
+   "prereq": []
+  },
+  "Kt-47": {
+   "name": "技术试验",
+   "block": "design",
+   "topic": "T-47",
+   "core": [
+    "目的：验证性能、发现问题",
+    "常用方法：对比试验、模拟试验、破坏性试验"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把试验与检验混为一谈"
+   ],
+   "prereq": []
+  },
+  "Kt-48": {
+   "name": "图样表达",
+   "block": "design",
+   "topic": "T-48",
+   "core": [
+    "三视图遵循长对正、高平齐、宽相等",
+    "剖视图用于表达内部结构"
+   ],
+   "formulas": [],
+   "confusions": [
+    "三视图方向对应错"
+   ],
+   "prereq": []
+  },
+  "Kt-49": {
+   "name": "尺寸标注",
+   "block": "design",
+   "topic": "T-49",
+   "core": [
+    "尺寸三要素：尺寸界线、尺寸线、尺寸数字",
+    "单位默认毫米，不写单位"
+   ],
+   "formulas": [],
+   "confusions": [
+    "标注重复或漏标定位尺寸"
+   ],
+   "prereq": []
+  },
+  "Kt-50": {
+   "name": "设计草图与主要尺寸",
+   "block": "design",
+   "topic": "T-50",
+   "core": [
+    "草图要能表达结构与关键尺寸",
+    "先定功能结构再画细节"
+   ],
+   "formulas": [],
+   "confusions": [
+    "只画外形不标尺寸"
+   ],
+   "prereq": []
+  },
+  "Kt-51": {
+   "name": "结构",
+   "block": "struct",
+   "topic": "T-51",
+   "core": [
+    "结构由构件组成，承受外力并传递",
+    "结构受力有拉力、压力、弯曲、剪切、扭转"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把弯曲受力当拉力"
+   ],
+   "prereq": []
+  },
+  "Kt-52": {
+   "name": "结构的稳定性",
+   "block": "struct",
+   "topic": "T-52",
+   "core": [
+    "稳定性与支撑面大小、重心高低、结构形状有关",
+    "三角形结构最稳定"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把稳定性与强度混同"
+   ],
+   "prereq": []
+  },
+  "Kt-53": {
+   "name": "结构的连接",
+   "block": "struct",
+   "topic": "T-53",
+   "core": [
+    "刚连接（焊接、铆接、螺栓）与铰连接",
+    "不同连接影响结构能否活动"
+   ],
+   "formulas": [],
+   "confusions": [
+    "认为铰连接也能传递弯矩"
+   ],
+   "prereq": []
+  },
+  "Kt-54": {
+   "name": "流程",
+   "block": "struct",
+   "topic": "T-54",
+   "core": [
+    "流程由若干环节与时序组成",
+    "环节可并行也可串行"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把时序当可有可无"
+   ],
+   "prereq": []
+  },
+  "Kt-55": {
+   "name": "流程设计与优化",
+   "block": "struct",
+   "topic": "T-55",
+   "core": [
+    "优化目的：缩短时间、提高效率、降低成本、保证质量",
+    "用关键路径找瓶颈环节"
+   ],
+   "formulas": [],
+   "confusions": [
+    "优化时漏掉必要的检验环节"
+   ],
+   "prereq": []
+  },
+  "Kt-56": {
+   "name": "系统",
+   "block": "system",
+   "topic": "T-56",
+   "core": [
+    "由相互联系的元素构成，具有整体功能",
+    "整体功能大于部分之和"
+   ],
+   "formulas": [],
+   "confusions": [
+    "只分析部分不分析联系"
+   ],
+   "prereq": []
+  },
+  "Kt-57": {
+   "name": "系统分析的原则",
+   "block": "system",
+   "topic": "T-57",
+   "core": [
+    "整体性、科学性、综合性",
+    "先整体后部分，先综合后分析"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把局部最优当整体最优"
+   ],
+   "prereq": []
+  },
+  "Kt-58": {
+   "name": "系统的优化",
+   "block": "system",
+   "topic": "T-58",
+   "core": [
+    "数学模型适用于可用公式表达的目标",
+    "非数学模型用于难以量化的目标"
+   ],
+   "formulas": [],
+   "confusions": [
+    "对可量化问题用经验判断"
+   ],
+   "prereq": []
+  },
+  "Kt-59": {
+   "name": "控制",
+   "block": "system",
+   "topic": "T-59",
+   "core": [
+    "控制是按目的改变对象状态",
+    "开环与闭环的区别在于有无反馈"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把人工控制当闭环"
+   ],
+   "prereq": []
+  },
+  "Kt-60": {
+   "name": "控制系统的组成",
+   "block": "system",
+   "topic": "T-60",
+   "core": [
+    "控制器、执行器、被控对象、检测装置、输入输出",
+    "检测装置负责反馈量采集"
+   ],
+   "formulas": [],
+   "confusions": [
+    "漏掉检测装置"
+   ],
+   "prereq": []
+  },
+  "Kt-61": {
+   "name": "控制方式与控制系统框图",
+   "block": "system",
+   "topic": "T-61",
+   "core": [
+    "开环：无反馈，简单但易受干扰；闭环：有反馈，抗干扰强",
+    "框图按信号流方向连线"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把反馈量当输入量"
+   ],
+   "prereq": []
+  },
+  "Kt-62": {
+   "name": "干扰因素与反馈",
+   "block": "system",
+   "topic": "T-62",
+   "core": [
+    "干扰是除输入外影响被控量的因素",
+    "反馈用于纠正偏差"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把干扰与输入混同"
+   ],
+   "prereq": []
+  },
+  "Kt-63": {
+   "name": "电子元器件识别",
+   "block": "elec",
+   "topic": "T-63",
+   "core": [
+    "电阻、电容、二极管、三极管、继电器各有图形符号",
+    "实物与符号要会对应"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把二极管符号方向画反"
+   ],
+   "prereq": []
+  },
+  "Kt-64": {
+   "name": "传感器的类别",
+   "block": "elec",
+   "topic": "T-64",
+   "core": [
+    "热敏、光敏、湿敏、力敏、磁敏",
+    "传感器把非电量转为电信号"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把传感器当执行器"
+   ],
+   "prereq": []
+  },
+  "Kt-65": {
+   "name": "二极管",
+   "block": "elec",
+   "topic": "T-65",
+   "core": [
+    "单向导电，正向导通压降约 0.7 V",
+    "稳压二极管需反向使用"
+   ],
+   "formulas": [],
+   "confusions": [
+    "认为反向也能导通"
+   ],
+   "prereq": []
+  },
+  "Kt-66": {
+   "name": "三极管",
+   "block": "elec",
+   "topic": "T-66",
+   "core": [
+    "三个电极：基极 b、集电极 c、发射极 e",
+    "放大状态条件：发射结正偏、集电结反偏"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把 c、e 极接反"
+   ],
+   "prereq": []
+  },
+  "Kt-67": {
+   "name": "三极管的开关作用",
+   "block": "elec",
+   "topic": "T-67",
+   "core": [
+    "饱和导通相当于开关闭合，截止相当于断开",
+    "基极电流足够大才能饱和"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把放大状态当开关状态"
+   ],
+   "prereq": []
+  },
+  "Kt-68": {
+   "name": "电容",
+   "block": "elec",
+   "topic": "T-68",
+   "core": [
+    "隔直流通交流，充放电需要时间",
+    "电容两端电压不能突变"
+   ],
+   "formulas": [],
+   "confusions": [
+    "认为电容阻交流"
+   ],
+   "prereq": []
+  },
+  "Kt-69": {
+   "name": "继电器",
+   "block": "elec",
+   "topic": "T-69",
+   "core": [
+    "用小电流控制大电流，实现触点开关",
+    "线圈与触点电气隔离"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把线圈与触点电路的电源混接"
+   ],
+   "prereq": []
+  },
+  "Kt-70": {
+   "name": "模拟与数字信号",
+   "block": "elec",
+   "topic": "T-70",
+   "core": [
+    "模拟信号连续变化，数字信号只有高低两个电平",
+    "数字信号抗干扰强"
+   ],
+   "formulas": [],
+   "confusions": [
+    "认为数字信号不会失真"
+   ],
+   "prereq": []
+  },
+  "Kt-71": {
+   "name": "门电路",
+   "block": "elec",
+   "topic": "T-71",
+   "core": [
+    "与门：全 1 出 1；或门：有 1 出 1；非门：取反",
+    "与非、或非要再取反"
+   ],
+   "formulas": [],
+   "confusions": [
+    "与非门漏掉最后取反"
+   ],
+   "prereq": []
+  },
+  "Kt-72": {
+   "name": "逻辑关系口诀",
+   "block": "elec",
+   "topic": "T-72",
+   "core": [
+    "与=全真才真，或=有真即真，非=真假相反",
+    "复杂电路按级从输入到输出推"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把与门与或门定义记反"
+   ],
+   "prereq": []
+  },
+  "Kt-73": {
+   "name": "逻辑电路设计",
+   "block": "elec",
+   "topic": "T-73",
+   "core": [
+    "先写真值表，再化简表达式，最后画电路",
+    "用卡诺图或布尔代数化简"
+   ],
+   "formulas": [],
+   "confusions": [
+    "真值表漏组合"
+   ],
+   "prereq": []
+  },
+  "Kt-74": {
+   "name": "信号处理电路",
+   "block": "elec",
+   "topic": "T-74",
+   "core": [
+    "常见功能：放大、滤波、整形、转换",
+    "按信号流向逐级分析"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把滤波当放大"
+   ],
+   "prereq": []
+  },
+  "Kt-75": {
+   "name": "比较器电路",
+   "block": "elec",
+   "topic": "T-75",
+   "core": [
+    "比较两输入电压高低，输出高或低电平",
+    "参考电压决定翻转点"
+   ],
+   "formulas": [],
+   "confusions": [
+    "忽略参考电压的设定"
+   ],
+   "prereq": []
+  },
+  "Kt-76": {
+   "name": "区间控制电路",
+   "block": "elec",
+   "topic": "T-76",
+   "core": [
+    "用上下限两次比较实现区间判断",
+    "常配合继电器控制设备启停"
+   ],
+   "formulas": [],
+   "confusions": [
+    "上下限值写反"
+   ],
+   "prereq": []
+  },
+  "Kt-77": {
+   "name": "反馈与自锁电路",
+   "block": "elec",
+   "topic": "T-77",
+   "core": [
+    "自锁：输出经反馈回到输入维持状态",
+    "反馈分正反馈（振荡）与负反馈（稳定）"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把自锁与振荡混同"
+   ],
+   "prereq": []
+  },
+  "Kt-78": {
+   "name": "光控翻转电路",
+   "block": "elec",
+   "topic": "T-78",
+   "core": [
+    "光照变化使比较器输出翻转，配合反馈实现保持",
+    "需要设定光敏电阻的分压点"
+   ],
+   "formulas": [],
+   "confusions": [
+    "忽略分压电阻的作用"
+   ],
+   "prereq": []
+  },
+  "Kt-79": {
+   "name": "焊接与面包板",
+   "block": "elec",
+   "topic": "T-79",
+   "core": [
+    "焊接顺序：先低后高、先小后大；避免虚焊",
+    "面包板中间凹槽两侧不导通"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把面包板同列横向当导通"
+   ],
+   "prereq": []
+  },
+  "Kt-80": {
+   "name": "多用电表测量",
+   "block": "elec",
+   "topic": "T-80",
+   "core": [
+    "测二极管用电阻挡，正反向阻值差别大",
+    "测三极管要判断 b、c、e 与类型"
+   ],
+   "formulas": [],
+   "confusions": [
+    "用电压挡测电阻"
+   ],
+   "prereq": []
+  },
+  "Kt-81": {
+   "name": "数字集成电路",
+   "block": "elec",
+   "topic": "T-81",
+   "core": [
+    "常见 74 系列芯片，注意电源脚与使能脚",
+    "悬空输入可能被误判为高电平"
+   ],
+   "formulas": [],
+   "confusions": [
+    "把未用输入端悬空"
+   ],
+   "prereq": []
+  },
+  "Kt-82": {
+   "name": "电路仿真",
+   "block": "elec",
+   "topic": "T-82",
+   "core": [
+    "仿真可先验证逻辑再搭实物",
+    "注意元件参数与电源电压设置"
+   ],
+   "formulas": [],
+   "confusions": [
+    "仿真通过就不再实测"
+   ],
+   "prereq": []
+  }
+ }
+}
