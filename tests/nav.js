@@ -22,7 +22,8 @@ if (!script) throw new Error(`${targetPath} 里没有内联脚本`)
 
 const CLASS_ATTR = { '.tab': 'v', '.subjcard': 'bank' }
 const HANDLERS = new Map()
-const keyOf = (sel, ds) => sel + '|' + JSON.stringify(ds || {})
+// 桩里同一个控件可能被不同选择器取到（如 '.tab' 与 '.tab[data-v]'），句柄一律只按 data-* 认
+const keyOf = (sel, ds) => JSON.stringify(ds || {})
 const renders = []
 let gen = 0
 const selCache = new Map()
@@ -57,6 +58,9 @@ const document = {
   getElementById(id) { if (!els.has(id)) els.set(id, makeEl()) ; return els.get(id) },
   querySelectorAll(sel) {
     if (/^#[A-Za-z0-9_-]+$/.test(sel)) return [document.getElementById(sel.slice(1))]
+    // 复合选择器（如 '.tab[data-v]'）只按方括号里的 data-* 取，桩不需要真 CSS 引擎
+    const bracket = sel.match(/\[(data-[a-z]+)\]/)
+    if (bracket && !/^\[data-[a-z]+\]$/.test(sel)) return document.querySelectorAll('[' + bracket[1] + ']')
     const key = sel + '#' + gen
     if (selCache.has(key)) return selCache.get(key)
     const m = sel.match(/^\[data-([a-z]+)\]$/)
@@ -200,6 +204,16 @@ ok(clickSel('[data-t]', 0), '练习页能点进考点')
 h = latest()
 ok(h.includes('只练这个考点'), '练习页第三层：有「只练这个考点」按钮')
 ok(h.includes('题库题数'), '练习页第三层：显示该考点题数')
+
+// ---- 返回上一级（新加的圆圈箭头）----
+clickEl(document.querySelectorAll('.tab').find((t) => t.dataset.v === 'practice'), '.tab')
+ok(!String(document.getElementById('tabs')._html).includes('backbtn'), '最外层不显示返回按钮')
+const firstBlock = document.querySelectorAll('[data-b]')[0]
+clickEl(firstBlock, '[data-b]')
+ok(String(document.getElementById('tabs')._html).includes('backbtn'), '进到知识块后出现返回按钮')
+const backEl = document.querySelectorAll('#backbtn')[0]
+backEl.onclick()
+ok(latest().includes('个考点'), '点返回回到最外层')
 
 if (process.env.NAV_DEBUG) {
   console.log('--- 练习页最新 HTML ---')

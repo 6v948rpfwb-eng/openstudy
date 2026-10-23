@@ -168,11 +168,15 @@ function renderTabs() {
   const bar = document.getElementById('tabs')
   if (!bar) return
   if (!FW_SUBJECTS.length) { bar.innerHTML = ''; return }
+  const canBack = backTarget() !== null
   bar.innerHTML = `
+    ${canBack ? `<button class="tab backbtn" id="backbtn" title="返回上一级">↩</button>` : ''}
     <button class="tab ${app.view === 'practice' ? 'on' : ''}" data-v="practice">练习</button>
     <button class="tab ${app.view === 'framework' ? 'on' : ''}" data-v="framework">方法论</button>
     <button class="tab ${app.view === 'map' ? 'on' : ''}" data-v="map">知识图</button>`
-  bar.querySelectorAll('.tab').forEach((b) => {
+  const bb = bar.querySelector('#backbtn')
+  if (bb) bb.onclick = () => { goBack() }
+  bar.querySelectorAll('.tab[data-v]').forEach((b) => {
     b.onclick = () => {
       if (app.view !== b.dataset.v) { app.view = b.dataset.v; navReset() }
       else navReset() // 已经在这一页：再点一次回到最外层
@@ -180,6 +184,43 @@ function renderTabs() {
       render()
     }
   })
+}
+
+// ---------- 返回上一级 ----------
+// 层级：做题中 → 练习根 → 知识块 → 单个考点；方法论同理（分类 → 题型）；知识图（块 → 单个知识点）
+function backTarget() {
+  if (app.phase === 'practice') return 'exitSession'
+  if (app.view === 'practice') {
+    if (app.nav.topic) return 'practice.topic'
+    if (app.nav.block) return 'practice.block'
+    return null
+  }
+  if (app.view === 'framework') {
+    if (app.mnav.method) return 'framework.method'
+    if (app.mnav.group) return 'framework.group'
+    return null
+  }
+  if (app.view === 'map') {
+    if (app.kb.node) return 'map.node'
+    if (app.kb.block) return 'map.block'
+    return null
+  }
+  return null
+}
+
+function goBack() {
+  const t = backTarget()
+  if (!t) return
+  if (t === 'exitSession') {
+    app.phase = 'ready'
+    app.session = null
+  } else if (t === 'practice.topic') app.nav.topic = null
+  else if (t === 'practice.block') app.nav.block = null
+  else if (t === 'framework.method') app.mnav.method = null
+  else if (t === 'framework.group') app.mnav.group = null
+  else if (t === 'map.node') app.kb.node = null
+  else if (t === 'map.block') app.kb.block = null
+  render()
 }
 
 // ---------- 通用：状态、面包屑、小块 ----------
