@@ -143,6 +143,7 @@ const fwConst = `const __FRAMEWORK_DOCS__ = ${JSON.stringify(fwDocs)};`
 const dataDir = join(here, 'tools', 'data')
 const kDocs = {}
 const mDocs = {}
+let thinkDoc = null
 if (existsSync(dataDir)) {
   for (const f of readdirSync(dataDir)) {
     if (!/\.json$/.test(f)) continue
@@ -151,12 +152,13 @@ if (existsSync(dataDir)) {
       if (typeof d.schema !== 'string') continue
       if (d.schema.startsWith('openstudy.knowledge/')) kDocs[d.subject || f] = d
       if (d.schema.startsWith('openstudy.methods/')) mDocs[d.subject || f] = d
+      if (d.schema.startsWith('openstudy.thinking/')) thinkDoc = d
     } catch (e) {
       console.warn(`跳过 data/${f}：${e.message}`)
     }
   }
 }
-const kConst = `const __KNOWLEDGE_DOCS__ = ${JSON.stringify(kDocs)};\nconst __METHOD_DOCS__ = ${JSON.stringify(mDocs)};`
+const kConst = `const __KNOWLEDGE_DOCS__ = ${JSON.stringify(kDocs)};\nconst __METHOD_DOCS__ = ${JSON.stringify(mDocs)};\nconst __THINKING_DOC__ = ${JSON.stringify(thinkDoc)};`
 
 const bundle = `(function(){\n"use strict";\n${bankConst}\n${fwConst}\n${kConst}\n${parts.join('\n\n')}\n})();`
 

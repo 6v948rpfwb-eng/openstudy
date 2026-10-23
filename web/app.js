@@ -414,6 +414,7 @@ function topicDetailHTML(doc, tid, extra = '') {
 // 数据来源 tools/data/methods-*.json；每个方法 = 一类题的「触发特征 → 动作序列 → 必查项」
 function methodDocs() { return typeof __METHOD_DOCS__ !== 'undefined' ? __METHOD_DOCS__ : {} }
 function knowledgeDocs() { return typeof __KNOWLEDGE_DOCS__ !== 'undefined' ? __KNOWLEDGE_DOCS__ : {} }
+function thinkingDoc() { return typeof __THINKING_DOC__ !== 'undefined' && __THINKING_DOC__ ? __THINKING_DOC__ : null }
 function curSubject() { return (app.bank && app.bank.subject) || app.fw.subject }
 function topicState(tid) {
   const t = app.bank && app.bank.topics ? app.bank.topics[tid] : null
@@ -430,6 +431,35 @@ function renderMethods() {
     return
   }
   const list = doc.methods || []
+
+  // 第三层之一：一条思想方法
+  const th = thinkingDoc()
+  if (m.think && th) {
+    const e = (th.entries || []).find((x) => x.id === m.think)
+    if (e) {
+      const blk = (th.blocks || []).find((b) => b.id === e.block) || {}
+      $root.innerHTML = crumbTrail([
+        { label: '思想方法' },
+        { label: blk.label || e.block, go: () => { m.think = null; m.thinkBlock = e.block; render() } },
+        { label: e.name },
+      ]) + `<div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div><b>${fwEsc(e.name)}</b></div><span class="muted">${fwEsc(e.id)}</span>
+        </div>
+        <div class="thinkone">${renderMathText(e.one || '')}</div>
+        <div class="muted" style="margin-top:14px">什么时候该想到它</div>
+        <ul class="mtight">${(e.when || []).map((x) => `<li>${renderMathText(x)}</li>`).join('')}</ul>
+        <div class="muted" style="margin-top:12px">怎么做（三步）</div>
+        <ol class="mtight">${(e.how || []).map((x) => `<li>${renderMathText(x)}</li>`).join('')}</ol>
+        <div class="muted" style="margin-top:12px">各科的样子</div>
+        ${(e.examples || []).map((x) => `<div class="thx"><span class="thxs">${fwEsc(x.s)}</span><span>${renderMathText(x.t)}</span></div>`).join('')}
+        ${(e.traps || []).length ? `<div class="muted" style="margin-top:12px">容易用错的地方</div>
+          <ul class="mtight warn">${(e.traps || []).map((x) => `<li>${renderMathText(x)}</li>`).join('')}</ul>` : ''}
+      </div>`
+      bindCrumbs([{ go: () => { m.think = null; render() } }, { go: () => { m.think = null; m.thinkBlock = e.block; render() } }])
+      return
+    }
+  }
 
   // 第三层：一个方法的完整打法
   if (m.method) {
@@ -467,6 +497,28 @@ function renderMethods() {
     }
   }
 
+  // 第二层之二：某一类思想方法里的条目
+  if (m.thinkBlock && th) {
+    const blk = (th.blocks || []).find((b) => b.id === m.thinkBlock) || {}
+    const items = (th.entries || []).filter((x) => x.block === m.thinkBlock)
+    const rows = items.map((x) => `<button class="trow" data-tk="${fwEsc(x.id)}">
+      <span class="tid">${fwEsc(x.id)}</span>
+      <span class="tname">${fwEsc(x.name)}<span class="tsub">${fwEsc((x.one || '').slice(0, 30))}</span></span>
+      <span class="muted tside">${(x.how || []).length} 步</span>
+    </button>`).join('')
+    $root.innerHTML = crumbTrail([{ label: '思想方法' }, { label: blk.label || m.thinkBlock }]) + `
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div><b>${fwEsc(blk.label || m.thinkBlock)}</b></div><span class="muted">${items.length} 条</span>
+        </div>
+        <div class="muted" style="margin-top:6px">${fwEsc(blk.note || '')}</div>
+      </div>
+      <div class="tlist">${rows}</div>`
+    bindCrumbs([{ go: () => { m.thinkBlock = null; render() } }])
+    $root.querySelectorAll('[data-tk]').forEach((b) => { b.onclick = () => { m.think = b.dataset.tk; render() } })
+    return
+  }
+
   // 第二层：某一组（A/B/C/D）里的题型
   if (m.group) {
     const g = m.group
@@ -492,19 +544,31 @@ function renderMethods() {
   }
 
   // 第一层：四个组
-  const cards = Object.entries(doc.groups || {}).map(([g, info]) => {
-    const n = list.filter((x) => x.group === g).length
+  const cards = Object.entries(doc.groups || {}).map(([g, info]) => [g, info, list.filter((x) => x.group === g).length])
+    .filter(([, , n]) => n > 0).map(([g, info, n]) => {
     return `<button class="bcard" data-g="${g}">
       <span class="gbadge b${g} bbig">${g}</span>
       <span class="btitle">${fwEsc(info.label || g)}</span>
       <span class="muted">${n} 类题 · ${fwEsc(info.desc || '')}</span>
     </button>`
   }).join('')
-  $root.innerHTML = `<div class="card">
-      <div><strong>${fwEsc(doc.title || '方法论')}</strong></div>
+  const thCards = th ? (th.blocks || []).map((b) => {
+    const n = (th.entries || []).filter((x) => x.block === b.id).length
+    return `<button class="bcard think" data-tb="${fwEsc(b.id)}">
+      <span class="btitle">${fwEsc(b.label)}</span>
+      <span class="muted">${n} 条方法</span>
+    </button>`
+  }).join('') : ''
+  $root.innerHTML = `${th ? `<div class="card">
+      <div><strong>思想方法</strong><span class="muted">　先想「该用哪种思想」，再看具体题型</span></div>
+      <div class="muted" style="margin-top:4px">这些是跨学科通用的：等效替代、守恒、微元、临界、对称……一条思想配各科的样子。</div>
+    </div><div class="bgrid">${thCards}</div>` : ''}
+    <div class="card" style="margin-top:18px">
+      <div><strong>${fwEsc(doc.title || '按题型')}</strong></div>
       <div class="muted" style="margin-top:4px">这里按「题目长什么样」分类。点进去看这一类题的触发特征、动作序列和必查项。</div>
     </div><div class="bgrid">${cards}</div>`
   $root.querySelectorAll('[data-g]').forEach((b) => { b.onclick = () => { m.group = b.dataset.g; m.method = null; render() } })
+  $root.querySelectorAll('[data-tb]').forEach((b) => { b.onclick = () => { m.thinkBlock = b.dataset.tb; m.think = null; render() } })
 }
 
 // ---------- 存档 ----------
