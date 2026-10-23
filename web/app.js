@@ -576,9 +576,6 @@ function renderKnowledge() {
       <div><strong>${fwEsc(doc.title || '知识点图')}</strong></div>
       <div class="muted" style="margin-top:4px">这里只有知识点本身：定义、公式、易混点、前置关系。怎么解题去「方法论」。</div>
     </div><div class="bgrid">${cards}</div>`
-  $root.querySelectorAll('[data-paper]').forEach((b) => {
-    b.onclick = () => startPaperSession(b.dataset.paper)
-  })
   $root.querySelectorAll('[data-b]').forEach((b) => { b.onclick = () => { app.kb.block = b.dataset.b; app.kb.node = null; render() } })
 }
 
@@ -949,6 +946,9 @@ function renderReady() {
     app.state = emptyState(bank.subject)
     render()
   }
+  $root.querySelectorAll('[data-paper]').forEach((b) => {
+    b.onclick = () => startPaperSession(b.dataset.paper)
+  })
   $root.querySelectorAll('[data-b]').forEach((b) => {
     b.onclick = () => { nav.block = b.dataset.b; nav.topic = null; render() }
   })
