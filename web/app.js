@@ -425,6 +425,68 @@ async function pullRemote(subject) {
   } catch { return null }
 }
 
+
+// ---------- 问大肥鱼：拼好上下文，一键复制到 DSH 对话框 ----------
+// 思路：网页没法直接调用 DSH（本地服务要令牌），所以这里负责「把问题连同题目、考点、
+// 你的作答一起整理成一段话」，复制到剪贴板，切到 DSH 粘贴发送即可。
+function buildAskPrompt(info) {
+  const it = info || {}
+  const lines = []
+  const head = ['【开卷提问】']
+  if (it.subject) head.push(`学科：${it.subjectName || it.subject}`)
+  if (it.view) head.push(`视图：${it.view}`)
+  if (it.topicName) head.push(`考点：${it.topicName}${it.topicId ? '（' + it.topicId + '）' : ''}`)
+  lines.push(head.join(' ｜ '))
+  if (it.stem) lines.push('', '题干：' + String(it.stem).replace(/\s+/g, ' ').trim())
+  if (Array.isArray(it.choices) && it.choices.length) {
+    const abc = 'ABCDEFGHIJ'
+    lines.push('选项：' + it.choices.map((c, i) => `${abc[i]}. ${String(c).trim()}`).join('  '))
+  }
+  if (it.myAnswer !== undefined && it.myAnswer !== null && it.myAnswer !== '') {
+    lines.push('我的答案：' + it.myAnswer)
+  }
+  if (it.correct !== undefined && it.correct !== null) {
+    lines.push('系统判定：' + (it.correct ? '对' : '错') + (it.reference ? `　参考：${String(it.reference).replace(/\s+/g, ' ').slice(0, 200)}` : ''))
+  }
+  if (it.note) lines.push('备注：' + it.note)
+  lines.push('', '我的问题：' + (it.question || '（待填）'))
+  return lines.join('\n')
+}
+
+async function copyText(text) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch (e) { /* 下面用兜底方案 */ }
+  try {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    document.body.appendChild(ta)
+    ta.select()
+    const ok = document.execCommand && document.execCommand('copy')
+    document.body.removeChild(ta)
+    return !!ok
+  } catch (e) { return false }
+}
+
+/** 复制 + 记进提问队列（队列是给「回到 DSH 里翻旧问题」用的备份） */
+async function askFromPage(info) {
+  const text = buildAskPrompt(info)
+  const copied = await copyText(text)
+  const saved = await sendQuestion({
+    subject: info?.subject,
+    questionId: info?.questionId ?? null,
+    stem: info?.stem ?? null,
+    myAnswer: info?.myAnswer ?? null,
+    correct: info?.correct ?? null,
+    reference: info?.reference ?? null,
+    message: info?.question || '（未写问题）',
+  })
+  return { copied, saved: saved.ok, text }
+}
+
 async function sendQuestion(payload) {
   if (API_BASE === null) return { ok: false, reason: 'offline' }
   try {
@@ -749,9 +811,49 @@ function setupMapZoom() {
   apply()
 }
 
+
+// 悬浮「问」按钮：任何视图都能用，自动带上当前学科与所在位置
+function wireAskFloat() {
+  const btn = document.getElementById('askfloat')
+  const panel = document.getElementById('askpanel')
+  const ta = document.getElementById('askpanel-text')
+  const copyBtn = document.getElementById('askpanel-copy')
+  const closeBtn = document.getElementById('askpanel-close')
+  const msg = document.getElementById('askpanel-msg')
+  if (!btn || !panel) return
+  btn.onclick = () => {
+    panel.hidden = !panel.hidden
+    if (!panel.hidden && ta) { ta.value = ''; ta.focus() }
+  }
+  if (closeBtn) closeBtn.onclick = () => { panel.hidden = true }
+  if (copyBtn) {
+    copyBtn.onclick = async () => {
+      const text = (ta?.value || '').trim()
+      const where = { practice: '练习', framework: '方法论', map: '知识图' }[app.view] || '练习'
+      const topicId = app.nav?.topic || app.kb?.node || app.mnav?.method || null
+      const r = await askFromPage({
+        subject: app.bank?.subject,
+        subjectName: app.bank?.title,
+        view: where,
+        topicId,
+        topicName: topicId ? (app.bank?.topics?.[topicId]?.name
+          || (FW_DOCS[app.bank?.subject]?.topics?.[topicId]?.name)) : null,
+        question: text || '（未写问题，请补充）',
+      })
+      if (msg) {
+        msg.textContent = r.copied
+          ? '已复制，切到 DSH 窗口 ⌘V 粘贴发送'
+          : '复制没成功，手动复制下面这段'
+      }
+      if (!r.copied && msg) msg.textContent = r.text.slice(0, 80) + '…'
+    }
+  }
+}
+
 // ---------- 渲染 ----------
 function render() {
   mountMascot()
+  wireAskFloat()
   mascotSetActive(app.phase === 'practice')
   renderSubjects()
   renderTabs()
@@ -1247,7 +1349,7 @@ function renderPractice() {
         <summary>这题想问</summary>
         <textarea id="asktext" rows="3" placeholder="想问什么？比如：为什么 B 不对、这一步怎么来的"></textarea>
         <div class="row" style="margin-top:8px">
-          <button class="btn plain" id="askbtn">记进提问队列</button>
+          <button class="btn plain" id="askbtn">复制提问（粘到 DSH 里问我）</button>
           <span class="muted" id="askmsg"></span>
         </div>
       </details>
@@ -1261,22 +1363,27 @@ function renderPractice() {
       const text = (ta?.value || '').trim()
       if (!text) { if (msg) msg.textContent = '先写点什么'; return }
       const q = app.paper.questions[app.index]
-      if (msg) msg.textContent = '记录中…'
-      const r = await sendQuestion({
+      if (msg) msg.textContent = '整理中…'
+      const r = await askFromPage({
         subject: app.bank?.subject,
+        subjectName: app.bank?.title,
+        view: '练习',
+        topicId: q?.topic,
+        topicName: app.bank?.topics?.[q?.topic]?.name,
         questionId: q?.id,
         stem: q?.stem,
+        choices: q?.choices ?? null,
         myAnswer: c.graded ? (app.current.picked ?? app.current.input ?? '') : null,
         correct: c.graded ? c.graded.correct : null,
         reference: q?.answer?.reference ?? null,
-        message: text,
+        question: text,
       })
       if (msg) {
-        msg.textContent = r.ok
-          ? '已记下。回到对话里说「看看提问队列」，我就能看到。'
-          : '没连上本地服务器，这次没记下（用 打开练习.sh 启动才有服务器）'
+        msg.textContent = r.copied
+          ? '已复制。切到 DSH 窗口，⌘V 粘贴后回车，我就能看到完整题目和你的问题。'
+          : '复制没成功：手动选中下面的文字复制也行'
       }
-      if (r.ok && ta) ta.value = ''
+      if (r.copied && ta) ta.value = ''
     }
   }
 
@@ -1458,3 +1565,8 @@ function escapeHtml(s) {
 function escapeAttr(s) { return escapeHtml(s) }
 
 render()
+
+// 测试钩子：把纯函数挂到 globalThis，方便 node 里离线断言（不影响页面行为）
+if (typeof globalThis !== 'undefined') {
+  globalThis.__openstudy = { buildAskPrompt, askFromPage }
+}

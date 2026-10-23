@@ -5,6 +5,17 @@
 <title>开卷 · 练习引擎</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>
+  /* 问大肥鱼按钮与面板 */
+  #askfloat{position:fixed;left:18px;bottom:18px;width:52px;height:52px;border-radius:50%;
+    border:none;background:var(--accent,#4d6bfe);color:#fff;font:600 16px/1 system-ui;
+    box-shadow:0 6px 18px rgba(77,107,254,.35);cursor:pointer;z-index:40}
+  #askfloat:hover{filter:brightness(1.05)}
+  .askpanel{position:fixed;left:18px;bottom:82px;width:340px;background:#fff;border-radius:16px;
+    box-shadow:0 12px 40px rgba(30,50,90,.18);padding:14px;z-index:41}
+  .askpanel[hidden]{display:none}
+  .askhead{font-weight:600;margin-bottom:8px}
+  .askpanel textarea{width:100%;border:1px solid #dfe4ee;border-radius:10px;padding:8px 10px;
+    font:14px/1.6 system-ui;resize:vertical;box-sizing:border-box}
   :root {
     --bg: #f4f7ff;
     --card: #ffffff;
@@ -333,6 +344,18 @@ sup, sub { font-size: .72em; line-height: 0; }
     })
   </script>
   <div id="root"></div>
+
+  <!-- 问大肥鱼：把当前页面/题目打包成一段话，复制到剪贴板，切到 DSH 粘贴发送 -->
+  <button id="askfloat" title="问大肥鱼（复制问题到剪贴板）">问</button>
+  <div id="askpanel" class="askpanel" hidden>
+    <div class="askhead">问大肥鱼 <span class="muted">（会连题目、考点、你的作答一起打包）</span></div>
+    <textarea id="askpanel-text" rows="3" placeholder="想问什么？比如：为什么 B 不对、这一步怎么来的"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="askpanel-copy">复制到剪贴板</button>
+      <button class="btn plain" id="askpanel-close">关闭</button>
+      <span class="muted" id="askpanel-msg"></span>
+    </div>
+  </div>
 
   <script type="module" src="./app.js"></script>
 </body>

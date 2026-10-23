@@ -219,5 +219,23 @@ if (process.env.NAV_DEBUG) {
   console.log('--- 练习页最新 HTML ---')
   console.log(latest().slice(0, 400))
 }
+
+// ---- 问大肥鱼：提问文本要把上下文打包好 ----
+const A = sandbox.__openstudy
+ok(A && typeof A.buildAskPrompt === 'function', '提问函数已挂到 globalThis（测试钩子）')
+const promptText = A.buildAskPrompt({
+  subject: 'physics', subjectName: '高中物理', view: '练习',
+  topicId: 'P-02', topicName: '力与平衡',
+  stem: '如图，物块静止在斜面上，求摩擦力',
+  choices: ['0', 'mg sinθ', 'mg cosθ', '无法确定'],
+  myAnswer: 'C', correct: false, reference: 'B',
+  question: '为什么不是 mgcosθ',
+})
+ok(promptText.includes('高中物理') && promptText.includes('力与平衡'), '提问文本带学科与考点')
+ok(promptText.includes('mg sinθ') && promptText.includes('A. 0'), '提问文本带题干与选项')
+ok(promptText.includes('我的答案：C') && promptText.includes('系统判定：错'), '提问文本带作答与判定')
+ok(promptText.trim().endsWith('为什么不是 mgcosθ'), '提问文本以问题结尾')
+ok(!/undefined|null/.test(A.buildAskPrompt({ subject: 'math' })), '缺字段时不出现 undefined')
+
 console.log(`${pass} 项通过` + (bad.length ? `，${bad.length} 项失败：\n- ` + bad.join('\n- ') : ''))
 if (bad.length) process.exit(1)
