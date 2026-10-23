@@ -71,6 +71,7 @@ function pageParams() {
 }
 const hashNow = pageParams()
 if (FW_SUBJECTS.length && (hashNow.framework || hashNow.view === 'framework')) app.view = 'framework'
+if (FW_SUBJECTS.length && (hashNow.map || hashNow.view === 'map')) app.view = 'map'
 let pendingSubject = typeof hashNow.subject === 'string' ? hashNow.subject : null
 // 没在地址栏指定学科时，沿用上次切的学科（换学科是习惯，不该每次回默认）
 if (!pendingSubject) {
@@ -82,6 +83,7 @@ function syncHash() {
   if (typeof history === 'undefined' || !history.replaceState) return
   const parts = []
   if (app.view === 'framework') parts.push('framework')
+  else if (app.view === 'map') parts.push('map')
   const sub = app.bank ? app.bank.subject : ''
   if (sub) parts.push('subject=' + encodeURIComponent(sub))
   try { history.replaceState(null, '', '#' + parts.join('&')) } catch (e) { /* file:// 某些情况不让改，忽略 */ }
@@ -90,7 +92,8 @@ function syncHash() {
 if (typeof window !== 'undefined') {
   window.addEventListener('hashchange', () => {
     const h = pageParams()
-    const v = (h.framework || h.view === 'framework') ? 'framework' : 'practice'
+    const v = (h.framework || h.view === 'framework') ? 'framework'
+      : (h.map || h.view === 'map') ? 'map' : 'practice'
     if (h.subject && BANKS && BANKS[h.subject] && app.bank && app.bank.subject !== h.subject) {
       switchBank(h.subject)
       return
@@ -151,7 +154,8 @@ function renderTabs() {
   if (!FW_SUBJECTS.length) { bar.innerHTML = ''; return }
   bar.innerHTML = `
     <button class="tab ${app.view === 'practice' ? 'on' : ''}" data-v="practice">练习</button>
-    <button class="tab ${app.view === 'framework' ? 'on' : ''}" data-v="framework">方法论</button>`
+    <button class="tab ${app.view === 'framework' ? 'on' : ''}" data-v="framework">方法论</button>
+    <button class="tab ${app.view === 'map' ? 'on' : ''}" data-v="map">知识图</button>`
   bar.querySelectorAll('.tab').forEach((b) => {
     b.onclick = () => {
       app.view = b.dataset.v
@@ -358,6 +362,99 @@ async function tryAutoLoad() {
   return false
 }
 
+// ---------- 知识点图视图 ----------
+// 数据来自同一份 topics-*.json 的 graph 字段：
+//   modules = [{ id, label, topics: [编号…] }]  每列 = 一块知识，列内按数组顺序学
+//   edges   = [[起点, 终点], …]                跨列的前提关系
+// 列内自动连成一条向下的链；跨列画曲线。节点状态直接读考点表的 state。
+app.map = { cur: null }
+
+function renderMap() {
+  if (app.bank && FW_DOCS[app.bank.subject] && app.bank.subject !== app.fw.subject) app.fw.subject = app.bank.subject
+  const doc = FW_DOCS[app.fw.subject]
+  const graph = doc && doc.graph
+  if (!graph || !graph.modules || !graph.modules.length) {
+    $root.innerHTML = '<div class="card">这个学科还没有知识点图</div>'
+    return
+  }
+
+  const COL_W = 178, NODE_H = 44, GAP = 14, PAD = 12, TOP = 36, NW = 162
+  const topics = doc.topics
+  const pos = new Map()
+  graph.modules.forEach((m, ci) => {
+    m.topics.forEach((tid, ri) => {
+      pos.set(tid, { x: PAD + ci * COL_W, y: TOP + ri * (NODE_H + GAP), module: m.id })
+    })
+  })
+  const maxRows = Math.max(...graph.modules.map((m) => m.topics.length))
+  const W = PAD * 2 + graph.modules.length * COL_W
+  const H = TOP + maxRows * (NODE_H + GAP) + 20
+
+  let svg = `<svg class="kmap" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`
+  graph.modules.forEach((m, ci) => {
+    svg += `<text class="kmap-col" x="${PAD + ci * COL_W}" y="24">${fwEsc(m.label)}</text>`
+  })
+  graph.modules.forEach((m) => {
+    for (let i = 0; i + 1 < m.topics.length; i++) {
+      const a = pos.get(m.topics[i]), b = pos.get(m.topics[i + 1])
+      if (!a || !b) continue
+      svg += `<path class="kmap-link" d="M${a.x + NW / 2} ${a.y + NODE_H} L${b.x + NW / 2} ${b.y}"/>`
+    }
+  })
+  for (const [from, to] of graph.edges || []) {
+    const a = pos.get(from), b = pos.get(to)
+    if (!a || !b) continue
+    const x1 = a.x + (b.x > a.x ? NW : NW / 2), y1 = a.y + NODE_H / 2
+    const x2 = b.x + (b.x > a.x ? 0 : NW / 2), y2 = b.y + NODE_H / 2
+    const dx = Math.max(40, Math.abs(x2 - x1) / 2)
+    svg += `<path class="kmap-edge${b.x > a.x ? '' : ' back'}" d="M${x1} ${y1} C${x1 + dx} ${y1} ${x2 - dx} ${y2} ${x2} ${y2}"/>`
+  }
+  for (const [tid, p] of pos) {
+    const t = topics[tid]
+    if (!t) continue
+    const st = t.state === '✅' ? 'ok' : t.state === '🟡' ? 'mid' : t.state === '🔴' ? 'bad' : 'none'
+    const full = String(t.name || tid)
+    const maxLen = 14
+    const label = full.length > maxLen ? full.slice(0, maxLen) + '…' : full
+    svg += `<g class="knode g${t.group || 'x'} st-${st}${app.map.cur === tid ? ' on' : ''}" data-t="${fwEsc(tid)}" transform="translate(${p.x},${p.y})">`
+    svg += `<rect class="kbox" width="${NW}" height="${NODE_H}" rx="10"/>`
+    svg += `<text class="kid" x="10" y="16">${fwEsc(tid)}</text>`
+    svg += `<text class="kname" x="10" y="33">${fwEsc(label)}</text>`
+    if (st !== 'none') svg += `<circle class="kdot" cx="${NW - 12}" cy="12" r="4"/>`
+    svg += `</g>`
+  }
+  svg += '</svg>'
+
+  const cur = app.map.cur && topics[app.map.cur] ? app.map.cur : null
+  const detail = cur ? `
+    <div class="card kdetail">
+      <div class="row"><b>${fwEsc(cur)} · ${fwEsc(topics[cur].name)}</b>
+        <span class="fst ${FST_CLASS(topics[cur].state)}">${fwEsc(topics[cur].state || '未测')}</span></div>
+      <div class="muted" style="margin-top:6px">判据（表 1）：${(topics[cur].cues || []).length ? fwEsc((topics[cur].cues || []).join('、')) : '还没写'}</div>
+      <div class="muted" style="margin-top:8px">动作序列（表 2 = 组级 + 本题补充）</div>
+      <ol>${groupStepsFor(doc, cur).map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ol>
+      <div class="muted" style="margin-top:8px">必查项（表 3）</div>
+      <ul>${checksFor(doc, cur).map((x) => `<li>${fwEsc(x)}</li>`).join('')}</ul>
+    </div>` : `<div class="muted" style="margin:10px 0 0 2px">点方块看它的判据、动作序列、必查项。</div>`
+
+  const legend = `<div class="klegend">
+    <span><i class="lg gA"></i>A 条件→方程</span><span><i class="lg gB"></i>B 证据→判断</span>
+    <span><i class="lg gC"></i>C 触发→复现</span><span><i class="lg gD"></i>D 骨架→成文</span>
+    <span class="sep"></span><span><i class="dot ok"></i>已会</span><span><i class="dot mid"></i>待确认</span>
+    <span><i class="dot bad"></i>没做出来</span><span><i class="dot none"></i>没测</span></div>`
+
+  $root.innerHTML = `<div class="card">
+      <div class="row"><b>${fwEsc(doc.title || app.fw.subject)} · 知识点图</b>
+        <span class="muted">${graph.modules.length} 块、${pos.size} 个考点、${(graph.edges || []).length} 条跨块连线</span></div>
+      ${legend}
+      <div class="mapwrap">${svg}</div>
+    </div>${detail}`
+
+  $root.querySelectorAll('.knode').forEach((g) => {
+    g.onclick = () => { app.map.cur = g.dataset.t; renderMap() }
+  })
+}
+
 // ---------- 渲染 ----------
 function render() {
   mountMascot()
@@ -365,6 +462,7 @@ function render() {
   renderSubjects()
   renderTabs()
   if (app.view === 'framework') return renderFramework()
+  if (app.view === 'map') return renderMap()
   if (app.phase === 'load') return renderLoad()
   if (app.phase === 'ready') return renderReady()
   if (app.phase === 'practice') return renderPractice()

@@ -195,6 +195,41 @@ sup, sub { font-size: .72em; line-height: 0; }
   .choice, .opt { transition: background .12s, border-color .12s, transform .08s; }
   .choice:hover, .opt:hover { border-color: var(--accent); }
   .choice:active, .opt:active { transform: scale(.995); }
+
+  /* ---------- 知识点图 ---------- */
+  .mapwrap { overflow: auto; margin-top: 10px; padding-bottom: 6px; }
+  .kmap { display: block; }
+  .kmap-col { font-size: 13px; font-weight: 600; fill: var(--sub); }
+  .kmap-link { stroke: #d7dbe6; stroke-width: 1.6; fill: none; }
+  .kmap-edge { stroke: var(--accent); stroke-width: 1.6; fill: none; opacity: .55;
+               stroke-dasharray: 5 4; marker-end: none; }
+  .kmap-edge.back { stroke: #c3b6e8; }
+  .knode { cursor: pointer; }
+  .kbox { fill: #fff; stroke: #dde1ea; stroke-width: 1.4; }
+  .knode.gA .kbox { fill: #f2f5ff; } .knode.gB .kbox { fill: #f0faf7; }
+  .knode.gC .kbox { fill: #fff8ec; } .knode.gD .kbox { fill: #f8f2ff; }
+  .kid { font-size: 11px; fill: var(--sub); }
+  .kname { font-size: 12.5px; fill: var(--ink); }
+  .knode.st-ok .kbox { stroke: #3fa37a; } .knode.st-ok .kdot { fill: #3fa37a; }
+  .knode.st-bad .kbox { stroke: var(--wrong); } .knode.st-bad .kdot { fill: var(--wrong); }
+  .knode.st-mid .kbox { stroke: var(--warn); stroke-dasharray: 4 3; } .knode.st-mid .kdot { fill: var(--warn); }
+  .knode.st-none .kbox { stroke-dasharray: 3 3; }
+  .knode:hover .kbox { stroke: var(--accent); }
+  .knode.on .kbox { stroke: var(--accent); stroke-width: 2.4; }
+  .klegend { display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+             font-size: 12px; color: var(--sub); margin-top: 10px; }
+  .klegend .sep { width: 1px; height: 14px; background: var(--line); }
+  .klegend .lg { display: inline-block; width: 12px; height: 12px; border-radius: 4px;
+                 margin-right: 5px; vertical-align: -2px; }
+  .klegend .lg.gA { background: #f2f5ff; border: 1px solid var(--accent); }
+  .klegend .lg.gB { background: #f0faf7; border: 1px solid #3fa37a; }
+  .klegend .lg.gC { background: #fff8ec; border: 1px solid var(--warn); }
+  .klegend .lg.gD { background: #f8f2ff; border: 1px solid #9b7fe0; }
+  .klegend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+                  margin-right: 5px; vertical-align: 1px; background: #cfd4df; }
+  .klegend .dot.ok { background: #3fa37a; } .klegend .dot.mid { background: var(--warn); }
+  .klegend .dot.bad { background: var(--wrong); }
+  .kdetail { margin-top: 12px; }
 </style>
 </head>
 <body>

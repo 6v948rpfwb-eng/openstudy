@@ -1,0 +1,1702 @@
+{
+  "_说明": "技术学科考点表（openstudy.topics/2）。alias 是《考点索引》里的 技-NN；module 决定知识点图里归到哪一列；group 是四组方法论归属；改完跑 node build.js 重新生成页面。",
+  "schema": "openstudy.topics/2",
+  "subject": "technology",
+  "title": "高中技术（信息技术 + 通用技术）",
+  "groups": {
+    "A": {
+      "label": "A 条件→方程→边界",
+      "steps": [
+        "读条件，把已知量列成表",
+        "写出关系式（公式或规律）",
+        "代入求解，注意单位和有效数字",
+        "回代检验：是否符合题设范围"
+      ],
+      "checks": [
+        "条件抄全了吗",
+        "单位换了吗",
+        "边界（范围/取值）查了吗"
+      ]
+    },
+    "B": {
+      "label": "B 证据→判断",
+      "steps": [
+        "读题干，圈出判断的关键词",
+        "在脑里找出对应概念或原理",
+        "逐项比对选项与原理",
+        "选出后回读题干，确认没扩大或缩小范围"
+      ],
+      "checks": [
+        "有没有凭印象选",
+        "选项有没有偷换主体或条件",
+        "有没有把\"一定\"当成\"可能\""
+      ]
+    },
+    "C": {
+      "label": "C 触发→精确复现",
+      "steps": [
+        "从题干里的触发词（名称/符号/场景）认出考点",
+        "在心里默写对应名称、符号或规则",
+        "写出来后逐字核对",
+        "不确定就标注，别猜"
+      ],
+      "checks": [
+        "符号和下标写全了吗",
+        "名称有没有写混（相似概念）",
+        "关键词有没有漏"
+      ]
+    },
+    "D": {
+      "label": "D 骨架→成文",
+      "steps": [
+        "先写骨架（要点序号）",
+        "每点补一句支撑",
+        "检查要点是否覆盖题干要求"
+      ],
+      "checks": [
+        "要点齐了吗",
+        "有没有答非所问"
+      ]
+    }
+  },
+  "graph": {
+    "modules": [
+      {
+        "id": "info",
+        "label": "信息与数据",
+        "topics": [
+          "T-01",
+          "T-02",
+          "T-03",
+          "T-04"
+        ]
+      },
+      {
+        "id": "code",
+        "label": "数字编码",
+        "topics": [
+          "T-05",
+          "T-06",
+          "T-07",
+          "T-08",
+          "T-09",
+          "T-10",
+          "T-11",
+          "T-12"
+        ]
+      },
+      {
+        "id": "algo",
+        "label": "算法与程序",
+        "topics": [
+          "T-13",
+          "T-14",
+          "T-15",
+          "T-16",
+          "T-17",
+          "T-18",
+          "T-19"
+        ]
+      },
+      {
+        "id": "ds",
+        "label": "数据结构",
+        "topics": [
+          "T-20",
+          "T-21",
+          "T-22",
+          "T-23",
+          "T-24",
+          "T-25",
+          "T-26",
+          "T-27"
+        ]
+      },
+      {
+        "id": "is",
+        "label": "信息系统与网络",
+        "topics": [
+          "T-28",
+          "T-29",
+          "T-30",
+          "T-31",
+          "T-32",
+          "T-33",
+          "T-34",
+          "T-35",
+          "T-36",
+          "T-37",
+          "T-38",
+          "T-39"
+        ]
+      },
+      {
+        "id": "design",
+        "label": "技术与设计",
+        "topics": [
+          "T-40",
+          "T-41",
+          "T-42",
+          "T-43",
+          "T-44",
+          "T-45",
+          "T-46",
+          "T-47",
+          "T-48",
+          "T-49",
+          "T-50"
+        ]
+      },
+      {
+        "id": "struct",
+        "label": "结构与流程",
+        "topics": [
+          "T-51",
+          "T-52",
+          "T-53",
+          "T-54",
+          "T-55"
+        ]
+      },
+      {
+        "id": "system",
+        "label": "系统与控制",
+        "topics": [
+          "T-56",
+          "T-57",
+          "T-58",
+          "T-59",
+          "T-60",
+          "T-61",
+          "T-62"
+        ]
+      },
+      {
+        "id": "elec",
+        "label": "电子控制",
+        "topics": [
+          "T-63",
+          "T-64",
+          "T-65",
+          "T-66",
+          "T-67",
+          "T-68",
+          "T-69",
+          "T-70",
+          "T-71",
+          "T-72",
+          "T-73",
+          "T-74",
+          "T-75",
+          "T-76",
+          "T-77",
+          "T-78",
+          "T-79",
+          "T-80",
+          "T-81",
+          "T-82"
+        ]
+      }
+    ],
+    "edges": [
+      [
+        "T-04",
+        "T-28"
+      ],
+      [
+        "T-12",
+        "T-39"
+      ],
+      [
+        "T-19",
+        "T-20"
+      ],
+      [
+        "T-27",
+        "T-39"
+      ],
+      [
+        "T-48",
+        "T-50"
+      ],
+      [
+        "T-52",
+        "T-53"
+      ],
+      [
+        "T-55",
+        "T-58"
+      ],
+      [
+        "T-60",
+        "T-63"
+      ],
+      [
+        "T-64",
+        "T-68"
+      ],
+      [
+        "T-39",
+        "T-28"
+      ],
+      [
+        "T-14",
+        "T-16"
+      ],
+      [
+        "T-16",
+        "T-18"
+      ]
+    ]
+  },
+  "topics": {
+    "T-01": {
+      "alias": "技-01",
+      "name": "数据、信息、知识三者关系与区别",
+      "desc": "数据、信息、知识三者关系与区别",
+      "group": "C",
+      "freq": "必考",
+      "module": "info",
+      "cues": [
+        "数据",
+        "信息",
+        "知识三者关系与区别"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-01✅"
+    },
+    "T-02": {
+      "alias": "技-02",
+      "name": "信息的特征",
+      "desc": "信息的特征（载体依附性、共享性、时效性、真伪性、价值性）",
+      "group": "C",
+      "freq": "必考",
+      "module": "info",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-02·"
+    },
+    "T-03": {
+      "alias": "技-03",
+      "name": "大数据特征",
+      "desc": "大数据特征（4V：数据量大、价值密度低、类型多样、速度快）与处理思想（分治、批处理、全体而非抽样、允许多 data 不完全精确）",
+      "group": "C",
+      "freq": "常考",
+      "module": "info",
+      "cues": [
+        "大数据特征与处理思想"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-03·"
+    },
+    "T-04": {
+      "alias": "技-04",
+      "name": "人工智能",
+      "desc": "人工智能：符号主义 / 联结主义 / 行为主义三大流派，混合增强智能，机器学习/深度学习/神经网络",
+      "group": "C",
+      "freq": "必考",
+      "module": "info",
+      "cues": [
+        "人工智能：符号主义 ",
+        " 联结主义 ",
+        " 行为主义三大流派",
+        "混合增强智能"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-04·"
+    },
+    "T-05": {
+      "alias": "技-05",
+      "name": "二进制与十进制、十六进制互转；n…",
+      "desc": "二进制与十进制、十六进制互转；n 位二进制可表示 2ⁿ 种状态",
+      "group": "A",
+      "freq": "必考",
+      "module": "code",
+      "cues": [
+        "二进制与十进制",
+        "十六进制互转"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-05·"
+    },
+    "T-06": {
+      "alias": "技-06",
+      "name": "ASCII 码、汉字内码",
+      "desc": "ASCII 码、汉字内码（十六进制表示、进位推算，如 i→j）",
+      "group": "A",
+      "freq": "必考",
+      "module": "code",
+      "cues": [
+        "ASCII 码",
+        "汉字内码"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-06·"
+    },
+    "T-07": {
+      "alias": "技-07",
+      "name": "字符编码容量",
+      "desc": "字符编码容量（字节数）计算",
+      "group": "A",
+      "freq": "常考",
+      "module": "code",
+      "cues": [
+        "字符编码容量计算"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-07·"
+    },
+    "T-08": {
+      "alias": "技-08",
+      "name": "图像数字化",
+      "desc": "图像数字化：像素、颜色位深度、256 色=8 位、24 位真彩色、分辨率",
+      "group": "A",
+      "freq": "必考",
+      "module": "code",
+      "cues": [
+        "图像数字化：像素",
+        "颜色位深度",
+        "256 色=8 位",
+        "24 位真彩色"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-08✅"
+    },
+    "T-09": {
+      "alias": "技-09",
+      "name": "声音数字化",
+      "desc": "声音数字化：采样 → 量化 → 编码；采样频率、量化位数、声道数、时长",
+      "group": "A",
+      "freq": "必考",
+      "module": "code",
+      "cues": [
+        "采样频率",
+        "量化位数",
+        "声道数",
+        "时长"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-09·"
+    },
+    "T-10": {
+      "alias": "技-10",
+      "name": "视频",
+      "desc": "视频：帧率、时长、分辨率、颜色位深度",
+      "group": "A",
+      "freq": "常考",
+      "module": "code",
+      "cues": [
+        "视频：帧率",
+        "时长",
+        "分辨率",
+        "颜色位深度"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-10·"
+    },
+    "T-11": {
+      "alias": "技-11",
+      "name": "文件格式与压缩",
+      "desc": "文件格式与压缩：BMP 无压缩 / JPEG 有损 / MP4 比 AVI 高效",
+      "group": "A",
+      "freq": "常考",
+      "module": "code",
+      "cues": [
+        " JPEG 有损 "
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-11·"
+    },
+    "T-12": {
+      "alias": "技-12",
+      "name": "数据可视化与图表",
+      "desc": "数据可视化与图表",
+      "group": "A",
+      "freq": "常考",
+      "module": "code",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-12·"
+    },
+    "T-13": {
+      "alias": "技-13",
+      "name": "算法的三种基本结构",
+      "desc": "算法的三种基本结构：顺序、选择、循环",
+      "group": "A",
+      "freq": "必考",
+      "module": "algo",
+      "cues": [
+        "算法的三种基本结构：顺序",
+        "选择",
+        "循环"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-13✅"
+    },
+    "T-14": {
+      "alias": "技-14",
+      "name": "流程图符号",
+      "desc": "流程图符号（处理框、判断框、输入输出框、流程线）与流程执行次数统计",
+      "group": "A",
+      "freq": "必考",
+      "module": "algo",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "🔴",
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "技-14🔴"
+    },
+    "T-15": {
+      "alias": "技-15",
+      "name": "流程图补全",
+      "desc": "流程图补全（根据算法描述填条件或语句）",
+      "group": "A",
+      "freq": "必考",
+      "module": "algo",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-15·"
+    },
+    "T-16": {
+      "alias": "技-16",
+      "name": "Python 基础语法",
+      "desc": "Python 基础语法：变量、赋值、while / for、if-elif-else、缩进",
+      "group": "A",
+      "freq": "必考",
+      "module": "algo",
+      "cues": [
+        "赋值",
+        "while ",
+        " for",
+        "if-elif-else"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-16·"
+    },
+    "T-17": {
+      "alias": "技-17",
+      "name": "Python 内置函数与字符串操…",
+      "desc": "Python 内置函数与字符串操作：len()、range()、切片、字符串拼接",
+      "group": "A",
+      "freq": "必考",
+      "module": "algo",
+      "cues": [
+        "range()",
+        "切片",
+        "字符串拼接"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-17·"
+    },
+    "T-18": {
+      "alias": "技-18",
+      "name": "列表",
+      "desc": "列表（数组）遍历、下标、交换元素（如 a[i], a[j] = a[j], a[i]）",
+      "group": "A",
+      "freq": "必考",
+      "module": "algo",
+      "cues": [
+        "列表遍历",
+        "下标",
+        "交换元素"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-18⬜"
+    },
+    "T-19": {
+      "alias": "技-19",
+      "name": "字符串处理",
+      "desc": "字符串处理",
+      "group": "A",
+      "freq": "常考",
+      "module": "algo",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-19·"
+    },
+    "T-20": {
+      "alias": "技-20",
+      "name": "队列",
+      "desc": "队列：入队/出队、队首队尾、循环队列",
+      "group": "A",
+      "freq": "常考",
+      "module": "ds",
+      "cues": [
+        "队列：入队",
+        "出队",
+        "队首队尾",
+        "循环队列"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-20✅"
+    },
+    "T-21": {
+      "alias": "技-21",
+      "name": "栈",
+      "desc": "栈：入栈/出栈、用数组模拟栈（top 指针）",
+      "group": "A",
+      "freq": "常考",
+      "module": "ds",
+      "cues": [
+        "栈：入栈",
+        "出栈",
+        "用数组模拟栈"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-21·"
+    },
+    "T-22": {
+      "alias": "技-22",
+      "name": "链表",
+      "desc": "链表：用列表模拟链表（数据区 + 指针区）、链表遍历、插入/删除",
+      "group": "A",
+      "freq": "常考",
+      "module": "ds",
+      "cues": [
+        "链表：用列表模拟链表",
+        "链表遍历",
+        "插入",
+        "删除"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-22·"
+    },
+    "T-23": {
+      "alias": "技-23",
+      "name": "树与二叉树",
+      "desc": "树与二叉树：中序遍历、后序遍历、前序遍历；由两种遍历序列反推树形",
+      "group": "A",
+      "freq": "常考",
+      "module": "ds",
+      "cues": [
+        "树与二叉树：中序遍历",
+        "后序遍历",
+        "前序遍历",
+        "由两种遍历序列反推树形"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-23·"
+    },
+    "T-24": {
+      "alias": "技-24",
+      "name": "二叉树基本操作",
+      "desc": "二叉树基本操作",
+      "group": "A",
+      "freq": "常考",
+      "module": "ds",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-24·"
+    },
+    "T-25": {
+      "alias": "技-25",
+      "name": "排序算法",
+      "desc": "排序算法：冒泡排序为主",
+      "group": "A",
+      "freq": "常考",
+      "module": "ds",
+      "cues": [
+        "排序算法：冒泡排序为主"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-25·"
+    },
+    "T-26": {
+      "alias": "技-26",
+      "name": "查找、递归、枚举等算法思想",
+      "desc": "查找、递归、枚举等算法思想",
+      "group": "A",
+      "freq": "常考",
+      "module": "ds",
+      "cues": [
+        "查找",
+        "递归",
+        "枚举等算法思想"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-26·"
+    },
+    "T-27": {
+      "alias": "技-27",
+      "name": "算法综合设计",
+      "desc": "算法综合设计（非选择题压轴：链表模拟、区间统计、贪心/双指针等）",
+      "group": "A",
+      "freq": "必考",
+      "module": "ds",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "🔴",
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "技-27🔴"
+    },
+    "T-28": {
+      "alias": "技-28",
+      "name": "信息系统的组成",
+      "desc": "信息系统的组成（输入、处理、存储、输出、用户；硬件/软件/数据/通信/人员）",
+      "group": "B",
+      "freq": "必考",
+      "module": "is",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-28✅"
+    },
+    "T-29": {
+      "alias": "技-29",
+      "name": "传感器、智能终端、执行器、APP…",
+      "desc": "传感器、智能终端、执行器、APP 的角色判定",
+      "group": "B",
+      "freq": "必考",
+      "module": "is",
+      "cues": [
+        "传感器",
+        "智能终端",
+        "执行器",
+        "APP 的角色判定"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-29✅"
+    },
+    "T-30": {
+      "alias": "技-30",
+      "name": "信息系统功能与应用、局限性与对外…",
+      "desc": "信息系统功能与应用、局限性与对外部环境的依赖",
+      "group": "B",
+      "freq": "常考",
+      "module": "is",
+      "cues": [
+        "信息系统功能与应用",
+        "局限性与对外部环境的依赖"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-30✅"
+    },
+    "T-31": {
+      "alias": "技-31",
+      "name": "网络基础",
+      "desc": "网络基础：IP 地址、网络协议、局域网/广域网、4G/5G、蓝牙、无线通信",
+      "group": "B",
+      "freq": "必考",
+      "module": "is",
+      "cues": [
+        "网络基础：IP 地址",
+        "网络协议",
+        "局域网",
+        "广域网"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-31✅"
+    },
+    "T-32": {
+      "alias": "技-32",
+      "name": "网络资源共享与数据传输",
+      "desc": "网络资源共享与数据传输",
+      "group": "B",
+      "freq": "常考",
+      "module": "is",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-32✅"
+    },
+    "T-33": {
+      "alias": "技-33",
+      "name": "数据库基础",
+      "desc": "数据库基础：数据表、字段、记录、数据类型、主键",
+      "group": "A",
+      "freq": "必考",
+      "module": "is",
+      "cues": [
+        "数据库基础：数据表",
+        "字段",
+        "记录",
+        "数据类型"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-33·"
+    },
+    "T-34": {
+      "alias": "技-34",
+      "name": "SQL 查询",
+      "desc": "SQL 查询：SELECT 基本结构、WHERE / ORDER BY / GROUP BY、多表查询 JOIN",
+      "group": "A",
+      "freq": "常考",
+      "module": "is",
+      "cues": [
+        "WHERE ",
+        " ORDER BY ",
+        " GROUP BY",
+        "多表查询 JOIN"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-34·"
+    },
+    "T-35": {
+      "alias": "技-35",
+      "name": "信息安全与防护",
+      "desc": "信息安全与防护：数据备份、访问控制权限、漏洞修复、杀毒、身份认证",
+      "group": "B",
+      "freq": "必考",
+      "module": "is",
+      "cues": [
+        "信息安全与防护：数据备份",
+        "访问控制权限",
+        "漏洞修复",
+        "杀毒"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-35✅"
+    },
+    "T-36": {
+      "alias": "技-36",
+      "name": "信息社会责任",
+      "desc": "信息社会责任：隐私、版权、未经授权传播的违法性",
+      "group": "B",
+      "freq": "常考",
+      "module": "is",
+      "cues": [
+        "信息社会责任：隐私",
+        "版权",
+        "未经授权传播的违法性"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-36·"
+    },
+    "T-37": {
+      "alias": "技-37",
+      "name": "物联网系统搭建",
+      "desc": "物联网系统搭建：服务器 ↔ 智能终端 ↔ 传感器/执行器，数据传输方向",
+      "group": "A",
+      "freq": "必考",
+      "module": "is",
+      "cues": [
+        "执行器",
+        "数据传输方向"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "🟡",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-37🟡"
+    },
+    "T-38": {
+      "alias": "技-38",
+      "name": "服务器端程序",
+      "desc": "服务器端程序（如 Flask Web 框架）、视图函数与 URL",
+      "group": "A",
+      "freq": "常考",
+      "module": "is",
+      "cues": [
+        "视图函数与 URL"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-38·"
+    },
+    "T-39": {
+      "alias": "技-39",
+      "name": "数据处理实战",
+      "desc": "数据处理实战：pandas 读取 Excel、筛选、mean()、groupby()、sort_values()、head()；matplotlib 绘图",
+      "group": "A",
+      "freq": "必考",
+      "module": "is",
+      "cues": [
+        "筛选",
+        "mean()",
+        "groupby()",
+        "head()"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "🟡",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-39🟡"
+    },
+    "T-40": {
+      "alias": "技-40",
+      "name": "技术的性质",
+      "desc": "技术的性质：目的性、创新性、综合性、两面性、实践性、专利性",
+      "group": "B",
+      "freq": "必考",
+      "module": "design",
+      "cues": [
+        "技术的性质：目的性",
+        "创新性",
+        "综合性",
+        "两面性"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-40✅"
+    },
+    "T-41": {
+      "alias": "技-41",
+      "name": "技术与人、社会、自然的关系；技术…",
+      "desc": "技术与人、社会、自然的关系；技术与设计的关系；知识产权与专利",
+      "group": "B",
+      "freq": "常考",
+      "module": "design",
+      "cues": [
+        "技术与人",
+        "社会",
+        "自然的关系",
+        "技术与设计的关系"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-41·"
+    },
+    "T-42": {
+      "alias": "技-42",
+      "name": "人机关系",
+      "desc": "人机关系：舒适、高效、健康、安全四大目标；静态/动态、生理/心理",
+      "group": "B",
+      "freq": "必考",
+      "module": "design",
+      "cues": [
+        "人机关系：舒适",
+        "高效",
+        "健康",
+        "安全四大目标"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-42✅"
+    },
+    "T-43": {
+      "alias": "技-43",
+      "name": "设计的一般原则",
+      "desc": "设计的一般原则（创新、实用、经济、美观、道德、技术规范、可持续发展）",
+      "group": "B",
+      "freq": "常考",
+      "module": "design",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-43✅"
+    },
+    "T-44": {
+      "alias": "技-44",
+      "name": "设计分析",
+      "desc": "设计分析：从「物、人、环境」三个角度考虑",
+      "group": "B",
+      "freq": "常考",
+      "module": "design",
+      "cues": [
+        "设计分析：从「物",
+        "环境」三个角度考虑"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-44✅"
+    },
+    "T-45": {
+      "alias": "技-45",
+      "name": "材料的性能",
+      "desc": "材料的性能（强度、防锈蚀、耐高温、各向异性等）与选择",
+      "group": "B",
+      "freq": "常考",
+      "module": "design",
+      "cues": [
+        "材料的性能与选择"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "🟡",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-45🟡"
+    },
+    "T-46": {
+      "alias": "技-46",
+      "name": "设计的一般过程",
+      "desc": "设计的一般过程（发现与明确问题 → 制定方案 → 制作模型 → 测试评价 → 优化）",
+      "group": "B",
+      "freq": "常考",
+      "module": "design",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "🔴",
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "技-46🔴"
+    },
+    "T-47": {
+      "alias": "技-47",
+      "name": "技术试验",
+      "desc": "技术试验（性能试验、优化试验、安全性试验、破坏性试验）与试验必要性判断",
+      "group": "B",
+      "freq": "必考",
+      "module": "design",
+      "cues": [
+        "技术试验与试验必要性判断"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-47✅"
+    },
+    "T-48": {
+      "alias": "技-48",
+      "name": "图样表达",
+      "desc": "图样表达：三视图（正视图、俯视图、左视图投影关系与「长对正、高平齐、宽相等」）",
+      "group": "B",
+      "freq": "必考",
+      "module": "design",
+      "cues": [
+        "图样表达：三视图"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-48·"
+    },
+    "T-49": {
+      "alias": "技-49",
+      "name": "尺寸标注",
+      "desc": "尺寸标注：尺寸三要素、正误判断",
+      "group": "B",
+      "freq": "常考",
+      "module": "design",
+      "cues": [
+        "尺寸标注：尺寸三要素",
+        "正误判断"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-49·"
+    },
+    "T-50": {
+      "alias": "技-50",
+      "name": "设计草图绘制与主要尺寸标注",
+      "desc": "设计草图绘制与主要尺寸标注",
+      "group": "B",
+      "freq": "必考",
+      "module": "design",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-50⬜"
+    },
+    "T-51": {
+      "alias": "技-51",
+      "name": "结构",
+      "desc": "结构：常见结构的类型（实体、框架、壳体）；结构与力（拉力、压力、弯曲、剪切、扭转）",
+      "group": "B",
+      "freq": "必考",
+      "module": "struct",
+      "cues": [
+        "结构：常见结构的类型",
+        "结构与力"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-51·"
+    },
+    "T-52": {
+      "alias": "技-52",
+      "name": "结构的稳定性",
+      "desc": "结构的稳定性（重心位置、支撑面积、结构形状）与强度",
+      "group": "B",
+      "freq": "必考",
+      "module": "struct",
+      "cues": [
+        "结构的稳定性与强度"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-52·"
+    },
+    "T-53": {
+      "alias": "技-53",
+      "name": "结构的连接",
+      "desc": "结构的连接：铰连接与刚连接；连接件的选择与适用性",
+      "group": "B",
+      "freq": "常考",
+      "module": "struct",
+      "cues": [
+        "连接件的选择与适用性"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-53·"
+    },
+    "T-54": {
+      "alias": "技-54",
+      "name": "流程",
+      "desc": "流程：环节与时序、串行工序与并行工序、流程的分析与优化、流程图的阅读",
+      "group": "B",
+      "freq": "必考",
+      "module": "struct",
+      "cues": [
+        "流程：环节与时序",
+        "串行工序与并行工序",
+        "流程的分析与优化",
+        "流程图的阅读"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-54·"
+    },
+    "T-55": {
+      "alias": "技-55",
+      "name": "流程设计与优化",
+      "desc": "流程设计与优化（合并环节、调整时序、缩短工期）",
+      "group": "B",
+      "freq": "必考",
+      "module": "struct",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-55·"
+    },
+    "T-56": {
+      "alias": "技-56",
+      "name": "系统",
+      "desc": "系统：系统的含义与特性（整体性、相关性、目的性、动态性、环境适应性）",
+      "group": "B",
+      "freq": "必考",
+      "module": "system",
+      "cues": [
+        "系统：系统的含义与特性"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-56·"
+    },
+    "T-57": {
+      "alias": "技-57",
+      "name": "系统分析的主要原则",
+      "desc": "系统分析的主要原则（整体性、科学性、综合性）",
+      "group": "B",
+      "freq": "必考",
+      "module": "system",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-57·"
+    },
+    "T-58": {
+      "alias": "技-58",
+      "name": "系统的优化与数学模型/非数学模型",
+      "desc": "系统的优化与数学模型/非数学模型",
+      "group": "B",
+      "freq": "常考",
+      "module": "system",
+      "cues": [
+        "系统的优化与数学模型",
+        "非数学模型"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-58·"
+    },
+    "T-59": {
+      "alias": "技-59",
+      "name": "控制",
+      "desc": "控制：开环控制与闭环控制的区别",
+      "group": "B",
+      "freq": "必考",
+      "module": "system",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-59·"
+    },
+    "T-60": {
+      "alias": "技-60",
+      "name": "控制系统的组成",
+      "desc": "控制系统的组成：控制器、执行器、被控对象、传感器（检测装置）、输入量、输出量、反馈",
+      "group": "B",
+      "freq": "必考",
+      "module": "system",
+      "cues": [
+        "控制系统的组成：控制器",
+        "执行器",
+        "被控对象",
+        "传感器"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-60✅"
+    },
+    "T-61": {
+      "alias": "技-61",
+      "name": "控制系统的工作过程与方式；控制系…",
+      "desc": "控制系统的工作过程与方式；控制系统的设计与实施",
+      "group": "B",
+      "freq": "必考",
+      "module": "system",
+      "cues": [
+        "控制系统的工作过程与方式",
+        "控制系统的设计与实施"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-61·"
+    },
+    "T-62": {
+      "alias": "技-62",
+      "name": "干扰因素与反馈环节的作用",
+      "desc": "干扰因素与反馈环节的作用",
+      "group": "B",
+      "freq": "常考",
+      "module": "system",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-62·"
+    },
+    "T-63": {
+      "alias": "技-63",
+      "name": "电子元器件识别",
+      "desc": "电子元器件识别：电阻、电容、二极管、发光二极管、三极管、光敏/热敏/湿敏电阻、干簧管、继电器、电位器",
+      "group": "C",
+      "freq": "必考",
+      "module": "elec",
+      "cues": [
+        "电子元器件识别：电阻",
+        "电容",
+        "二极管",
+        "发光二极管"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-63✅"
+    },
+    "T-64": {
+      "alias": "技-64",
+      "name": "传感器的功能与类别",
+      "desc": "传感器的功能与类别（光敏、热敏、湿敏、磁敏=干簧管）",
+      "group": "C",
+      "freq": "必考",
+      "module": "elec",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-64·"
+    },
+    "T-65": {
+      "alias": "技-65",
+      "name": "二极管",
+      "desc": "二极管：单向导电性、正向导通压降、整流作用、稳压、开关、检波",
+      "group": "C",
+      "freq": "必考",
+      "module": "elec",
+      "cues": [
+        "二极管：单向导电性",
+        "正向导通压降",
+        "整流作用",
+        "稳压"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-65·"
+    },
+    "T-66": {
+      "alias": "技-66",
+      "name": "三极管",
+      "desc": "三极管：NPN/PNP 结构、三极（e/b/c）、三种工作状态（截止、放大、饱和）及判定条件",
+      "group": "A",
+      "freq": "必考",
+      "module": "elec",
+      "cues": [
+        "三极管：NPN",
+        "PNP 结构",
+        "三极",
+        "三种工作状态及判定条件"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-66·"
+    },
+    "T-67": {
+      "alias": "技-67",
+      "name": "三极管开关作用",
+      "desc": "三极管开关作用（相当于开关断开/闭合）、Ic=βIb",
+      "group": "A",
+      "freq": "必考",
+      "module": "elec",
+      "cues": [
+        "Ic=βIb"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-67·"
+    },
+    "T-68": {
+      "alias": "技-68",
+      "name": "电容",
+      "desc": "电容：充放电过程、滤波作用、容量对波形与延时的影响",
+      "group": "C",
+      "freq": "必考",
+      "module": "elec",
+      "cues": [
+        "电容：充放电过程",
+        "滤波作用",
+        "容量对波形与延时的影响"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "技-68✅"
+    },
+    "T-69": {
+      "alias": "技-69",
+      "name": "继电器",
+      "desc": "继电器：「以低控高、以小控大」、电磁继电器与干簧管",
+      "group": "C",
+      "freq": "常考",
+      "module": "elec",
+      "cues": [
+        "继电器：「以低控高",
+        "以小控大」",
+        "电磁继电器与干簧管"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-69·"
+    },
+    "T-70": {
+      "alias": "技-70",
+      "name": "模拟信号与数字信号的区别",
+      "desc": "模拟信号与数字信号的区别（连续 vs 不连续、正弦曲线 vs 柱状图）",
+      "group": "A",
+      "freq": "常考",
+      "module": "elec",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-70·"
+    },
+    "T-71": {
+      "alias": "技-71",
+      "name": "门电路",
+      "desc": "门电路：与门、或门、非门，及与非门、或非门；逻辑符号、逻辑表达式、真值表",
+      "group": "A",
+      "freq": "必考",
+      "module": "elec",
+      "cues": [
+        "门电路：与门",
+        "或门",
+        "非门",
+        "及与非门"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-71·"
+    },
+    "T-72": {
+      "alias": "技-72",
+      "name": "逻辑关系口诀",
+      "desc": "逻辑关系口诀：与门「全高出高，有低出低」、或门「有高出高，全低出低」、非门「有高出低，有低出高」",
+      "group": "A",
+      "freq": "必考",
+      "module": "elec",
+      "cues": [
+        "有低出低」",
+        "或门「有高出高",
+        "全低出低」",
+        "非门「有高出低"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-72·"
+    },
+    "T-73": {
+      "alias": "技-73",
+      "name": "逻辑电路设计",
+      "desc": "逻辑电路设计：确定输入输出变量 → 定义逻辑状态 → 列真值表 → 写逻辑表达式 → 画逻辑电路图",
+      "group": "A",
+      "freq": "常考",
+      "module": "elec",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-73·"
+    },
+    "T-74": {
+      "alias": "技-74",
+      "name": "信号处理电路",
+      "desc": "信号处理电路：波形关系分析（输入 A、B → 输出 F）",
+      "group": "A",
+      "freq": "必考",
+      "module": "elec",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-74·"
+    },
+    "T-75": {
+      "alias": "技-75",
+      "name": "比较器电路",
+      "desc": "比较器电路：V+ > V- 输出高电平，V+ < V- 输出低电平；基准电压 U_REF 的设定",
+      "group": "A",
+      "freq": "必考",
+      "module": "elec",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-75·"
+    },
+    "T-76": {
+      "alias": "技-76",
+      "name": "区间控制电路",
+      "desc": "区间控制电路（如温度上下限控制）",
+      "group": "A",
+      "freq": "必考",
+      "module": "elec",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-76·"
+    },
+    "T-77": {
+      "alias": "技-77",
+      "name": "反馈电路 / 自锁电路",
+      "desc": "反馈电路 / 自锁电路：V3 发光形成自锁、S1 按下解除自锁",
+      "group": "A",
+      "freq": "必考",
+      "module": "elec",
+      "cues": [
+        "反馈电路 ",
+        "S1 按下解除自锁"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-77·"
+    },
+    "T-78": {
+      "alias": "技-78",
+      "name": "光控翻转电路",
+      "desc": "光控翻转电路（强光触发、状态保持）",
+      "group": "A",
+      "freq": "常考",
+      "module": "elec",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-78·"
+    },
+    "T-79": {
+      "alias": "技-79",
+      "name": "印制电路板焊接技术、面包板孔连通…",
+      "desc": "印制电路板焊接技术、面包板孔连通规则与元器件插装",
+      "group": "A",
+      "freq": "常考",
+      "module": "elec",
+      "cues": [
+        "印制电路板焊接技术"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-79·"
+    },
+    "T-80": {
+      "alias": "技-80",
+      "name": "多用电表测量二极管、三极管",
+      "desc": "多用电表测量二极管、三极管",
+      "group": "A",
+      "freq": "常考",
+      "module": "elec",
+      "cues": [
+        "多用电表测量二极管",
+        "三极管"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-80·"
+    },
+    "T-81": {
+      "alias": "技-81",
+      "name": "数字集成电路",
+      "desc": "数字集成电路：TTL 与 CMOS 的特性、电源电压（TTL 5 V，CMOS 3～18 V）、不可混用与电平转换",
+      "group": "A",
+      "freq": "常考",
+      "module": "elec",
+      "cues": [
+        "电源电压",
+        "不可混用与电平转换"
+      ],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-81·"
+    },
+    "T-82": {
+      "alias": "技-82",
+      "name": "电路仿真",
+      "desc": "电路仿真（电子设计自动化工具）",
+      "group": "A",
+      "freq": "常考",
+      "module": "elec",
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-82·"
+    }
+  }
+}
