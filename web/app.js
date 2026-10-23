@@ -166,6 +166,49 @@ function switchBank(key) {
 
 
 // 题干排版：把「行｜列」串成的表格还原成真表格，其余按段落/小问分行
+/* ── 公式渲染（KaTeX）───────────────────────────────────────────────
+   题库里若带 TeX 原文（stemTex / choicesTex / solutionTex），就交给 KaTeX 排版；
+   没有 TeX 的题库仍走原来的纯文本通路（stemToHtml）。两种可以混着用。 */
+const KATEX_OK = () => typeof window !== 'undefined' && window.katex && typeof window.katex.renderToString === 'function'
+const katexCache = new Map()
+function texOnly(tex, display) {
+  if (!KATEX_OK() || !tex) return null
+  const key = (display ? 'D' : 'I') + tex
+  if (katexCache.has(key)) return katexCache.get(key)
+  let out = null
+  try {
+    out = window.katex.renderToString(tex, { displayMode: !!display, throwOnError: false, strict: false, trust: false })
+  } catch { out = null }
+  katexCache.set(key, out)
+  return out
+}
+/** 把「中文 + $行内公式$ + $$独立公式$$」的原文切成块渲染；没 KaTeX 就退回纯文本 */
+function texMixed(text) {
+  const src = String(text ?? '')
+  if (!KATEX_OK() || !/(\$|\\\(|\\\[)/.test(src)) return null
+  const parts = []
+  let rest = src
+  // $$...$$ 与 $...$ 两档；不跨行匹配，避免把正常美元符号吃掉
+  const re = /\$\$([^$]+?)\$\$|\$([^$\n]+?)\$/g
+  let last = 0
+  let m
+  while ((m = re.exec(src))) {
+    if (m.index > last) parts.push(fwEsc(src.slice(last, m.index)))
+    const display = m[1] !== undefined
+    const body = display ? m[1] : m[2]
+    const html = texOnly(body, display)
+    parts.push(html || fwEsc(display ? `$$${body}$$` : `$${body}$`))
+    last = re.lastIndex
+  }
+  if (last < src.length) parts.push(fwEsc(src.slice(last)))
+  return parts.join('').replace(/\n/g, '<br>')
+}
+/** 优先 TeX，其次纯文本 */
+function mathThen(tex, plainText) {
+  const h = texMixed(tex)
+  return h == null ? stemToHtml(plainText) : `<div class="texblock">${h}</div>`
+}
+
 function stemToHtml(text) {
   const raw = String(text ?? '').replace(/\r/g, '')
   const tokens = raw.split(/；(?=[^；]{0,60}｜)|；(?!)/).flatMap((x) => x.split('\n'))
@@ -1319,7 +1362,7 @@ function renderPractice() {
         if (correct) cls += ' right'
         else if (c.picked === i) cls += ' wrong'
       } else if (c.picked === i) cls += ' picked'
-      return `<button class="${cls}" data-i="${i}" ${c.graded ? 'disabled' : ''}>${'ABCDEFG'[i]}. ${renderMathText(ch)}</button>`
+      return `<button class="${cls}" data-i="${i}" ${c.graded ? 'disabled' : ''}>${'ABCDEFG'[i]}. ${(q.choicesTex && q.choicesTex[i] ? (texMixed(q.choicesTex[i]) ?? renderMathText(ch)) : renderMathText(ch))}</button>`
     }).join('')
   } else {
     inputArea = `<textarea id="ans" rows="4" placeholder="写下你的思路"
@@ -1386,7 +1429,7 @@ function renderPractice() {
         return `<button class="qno${i === app.index ? ' cur' : ''}${st}" data-q="${i}">${i + 1}</button>`
       }).join('')}</div>`}
       ${/图/.test(q.stem) && !(q.figures || []).length ? `<p class="muted figwarn">这题原文提到图，但题库里没有配图；文字部分能做的照做，需要读图的可以跳过。</p>` : ''}
-      <div class="stem" style="margin-top:18px">${stemToHtml(q.stem)}</div>
+      <div class="stem" style="margin-top:18px">${q.stemTex ? mathThen(q.stemTex, q.stem) : stemToHtml(q.stem)}</div>
       ${figureHtml}${figureNote}
       ${inputArea}
       ${feedback}

@@ -163,7 +163,18 @@ const html = readFileSync(join(here, 'web', 'index.html'), 'utf8')
 const marker = '<script type="module" src="./app.js"></script>'
 if (!html.includes(marker)) throw new Error('index.html 里找不到脚本占位符')
 
-const outHtml = html.replace(marker, () => `<script>\n${bundle}\n</script>`)
+// KaTeX（数学公式渲染）：样式内嵌字体，脚本内联，页面仍是单文件
+const katexDir = join(here, 'web', 'vendor', 'katex')
+let katexTag = ''
+if (existsSync(join(katexDir, 'katex-inline.css')) && existsSync(join(katexDir, 'katex.min.js'))) {
+  const kCss = readFileSync(join(katexDir, 'katex-inline.css'), 'utf8')
+  const kJs = readFileSync(join(katexDir, 'katex.min.js'), 'utf8')
+  katexTag = `<style id="katex-css">${kCss}</style>\n<script id="katex-js">${kJs}</script>\n`
+} else {
+  console.warn('提示：没有 web/vendor/katex，公式按纯文本显示（跑 tools/make-katex-inline.js 生成）')
+}
+
+const outHtml = html.replace(marker, () => `${katexTag}<script>\n${bundle}\n</script>`)
 
 mkdirSync(dirname(outPath), { recursive: true })
 writeFileSync(outPath, outHtml, 'utf8')

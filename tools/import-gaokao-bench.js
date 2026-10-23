@@ -32,6 +32,7 @@ const bankPath = arg('bank')
 const kind = arg('kind', 'mcq')
 const keepFigure = args.includes('--keep-figure')
 const splitMulti = args.includes('--split-multi')
+const keepTex = args.includes('--keep-tex')   // 保留 LaTeX 原文（stemTex / choicesTex），页面用 KaTeX 渲染
 const forceTopic = arg('topic', '')  // 整份文件强制归某个考点
 if (!file || !bankPath) {
   console.error('用法：--subject physics --file x.json --bank y.bank.json [--kind mcq|open] [--keep-figure]')
@@ -275,6 +276,13 @@ for (const it of items) {
     stem,
     source: `GAOKAO-Bench 高考真题 ${year} ${paper}（第 ${Number(it.index) + 1} 题）`,
     sourceUrl: 'https://github.com/OpenLMLab/GAOKAO-Bench',
+  }
+  if (keepTex) {
+    // 原文（未去 LaTeX）留一份，渲染时优先用它。注意 rawQ 已经被 deTeX 过，这里必须回到 it.question
+    const rawSrc = String(it.question || '')
+    const rawSplit = kind === 'mcq' ? splitChoices(rawSrc) : { stem: rawSrc, choices: null }
+    q.stemTex = String(rawSplit.stem || rawSrc).trim()
+    if (rawSplit.choices) q.choicesTex = rawSplit.choices.map((c) => String(c.text).trim())
   }
   if (choices) {
     q.choices = choices.map((c) => c.text)
