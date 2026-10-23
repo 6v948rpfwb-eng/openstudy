@@ -204,7 +204,20 @@ sup, sub { font-size: .72em; line-height: 0; }
   .choice:active, .opt:active { transform: scale(.995); }
 
   /* ---------- 知识点图 ---------- */
-  .mapwrap { overflow: auto; margin-top: 10px; padding-bottom: 6px; }
+  .maptools { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .mbtn { appearance: none; border: 1px solid var(--line); background: #fff; color: var(--ink);
+          border-radius: 9px; padding: 5px 11px; font-size: 13px; cursor: pointer; line-height: 1.4; }
+  .mbtn:hover { border-color: var(--accent); color: var(--accent); }
+  .mbtn.wide { padding: 5px 12px; }
+  .mzoom { min-width: 46px; text-align: center; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .mapwrap { overflow: auto; margin-top: 10px; padding-bottom: 6px; cursor: grab;
+             border: 1px solid var(--line); border-radius: 12px; background:
+             linear-gradient(#fff, #fff) padding-box, radial-gradient(circle at 1px 1px, #e6eaf5 1px, transparent 0) padding-box;
+             background-size: auto, 22px 22px; }
+  .mapwrap.dragging { cursor: grabbing; }
+  .mapwrap::-webkit-scrollbar { height: 10px; width: 10px; }
+  .mapwrap::-webkit-scrollbar-thumb { background: #ccd4e8; border-radius: 6px; }
+  .mapwrap svg.kmap { display: block; }
   .kmap { display: block; }
   .kmap-col { font-size: 13px; font-weight: 600; fill: var(--sub); }
   .kmap-link { stroke: #d7dbe6; stroke-width: 1.6; fill: none; }

@@ -379,7 +379,7 @@ async function tryAutoLoad() {
 //   modules = [{ id, label, topics: [编号…] }]  每列 = 一块知识，列内按数组顺序学
 //   edges   = [[起点, 终点], …]                跨列的前提关系
 // 列内自动连成一条向下的链；跨列画曲线。节点状态直接读考点表的 state。
-app.map = { cur: null }
+app.map = { cur: null, k: 1 }
 
 function renderMap() {
   if (app.bank && FW_DOCS[app.bank.subject] && app.bank.subject !== app.fw.subject) app.fw.subject = app.bank.subject
@@ -459,12 +459,92 @@ function renderMap() {
       <div class="row"><b>${fwEsc(doc.title || app.fw.subject)} · 知识点图</b>
         <span class="muted">${graph.modules.length} 块、${pos.size} 个考点、${(graph.edges || []).length} 条跨块连线</span></div>
       ${legend}
-      <div class="mapwrap">${svg}</div>
+      <div class="maptools">
+        <button class="mbtn" id="mzOut" title="缩小">−</button>
+        <span class="mzoom" id="mzVal">100%</span>
+        <button class="mbtn" id="mzIn" title="放大">+</button>
+        <button class="mbtn wide" id="mzFit">适应宽度</button>
+        <button class="mbtn wide" id="mzOne">100%</button>
+        <span class="muted" style="margin-left:6px;font-size:12px">滚轮滚动 · 按住拖动 · 双指捏合缩放</span>
+      </div>
+      <div class="mapwrap" id="mapwrap">${svg}</div>
     </div>${detail}`
 
   $root.querySelectorAll('.knode').forEach((g) => {
-    g.onclick = () => { app.map.cur = g.dataset.t; renderMap() }
+    g.onclick = () => {
+      if (mapDragMoved) return
+      app.map.cur = g.dataset.t
+      renderMap()
+    }
   })
+  setupMapZoom()
+}
+
+/** 知识图缩放/拖动：只改 svg 的显示宽高，矢量放大不糊；滚动容器自己滚 */
+let mapDragMoved = false
+function setupMapZoom() {
+  const wrap = $root.querySelector('#mapwrap')
+  const svg = wrap && wrap.querySelector('svg.kmap')
+  if (!wrap || !svg) return
+  const W = Number(svg.getAttribute('width')), H = Number(svg.getAttribute('height'))
+  wrap.style.maxHeight = '78vh'
+
+  const apply = () => {
+    const k = Math.min(2.2, Math.max(0.35, app.map.k || 1))
+    app.map.k = k
+    svg.style.width = W * k + 'px'
+    svg.style.height = H * k + 'px'
+    const val = $root.querySelector('#mzVal')
+    if (val) val.textContent = Math.round(k * 100) + '%'
+  }
+  const zoomAt = (k, cx, cy) => {
+    const before = app.map.k || 1
+    const rect = wrap.getBoundingClientRect()
+    const px = (cx ?? rect.width / 2), py = (cy ?? rect.height / 2)
+    const sx = (wrap.scrollLeft + px) / before, sy = (wrap.scrollTop + py) / before
+    app.map.k = k
+    apply()
+    wrap.scrollLeft = sx * app.map.k - px
+    wrap.scrollTop = sy * app.map.k - py
+  }
+
+  $root.querySelector('#mzIn').onclick = () => zoomAt((app.map.k || 1) * 1.2)
+  $root.querySelector('#mzOut').onclick = () => zoomAt((app.map.k || 1) / 1.2)
+  $root.querySelector('#mzOne').onclick = () => zoomAt(1)
+  $root.querySelector('#mzFit').onclick = () => {
+    const k = (wrap.clientWidth - 4) / W
+    app.map.k = Math.min(1, Math.max(0.35, k))
+    apply()
+    wrap.scrollLeft = 0
+  }
+
+  wrap.addEventListener('wheel', (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return           // 普通滚轮=滚动，捏合/^滚轮=缩放
+    e.preventDefault()
+    const rect = wrap.getBoundingClientRect()
+    zoomAt((app.map.k || 1) * (e.deltaY < 0 ? 1.1 : 1 / 1.1), e.clientX - rect.left, e.clientY - rect.top)
+  }, { passive: false })
+
+  let down = null
+  wrap.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return
+    down = { x: e.clientX, y: e.clientY, l: wrap.scrollLeft, t: wrap.scrollTop }
+    mapDragMoved = false
+    wrap.classList.add('dragging')
+  })
+  wrap.addEventListener('pointermove', (e) => {
+    if (!down) return
+    const dx = e.clientX - down.x, dy = e.clientY - down.y
+    if (Math.abs(dx) + Math.abs(dy) > 4) mapDragMoved = true
+    wrap.scrollLeft = down.l - dx
+    wrap.scrollTop = down.t - dy
+  })
+  const end = () => { down = null; wrap.classList.remove('dragging') }
+  wrap.addEventListener('pointerup', end)
+  wrap.addEventListener('pointercancel', end)
+  wrap.addEventListener('pointerleave', end)
+
+  apply()
 }
 
 // ---------- 渲染 ----------

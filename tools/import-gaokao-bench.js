@@ -1,0 +1,277 @@
+/**
+ * import-gaokao-bench.js —— 把 GAOKAO-Bench（OpenLMLab，2010–2022 高考真题）
+ * 的题目灌进 openstudy 题库。题目是 LaTeX，这里先转成纯文本再入库存档。
+ *
+ *   node tools/import-gaokao-bench.js --subject physics --file /tmp/phys_mcq.json \
+ *        --bank openstudy-data/physics.bank.json --kind mcq
+ *   node tools/import-gaokao-bench.js --subject chemistry --file /tmp/chem_mcq.json \
+ *        --bank openstudy-data/chemistry.bank.json --kind mcq
+ *   node tools/import-gaokao-bench.js --subject physics --file /tmp/phys_open.json \
+ *        --bank openstudy-data/physics.bank.json --kind open
+ *
+ * 选项题自动判分（type=choice），大题只能自己对答案（type=text，答案放 reference）。
+ * 依赖图形的题（题干里出现「如图 / 图甲 / 图所示」）默认丢掉——页面没法显示图。
+ */
+import { readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
+import { guessTopics } from '../core/framework.js'
+
+const here = dirname(fileURLToPath(import.meta.url))
+const args = process.argv.slice(2)
+const arg = (k, d) => {
+  const i = args.indexOf('--' + k)
+  return i >= 0 ? args[i + 1] : d
+}
+
+const subject = arg('subject', 'physics')
+const file = arg('file')
+const bankPath = arg('bank')
+const kind = arg('kind', 'mcq')
+const keepFigure = args.includes('--keep-figure')
+if (!file || !bankPath) {
+  console.error('用法：--subject physics --file x.json --bank y.bank.json [--kind mcq|open] [--keep-figure]')
+  process.exit(1)
+}
+
+const topicsFile = join(here, `topics-${subject}.json`)
+if (!existsSync(topicsFile)) {
+  console.error('找不到考点表：' + topicsFile)
+  process.exit(1)
+}
+const topicsDoc = JSON.parse(readFileSync(topicsFile, 'utf8'))
+const fallbackTopic = subject === 'chemistry' ? 'C-99' : subject === 'technology' ? 'T-99' : 'P-99'
+
+// ---------- LaTeX → 纯文本 ----------
+const GREEK = {
+  alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', epsilon: 'ε', varepsilon: 'ε', zeta: 'ζ', eta: 'η',
+  theta: 'θ', lambda: 'λ', mu: 'μ', nu: 'ν', xi: 'ξ', pi: 'π', rho: 'ρ', sigma: 'σ', tau: 'τ',
+  phi: 'φ', varphi: 'φ', chi: 'χ', psi: 'ψ', omega: 'ω',
+  Gamma: 'Γ', Delta: 'Δ', Theta: 'Θ', Lambda: 'Λ', Pi: 'Π', Sigma: 'Σ', Phi: 'Φ', Psi: 'Ψ', Omega: 'Ω',
+}
+const SYM = {
+  rightleftharpoons: '⇌', leftrightarrows: '⇌', rightarrow: '→', leftarrow: '←', to: '→',
+  times: '×', cdot: '·', div: '÷', pm: '±', mp: '∓', leq: '≤', le: '≤', geq: '≥', ge: '≥',
+  neq: '≠', ne: '≠', approx: '≈', equiv: '≡', infty: '∞', angle: '∠', perp: '⊥', parallel: '∥',
+  triangle: '△', circ: '°', degree: '°', percent: '%', sim: '∽', because: '∵', therefore: '∴',
+  uparrow: '↑', downarrow: '↓', sum: 'Σ', int: '∫', sqrt: '√', in: '∈', notin: '∉', subset: '⊂',
+  cup: '∪', cap: '∩', emptyset: '∅', forall: '∀', exists: '∃', Rightarrow: '⇒', Leftarrow: '⇐',
+}
+
+export function deTeX(src) {
+  let s = String(src ?? '')
+  s = s.replace(/\\%|\\#|\\&/g, (m) => m[1])
+  // \frac{a}{b} → (a)/(b)：先处理一层，嵌套靠循环
+  for (let i = 0; i < 6; i++) {
+    const next = s.replace(/\\[dt]?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, (_, a, b) => `(${a.trim()})/(${b.trim()})`)
+    if (next === s) break
+    s = next
+  }
+  s = s.replace(/\\sqrt\s*\{([^{}]*)\}/g, (_, a) => `√(${a.trim()})`)
+  s = s.replace(/\\(?:mathrm|mathbf|mathit|mathsf|mathtt|mathcal|text|textbf|textit|ce|pu|rm|bf)\s*/g, '')
+  s = s.replace(/\\(?:left|right|big|Big|bigg|Bigg|displaystyle|limits|nonumber|quad|qquad)\b/g, '')
+  s = s.replace(/\\([A-Za-z]+)/g, (m, name) => SYM[name] ?? GREEK[name] ?? (name.length === 1 ? name : ''))
+  s = s.replace(/\\[,;:! ]/g, ' ')
+  s = s.replace(/\\\{|\\\}/g, (m) => m[1])
+  s = s.replace(/\$\$?/g, '')
+  s = s.replace(/([_^])\s*\{([^{}]*)\}/g, (_, op, a) => `${op}${a.trim()}`)
+  s = s.replace(/([_^])\s*([A-Za-z0-9+\-])/g, (_, op, a) => `${op}${a}`)
+  s = s.replace(/[{}]/g, '')
+  s = s.replace(/~+/g, ' ')
+  s = s.replace(/[ \t]{2,}/g, ' ')
+  s = s.replace(/\n{3,}/g, '\n\n')
+  return s.trim()
+}
+
+// ---------- 拆题干与选项 ----------
+const LETTER = ['A', 'B', 'C', 'D', 'E', 'F']
+function splitChoices(text) {
+  const t = text.replace(/\r/g, '')
+  const marks = []
+  for (const m of t.matchAll(/(^|[\s\n（(])([A-D])\s*[.．、]/g)) {
+    marks.push({ letter: m[2], start: m.index + m[1].length })
+  }
+  // 只认从 A 开始、连续且字母递增的一组
+  const seq = []
+  for (const m of marks) {
+    const want = LETTER[seq.length]
+    if (m.letter === want) seq.push(m)
+    else if (seq.length >= 2) break
+    else if (m.letter === 'A' && seq.length === 0) seq.push(m)
+  }
+  if (seq.length < 2) return { stem: t.trim(), choices: null }
+  const stem = t.slice(0, seq[0].start).trim()
+  const choices = seq.map((m, i) => {
+    const end = i + 1 < seq.length ? seq[i + 1].start : t.length
+    return { label: m.letter, text: t.slice(m.start, end).replace(/^[A-D]\s*[.．、]\s*/, '').trim() }
+  })
+  return { stem, choices }
+}
+
+// ---------- 答案 ----------
+function parseAnswer(raw) {
+  const s = String(raw ?? '').trim()
+  try {
+    const arr = JSON.parse(s)
+    if (Array.isArray(arr)) return arr.map((x) => String(x).trim()).filter(Boolean)
+  } catch (e) { /* 不是 JSON 就按文本处理 */ }
+  return s ? [s] : []
+}
+
+// ---------- 难度粗估：分值 + 字数 ----------
+function estimateDifficulty(score, text) {
+  const n = text.length
+  const base = Number(score) >= 12 ? 0.68 : Number(score) >= 6 ? 0.55 : 0.45
+  const bump = n > 400 ? 0.08 : n > 220 ? 0.04 : 0
+  return Math.min(0.92, Math.round((base + bump) * 100) / 100)
+}
+
+
+// 物理考点表的判据词偏少，这里补一组硬关键词（命中越多越可信）
+const HINTS = subject === 'physics' ? {
+  'P-01': ['速度', '加速度', '匀变速', '位移', '匀加速', '匀减速', '自由落体', '图象'],
+  'P-02': ['受平衡', '受力分析', '摩擦力', '合力', '静止状态', '匀速直线'],
+  'P-03': ['牛顿', '超重', '失重', '惯性', '作用力与反作用'],
+  'P-04': ['平抛', '圆周运动', '向心', '万有引力', '卫星', '轨道半径', '第一宇宙速度', '角速度', '线速度'],
+  'P-05': ['动能定理', '机械能', '功率', '动量', '冲量', '碰撞', '重力势能', '弹性势能'],
+  'P-06': ['简谐', '横波', '振幅', '波长', '周期', '干涉', '衍射', '波速', '振动'],
+  'P-07': ['电场强度', '电势', '电容器', '电场力', '带电粒子', '电势能', '匀强电场'],
+  'P-08': ['电流', '电阻', '欧姆定律', '电功率', '电动势', '闭合电路', '滑动变阻器'],
+  'P-09': ['磁场', '安培力', '洛伦兹力', '磁感应强度', '感应电动势', '磁通量', '楞次', '右手定则'],
+  'P-10': ['交流', '变压器', '有效值', '最大值', '振荡', '电感', '电容'],
+  'P-11': ['分子', '内能', '热力学', '气体', '压强', '温度', '扩散', '布朗'],
+  'P-12': ['折射', '全反射', '干涉', '偏振', '透镜', '光速', '光路'],
+  'P-13': ['光电效应', '原子核', '衰变', '光子', '波粒二象性', '能级', '核反应', '半衰期'],
+  'P-14': ['打点计时器', '刻度尺', '实验', '纸带', '游标卡尺', '螺旋测微器'],
+} : subject === 'chemistry' ? {
+  'C-14': ['勒夏特列', '平衡移动', '转化率'],
+  'C-15': ['化学平衡常数', 'K值', '平衡浓度'],
+  'C-32': ['晶胞', '配位数', '晶体结构'],
+  'C-16': ['原电池', '电解', '电极', '离子交换膜', '电子转移'],
+  'C-09': ['微粒半径', '金属性', '非金属性', '第一电离能', '电负性', '同周期', '同主族'],
+  'C-10': ['微粒半径', '金属性', '非金属性', '第一电离能', '电负性', '同周期', '同主族'],
+  'C-06': ['阿伏加德罗', '物质的量', '摩尔', 'NA'],
+  'C-12': ['盖斯定律', '反应热', '焓变', '燃烧热', '中和热'],
+  'C-17': ['化学反应速率', '速率常数', '活化能', '催化剂'],
+  'C-18': ['△H', '熵变', '自发', '吉布斯'],
+  'C-21': ['影响', '压强影响', '温度影响', '浓度影响'],
+  'C-27': ['烷烃', '烯烃', '炔烃', '苯环', '芳香'],
+  'C-28': ['酯化', '水解', '加聚', '缩聚', '高分子'],
+  'C-33': ['离子方程式正误', '离子共存'],
+  'C-35': ['元素推断', '短周期元素', '甲乙丙丁'],
+  'C-38': ['氮的化合物', '硝酸', '铵盐', '氨气'],
+  'C-42': ['方案评价', '实验方案', '设计实验'],
+  'C-43': ['定量实验', '滴定', '误差', '中和滴定'],
+} : {}
+
+// ---------- 考点归类 ----------
+// 判据词（cues）命中越长越可信；考点名里的词命中给双倍权重
+const NAME_TOKENS = new Map()
+const CUE_TOKENS = new Map()
+for (const [tid, t] of Object.entries(topicsDoc.topics)) {
+  const names = String(t.name || '')
+    .split(/[、，,：:（）()／/·+＋与和及的及]/)
+    .map((x) => x.trim())
+    .filter((x) => x.length >= 2)
+  NAME_TOKENS.set(tid, names)
+  CUE_TOKENS.set(tid, (t.cues || []).filter((c) => String(c).trim().length >= 2))
+}
+function classify(stem) {
+  const text = stem.toLowerCase()
+  // 先看硬关键词：命中最多的那个考点直接用
+  let hintBest = null
+  for (const [tid, words] of Object.entries(HINTS)) {
+    let hit = 0
+    for (const w of words) if (text.includes(w.toLowerCase())) hit++
+    if (hit >= 2 && (!hintBest || hit > hintBest.hit)) hintBest = { tid, hit }
+  }
+  if (hintBest) return hintBest.tid
+  let best = null
+  for (const tid of Object.keys(topicsDoc.topics)) {
+    let score = 0
+    for (const c of CUE_TOKENS.get(tid) || []) {
+      if (text.includes(String(c).toLowerCase())) score += String(c).length + 2
+    }
+    for (const n of NAME_TOKENS.get(tid) || []) {
+      if (text.includes(n.toLowerCase())) score += n.length * 2
+    }
+    if (!best || score > best.score) best = { tid, score }
+  }
+  return best && best.score >= 4 ? best.tid : fallbackTopic
+}
+
+// 数据集自带一些小错字，顺手改掉
+const TYPO = [[/坚直/g, '竖直'], [/㲴核/g, '氚核'], [/平衝/g, '平衡'], [/飽和/g, '饱和']]
+const cleanStem = (t) =>
+  t.replace(/^\s*\d+\s*[.．]\s*/, '')
+   .replace(/[（(]\s*\d+\s*分\s*[）)]/g, '')
+   .replace(/\s{2,}/g, ' ')
+   .trim()
+
+const stemKey = (s) => createHash('sha1').update(s.replace(/\s+/g, '')).digest('hex').slice(0, 16)
+const isFigureQuestion = (s) => /如图|图甲|图乙|图丙|图示|图所示|如下图|左图|右图/.test(s)
+
+// ---------- 主流程 ----------
+const doc = JSON.parse(readFileSync(file, 'utf8'))
+const items = Array.isArray(doc) ? doc : doc.example || []
+const bank = JSON.parse(readFileSync(bankPath, 'utf8'))
+bank.questions ||= []
+const seen = new Set(bank.questions.map((q) => stemKey(q.stem || '')))
+
+let added = 0, skippedFigure = 0, skippedDup = 0, noAnswer = 0, skippedNoIndex = 0
+const byTopic = {}
+
+for (const it of items) {
+  const rawQ = deTeX(it.question || '')
+  if (!rawQ) continue
+  if (!keepFigure && isFigureQuestion(rawQ)) { skippedFigure++; continue }
+  const answers = parseAnswer(it.answer)
+  if (!answers.length) { noAnswer++; continue }
+
+  let { stem, choices } = kind === 'mcq' ? splitChoices(rawQ) : { stem: rawQ, choices: null }
+  for (const [re, to] of TYPO) stem = stem.replace(re, to)
+  stem = cleanStem(stem)
+  if (!stem || stem.length < 8) continue
+  const key = stemKey(stem)
+  if (seen.has(key)) { skippedDup++; continue }
+  seen.add(key)
+
+  const year = String(it.year || '')
+  const paper = String(it.category || '').replace(/[（）]/g, '')
+  const q = {
+    id: `gk-${subject}-${key}`,
+    topic: classify(stem),
+    type: choices ? 'choice' : 'text',
+    difficulty: estimateDifficulty(it.score, stem),
+    stem,
+    source: `GAOKAO-Bench 高考真题 ${year} ${paper}（第 ${Number(it.index) + 1} 题）`,
+    sourceUrl: 'https://github.com/OpenLMLab/GAOKAO-Bench',
+  }
+  if (choices) {
+    q.choices = choices.map((c) => c.text)
+    const idx = answers
+      .map((a) => LETTER.indexOf(String(a).trim().slice(0, 1).toUpperCase()))
+      .filter((i) => i >= 0 && i < choices.length)
+    if (!idx.length) { skippedNoIndex++; continue }
+    q.answer = { value: idx }
+  } else {
+    q.answer = { reference: answers.join('；') }
+  }
+  const sol = deTeX(it.analysis || '')
+  if (sol) q.solution = sol
+  bank.questions.push(q)
+  byTopic[q.topic] = (byTopic[q.topic] || 0) + 1
+  added++
+}
+
+writeFileSync(bankPath, JSON.stringify(bank, null, 2) + '\n')
+
+const named = Object.entries(byTopic)
+  .sort((a, b) => b[1] - a[1])
+  .map(([t, n]) => `${t}(${topicsDoc.topics[t]?.name || '?'}) ${n}`)
+console.log(
+  `${subject} ${kind}：新增 ${added} 题 → ${bankPath}\n` +
+  `跳过：图形题 ${skippedFigure}、重复 ${skippedDup}、无答案 ${noAnswer}、答案下标对不上 ${skippedNoIndex}\n` +
+  `归属：${named.join('、') || '无'}`
+)
