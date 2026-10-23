@@ -1697,6 +1697,21 @@
       "mastered": false,
       "retry": false,
       "stateDetail": "技-82·"
+    },
+    "T-99": {
+      "alias": "技-99",
+      "name": "未分类",
+      "desc": "暂时归不进任何考点的题",
+      "group": null,
+      "cues": [],
+      "extraSteps": [],
+      "extraChecks": [],
+      "state": "⬜",
+      "errorType": null,
+      "fillMe": true,
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "技-99·"
     }
   }
 }
