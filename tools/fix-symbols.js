@@ -19,6 +19,8 @@ const TEX = /\\{1,2}[a-zA-Z]+|\$|\}\}|\{\{|tabular/
 // 物理/化学里还有核素符号（_{Z}^{A}X）被压平成 z^A X 这种，单独再认一遍
 const NUCLIDE = /[_^]\s*\{?[A-Za-z0-9]{1,3}\}?\s*[_^]?\s*[A-Z][a-z]?(?![a-z])/
 const NUCLIDE_SUBJECTS = new Set(['physics', 'chemistry'])
+// 图片 markdown、被改坏的汉字、残留的 ^(…) 也要走一遍
+const JUNK = /!\[[^\]]*\]\(|棪|椟|桉|㭹|\^\s*\(/
 const FIELDS = ['stem', 'solution', 'reference', 'explain']
 
 function legacyWords(text) {
@@ -55,7 +57,7 @@ let totalFixed = 0
 // 递归处理对象里的所有字符串（公式可能藏在 answer.reference 这类深层字段里）
 function walk(node, counter, allowNuclide) {
   if (typeof node === 'string') {
-    if (TEX.test(node) || (allowNuclide && NUCLIDE.test(node))) { counter.n++; return clean(node) }
+    if (TEX.test(node) || JUNK.test(node) || (allowNuclide && NUCLIDE.test(node))) { counter.n++; return clean(node) }
     return node
   }
   if (Array.isArray(node)) return node.map((x) => walk(x, counter, allowNuclide))

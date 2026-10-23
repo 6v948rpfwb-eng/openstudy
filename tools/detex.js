@@ -128,7 +128,7 @@ export function deTeX(src) {
   }
 
   // 上下标（先处理带花括号的，再处理单字符）
-  s = s.replace(/\^\{([^{}]*)\}/g, (_, a) => renderSup(a))
+  s = s.replace(/\^\{([^{}]*)\}/g, (_, a) => renderSup(a.replace(/[()（）]/g, '').trim()))
   s = s.replace(/_\{([^{}]*)\}/g, (_, a) => renderSub(a))
   s = s.replace(/\^([0-9]{2,3})(?![0-9])/g, (_, a) => renderSup(a))
   s = s.replace(/_([0-9]{2,3})(?![0-9])/g, (_, a) => renderSub(a))
@@ -140,6 +140,20 @@ export function deTeX(src) {
   s = s.replace(/\^\s*\{?°\}?/g, '°')
   s = s.replace(/\^\(\s*°\s*\)/g, '°')
   s = s.replace(/\^\(\s*∘\s*\)/g, '°')
+  // 反应箭头（必须在通用上标换算之前吃掉，否则会变成 ^(→)）
+  s = s.replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+  s = s.replace(/\\x?x?long?rightarrow\b/g, '→')
+  s = s.replace(/\\xrightarrow\s*\{([^{}]*)\}/g, (_, l) => '—' + l.trim() + '→')
+  s = s.replace(/\\stackrel\s*\{([^{}]*)\}\s*\{\\?to\}/g, (_, l) => '—' + l.trim() + '→')
+  s = s.replace(/\\(?:right|long)?arrow(fill)?\b|\\to\b/g, '→')
+  s = s.replace(/\\(?:rightleft|leftrightharpoons)\b/g, '⇌')
+  s = s.replace(/\^\s*\(\s*→\s*\)/g, '→')
+  s = s.replace(/\^\s*\{?→\}?/g, '→')
+  s = s.replace(/\^\s*\(\s*△\s*\)/g, '△')
+  // 早期被改坏的字
+  s = s.replace(/椟|桉|棪|㭹/g, '浓')
+  s = s.replace(/→{2,}/g, '→')
+  s = s.replace(/浓\./g, '浓')
   // 命令名（先吃掉纯间距命令，再处理符号，最后兜底）
   s = s.replace(/\\[,;:! ]/g, '')
   s = s.replace(/\\([A-Za-z]+)\b/g, (m, name) => (name in SYM ? SYM[name] : GREEK[name] ?? ''))

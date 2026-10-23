@@ -46,5 +46,16 @@ const samples = [
 ]
 for (const s of samples) ok(noTeX(out(s)), '不留任何 LaTeX 标记：' + s)
 
+const extra = [
+  ['CCl4^(→)→CH3CHBrCH2Br', 'CCl4→CH3CHBrCH2Br'],
+  ['![x](https://cdn.mathpix.com/a.jpg) 苯', '苯'],
+  ['30^{(°)}', '30°'],
+  ['CH3CH2OH 棪H2SO4△', 'CH3CH2OH 浓H2SO4△'],
+]
+for (const [src, want] of extra) {
+  const got = out(src)
+  ok(got === want, `箭头/图片/汉字：${src} → ${got}`)
+}
+
 console.log(`\ndetex：${pass} 项通过，${fail} 项失败`)
 if (fail) process.exit(1)
