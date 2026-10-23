@@ -432,7 +432,7 @@ function useBankText(text, name) {
 
   // 题干写了「图」但没有配图的题：看不见图，做它没意义，先挡在组卷之外。
   // （这些题来自文字转写本，或者原图抓不到；给它们补上 figure 后刷新就自动回来）
-  const noFig = (q) => /图/.test(q.stem || '') && !q.figure
+  const noFig = (q) => !q.noFigure && /图/.test(q.stem || '') && !q.figure
   app.bank.hiddenNoFig = res.bank.questions.filter(noFig).length
   if (app.bank.hiddenNoFig) app.bank.questions = res.bank.questions.filter((q) => !noFig(q))
 
