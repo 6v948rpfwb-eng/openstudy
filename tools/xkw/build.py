@@ -18,6 +18,8 @@ bank_path = opt('bank')
 topics = json.load(open(os.path.join(BASE, 'tools', f'topics-{subject}.json'), encoding='utf8'))
 bank = json.load(open(bank_path, encoding='utf8'))
 tag = adoc['tag']
+import re as _re
+paper_title = _re.sub(r'[-_]组卷网$', '', (qdoc.get('title') or '')).strip() or f'组卷网 {tag}'
 figdir = os.path.join(FIG, subject); os.makedirs(figdir, exist_ok=True)
 
 
@@ -72,7 +74,7 @@ for i, q in enumerate(qdoc['questions']):
         'difficulty': 0.55, 'stem': stem, 'choices': opts,
         'answer': {'value': idx} if idx >= 0 and idx < len(opts) else {'reference': '见解析'},
         'solution': (ans or {}).get('ocr') or '',
-        'source': f'组卷网 {tag} 第{i+1}题', 'sourceUrl': f'https://zujuan.xkw.com/13q{qid}.html',
+        'source': f'{paper_title}·第{i+1}题', 'sourceUrl': f'https://zujuan.xkw.com/13q{qid}.html',
         'solutionOcr': True,
     }
     if figure: e['figure'] = figure
