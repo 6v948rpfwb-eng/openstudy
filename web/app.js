@@ -1179,10 +1179,12 @@ function renderPractice() {
         const st = !a ? '' : (a.correct ? ' ok' : ' bad')
         return `<button class="qno${i === app.index ? ' cur' : ''}${st}" data-q="${i}">${i + 1}</button>`
       }).join('')}</div>`}
+      ${/图/.test(q.stem) && !(q.figures || []).length ? `<p class="muted figwarn">这题原文提到图，但题库里没有配图；文字部分能做的照做，需要读图的可以跳过。</p>` : ''}
       <p class="stem" style="margin-top:16px">${renderMathText(q.stem)}</p>
       ${figureHtml}${figureNote}
       ${inputArea}
       ${feedback}
+      ${/图/.test(q.stem) && !(q.figures || []).length && !c.graded ? `<div class="row" style="margin-top:12px"><button class="btn plain" id="skipfig">跳过这题</button></div>` : ''}
       <div class="row" style="margin-top:16px">
         ${c.graded
           ? `<button class="btn" id="next">${isEndless() ? '下一题' : (app.index + 1 === total ? '交卷' : '下一题')}</button>`
@@ -1244,6 +1246,8 @@ function renderPractice() {
   })
 
   document.getElementById('submit')?.addEventListener('click', doSubmit)
+  const sf = document.getElementById('skipfig')
+  if (sf) sf.onclick = () => { app.index = Math.min(app.index + 1, app.paper.questions.length - 1); app.current = { input: '', picked: null, selfGrade: null, graded: null }; render() }
   $root.querySelectorAll('[data-q]').forEach((b) => {
     b.onclick = () => jumpTo(Number(b.dataset.q))
   })
