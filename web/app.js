@@ -576,6 +576,9 @@ function renderKnowledge() {
       <div><strong>${fwEsc(doc.title || '知识点图')}</strong></div>
       <div class="muted" style="margin-top:4px">这里只有知识点本身：定义、公式、易混点、前置关系。怎么解题去「方法论」。</div>
     </div><div class="bgrid">${cards}</div>`
+  $root.querySelectorAll('[data-paper]').forEach((b) => {
+    b.onclick = () => startPaperSession(b.dataset.paper)
+  })
   $root.querySelectorAll('[data-b]').forEach((b) => { b.onclick = () => { app.kb.block = b.dataset.b; app.kb.node = null; render() } })
 }
 
@@ -756,6 +759,27 @@ function masteredView(bank) {
   return { topics, questions }
 }
 
+/** 从 source 里拆出「卷名 + 题号」：整卷练习靠它把同一份卷子的题挑出来按顺序做 */
+function paperOf(q) {
+  const s = (q.source || '').trim()
+  const m = s.match(/^(.*?)\s*第\s*(\d+)/)
+  if (m) return { paper: m[1].trim().replace(/[（(\s]+$/, ''), no: Number(m[2]) }
+  return { paper: s || '未标注卷', no: 0 }
+}
+
+function papersOf(bank) {
+  const map = new Map()
+  for (const q of bank.questions) {
+    const { paper, no } = paperOf(q)
+    if (!map.has(paper)) map.set(paper, [])
+    map.get(paper).push({ q, no })
+  }
+  return [...map.entries()]
+    .map(([paper, arr]) => ({ paper, n: arr.length, qs: arr.sort((a, b) => a.no - b.no).map((x) => x.q) }))
+    .filter((p) => p.n >= 4)
+    .sort((a, b) => b.n - a.n || a.paper.localeCompare(b.paper))
+}
+
 function renderReady() {
   const { bank, state } = app
   const mastered = masteredView(bank)
@@ -769,6 +793,7 @@ function renderReady() {
   for (const q of bank.questions) perTopic[q.topic] = (perTopic[q.topic] || 0) + 1
   const qOf = (ids) => ids.reduce((n, id) => n + (perTopic[id] || 0), 0)
   const topics = bank.topics
+  const papers = papersOf(bank)
 
   // 第三层：单个考点
   if (nav.topic && topics[nav.topic]) {
@@ -897,6 +922,20 @@ function renderReady() {
       </p>
     </div>
 
+    ${papers.length ? `<div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div><b>整卷</b><div class="muted">按原卷顺序从头做到尾，不抽题、不跳题</div></div>
+        <span class="muted">共 ${papers.length} 份</span>
+      </div>
+      <div class="plist">
+        ${papers.slice(0, 10).map((p) => `<button class="prow" data-paper="${fwEsc(p.paper)}">
+          <span class="pname">${fwEsc(p.paper)}</span>
+          <span class="muted">${p.n} 题</span>
+        </button>`).join('')}
+      </div>
+      ${papers.length > 10 ? `<p class="muted" style="margin:8px 0 0">只列出题数最多的 10 份</p>` : ''}
+    </div>` : ''}
+
     ${other}
     <div class="muted" style="margin:18px 0 8px 2px">按知识块看考点（点进去还能只练这个考点）</div>
     <div class="bgrid">${cards}${exCard}</div>`
@@ -913,6 +952,20 @@ function renderReady() {
   $root.querySelectorAll('[data-b]').forEach((b) => {
     b.onclick = () => { nav.block = b.dataset.b; nav.topic = null; render() }
   })
+}
+
+/** 整卷：把同一份卷子的题按题号顺序做整场 */
+function startPaperSession(name) {
+  const p = papersOf(app.bank).find((x) => x.paper === name)
+  if (!p) { mascotSay('这份卷子的题没找着', 'think', 5); return }
+  app.mode = 'paper'
+  app.paperName = name
+  app.paper = { questions: p.qs, meta: null }
+  app.index = 0
+  app.answers = []
+  app.phase = 'practice'
+  mascotOnSessionStart()
+  nextQuestion()
 }
 
 /** 只练一个考点：把题库缩到该考点的题，再走正常组卷 */
