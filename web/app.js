@@ -429,6 +429,13 @@ function useBankText(text, name) {
     return
   }
   app.bank = res.bank
+
+  // 题干写了「图」但没有配图的题：看不见图，做它没意义，先挡在组卷之外。
+  // （这些题来自文字转写本，或者原图抓不到；给它们补上 figure 后刷新就自动回来）
+  const noFig = (q) => /图/.test(q.stem || '') && !q.figure
+  app.bank.hiddenNoFig = res.bank.questions.filter(noFig).length
+  if (app.bank.hiddenNoFig) app.bank.questions = res.bank.questions.filter((q) => !noFig(q))
+
   app.warnings = res.warnings
   app.state = loadState(app.bank.subject) ?? emptyState(app.bank.subject)
   migrateState(app.state)
@@ -899,6 +906,7 @@ function renderReady() {
         <div><b>${due.length}</b>到期考点</div>
       </div>
       <div style="margin-top:12px">${miniBar(all)} ${stateChips(all)}</div>
+      ${app.bank.hiddenNoFig ? `<p class="muted" style="margin-top:12px">另有 ${app.bank.hiddenNoFig} 道题原卷有图、但图没抓到（多为文字转写本里的「[图：…]」），先不出给你做；补齐图以后会自己回来。</p>` : ''}
       ${app.warnings.length ? `<p class="muted" style="margin-top:12px">题库提醒：${app.warnings.slice(0, 2).join('；')}${app.warnings.length > 2 ? ' …' : ''}</p>` : ''}
     </div>
 

@@ -32,7 +32,7 @@ for (const [subject, file] of [
 }
 
 const tech = read('topics-technology.json')
-ok(Object.keys(tech.topics).length === 82, '技术 82 个考点（技-01…技-82）')
+ok(Object.keys(tech.topics).filter((k) => k !== 'T-99').length === 82, '技术 82 个考点（技-01…技-82，另有 T-99 未分类）')
 ok(tech.topics['T-01'].alias === '技-01', '技术考点保留 alias 技-NN')
 ok(['physics', 'chemistry', 'technology'].includes(tech.subject), '技术 subject 正确')
 const groups = Object.values(tech.topics).reduce((m, t) => ((m[t.group] = (m[t.group] || 0) + 1), m), {})
