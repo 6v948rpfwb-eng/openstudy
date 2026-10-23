@@ -164,6 +164,41 @@ function switchBank(key) {
   syncHash()
 }
 
+
+// 题干排版：把「行｜列」串成的表格还原成真表格，其余按段落/小问分行
+function stemToHtml(text) {
+  const raw = String(text ?? '').replace(/\r/g, '')
+  const tokens = raw.split(/；(?=[^；]{0,60}｜)|；(?!)/).flatMap((x) => x.split('\n'))
+    .map((x) => x.trim()).filter(Boolean)
+  const out = []
+  let table = null
+  const flush = () => {
+    if (!table) return
+    const rows = table.map((cells) => `<tr>${cells.map((c) => `<td>${renderMathText(c)}</td>`).join('')}</tr>`).join('')
+    out.push(`<div class="tblwrap"><table class="stemtable">${rows}</table></div>`)
+    table = null
+  }
+  let prose = []
+  const flushProse = () => {
+    if (!prose.length) return
+    out.push(`<p class="sp">${renderMathText(prose.join('；'))}</p>`)
+    prose = []
+  }
+  for (const tk of tokens) {
+    if (tk.includes('｜')) {
+      flushProse()
+      const cells = tk.split('｜').map((c) => c.trim()).filter(Boolean)
+      if (cells.length >= 2) { (table = table || []).push(cells); continue }
+    }
+    flush()
+    prose.push(tk)
+  }
+  flush(); flushProse()
+  // 小问 (1)(2)(3) 各自成行，别挤在一段里
+  return out.join('').replace(/<p class="sp">([\s\S]*?)<\/p>/g, (m, inner) =>
+    inner.replace(/\s*[（(]([1-9])([）)])\s*/g, '</p><p class="sp sub">（$1）').replace(/^([\s\S]*?)<\/p><p class="sp sub">/, '$1</p><p class="sp sub">'))
+}
+
 function renderTabs() {
   const bar = document.getElementById('tabs')
   if (!bar) return
@@ -1351,7 +1386,7 @@ function renderPractice() {
         return `<button class="qno${i === app.index ? ' cur' : ''}${st}" data-q="${i}">${i + 1}</button>`
       }).join('')}</div>`}
       ${/图/.test(q.stem) && !(q.figures || []).length ? `<p class="muted figwarn">这题原文提到图，但题库里没有配图；文字部分能做的照做，需要读图的可以跳过。</p>` : ''}
-      <p class="stem" style="margin-top:16px">${renderMathText(q.stem)}</p>
+      <div class="stem" style="margin-top:18px">${stemToHtml(q.stem)}</div>
       ${figureHtml}${figureNote}
       ${inputArea}
       ${feedback}
@@ -1585,5 +1620,5 @@ render()
 
 // 测试钩子：把纯函数挂到 globalThis，方便 node 里离线断言（不影响页面行为）
 if (typeof globalThis !== 'undefined') {
-  globalThis.__openstudy = { buildAskPrompt, askFromPage }
+  globalThis.__openstudy = { buildAskPrompt, askFromPage, stemToHtml }
 }

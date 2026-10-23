@@ -237,5 +237,16 @@ ok(promptText.includes('我的答案：C') && promptText.includes('系统判定�
 ok(promptText.trim().endsWith('为什么不是 mgcosθ'), '提问文本以问题结尾')
 ok(!/undefined|null/.test(A.buildAskPrompt({ subject: 'math' })), '缺字段时不出现 undefined')
 
+
+// ---- 题干排版：表格题渲染成真表格 ----
+const stemCase = A.stemToHtml('下列由实验得出的结论正确的是（）；实验｜结论；A.｜乙烯通入溴的CCl₄｜无色透明；B.｜乙醇与水都与钠反应｜活性相同')
+ok(/<table class="stemtable">/.test(stemCase), '题干里的「行｜列」渲染成表格')
+ok((stemCase.match(/<tr>/g) || []).length === 3, '表格行数正确（含表头）: ' + (stemCase.match(/<tr>/g) || []).length)
+ok(/<td>乙烯通入溴的CCl₄<\/td>/.test(stemCase), '单元格内容保留')
+const subCase = A.stemToHtml('（1）求加速度；（2）求时间')
+ok((subCase.match(/class="sp sub"/g) || []).length === 2, '小问 (1)(2) 各自成段')
+const plain = A.stemToHtml('一段没有表格的题干，含公式 v²=2ax')
+ok(plain.includes('一段没有表格的题干') && !plain.includes('<table'), '普通题干不受影响')
+
 console.log(`${pass} 项通过` + (bad.length ? `，${bad.length} 项失败：\n- ` + bad.join('\n- ') : ''))
 if (bad.length) process.exit(1)
