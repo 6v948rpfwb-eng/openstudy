@@ -809,6 +809,7 @@ function renderKnowledge() {
         <div><b>${fwEsc(n.name)}</b> <span class="muted">${fwEsc(n.topic || '')}</span></div>
         <span class="fst ${FST_CLASS(st)}">${fwEsc(st || '未测')}</span>
       </div>
+      ${n.why ? `<div class="whybox"><span class="whyk">为什么</span><span>${renderMathText(n.why)}</span></div>` : ''}
       <div class="qfront">
         <div class="qlabel">先自己想 10 秒</div>
         <div class="qtext">这个知识点是什么？什么时候用？最容易错在哪里？</div>
