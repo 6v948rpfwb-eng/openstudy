@@ -11,18 +11,36 @@ import {
   loadBank, validateBank,
   composePaper,
   grade,
-  emptyState, finishSession, dueTopics, topicMastery, migrateState,
+  emptyState, finishSession, dueTopics, topicMastery, migrateState, seenCount,
   describeTheta, predictPass,
 } from '../core/index.js'
 import { renderMathText } from '../core/math.js'
 import { loadForTopic } from '../core/framework.js'
+import { DAILY_GOAL, xpForAnswer, levelOf, dayKey, settleSession, newBadges, withBadges, BADGES } from '../core/game.js'
 import { mountMascot, mascotSay, mascotOnAnswer, mascotOnSessionStart, mascotOnSessionEnd, mascotSetActive, mascotGreetOnce } from './mascot.js'
 
 const $root = document.getElementById('root')
 const KEY = (subject) => `openstudy.state.${subject}`
 
+const GAME_KEY = 'openstudy.game'
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(GAME_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch (e) { /* 忽略 */ }
+  return { xp: 0, streak: 0, lastDoneDay: '', todayXp: 0, todayDay: '', answered: 0, sessions: 0, bestCorrectStreak: 0, badges: {} }
+}
+function saveGame(g) {
+  try { localStorage.setItem(GAME_KEY, JSON.stringify(g)) } catch (e) { /* 忽略 */ }
+}
+
 const app = {
   opts: loadOpts(),
+  game: loadGame(),
+  sessionXp: 0,
+  correctStreak: 0,
+  bestStreak: 0,
+  gameInfo: null,
   bank: null,
   warnings: [],
   state: null,
@@ -1129,6 +1147,7 @@ function renderReady() {
     : ''
 
   $root.innerHTML = `
+    ${gameStripHTML()}
     <div class="card">
       <div class="row" style="justify-content:space-between">
         <div>
@@ -1183,6 +1202,7 @@ function renderReady() {
     </div>` : ''}
 
     ${other}
+    ${badgeWallHTML()}
     <div class="muted" style="margin:18px 0 8px 2px">按知识块看考点（点进去还能只练这个考点）</div>
     <div class="bgrid">${cards}${exCard}</div>`
 
@@ -1234,12 +1254,20 @@ function startTopicSession(tid, n = 10) {
   app.paper = { questions: picked, meta }
   app.index = 0
   app.answers = []
+  app.sessionXp = 0
+  app.correctStreak = 0
+  app.bestStreak = 0
+  app.gameInfo = null
   app.phase = 'practice'
   mascotOnSessionStart()
   nextQuestion()
 }
 
 function startSession(n) {
+  app.sessionXp = 0
+  app.correctStreak = 0
+  app.bestStreak = 0
+  app.gameInfo = null
   if (!n) return startEndless()
   app.mode = 'paper'
   const { picked, meta } = composePaper(app.bank, {
@@ -1320,6 +1348,9 @@ function settleEndless() {
 
 function finishEndless() {
   app.phase = 'done'
+  if (app.endless && app.endless.asked > 0) {
+    settleGame({ answered: app.endless.asked, correct: app.endless.correct })
+  }
   render()
 }
 
@@ -1549,7 +1580,41 @@ function recordAnswer(g, countsForTheta) {
     countsForTheta,
     input: app.current.input,
   }
+  // 经验值：第一次答对给得最多；同一题改判只覆盖，不重复记账
+  const firstTime = seenCount(app.state, q.id) === 0
+  const self = app.current && app.current.self
+  const xp = xpForAnswer({ correct: g.correct === true, firstTime, self })
+  const before = app.answers[app.index].xp || 0
+  app.answers[app.index].xp = xp
+  app.sessionXp += xp - before
+  if (g.correct === true) { app.correctStreak += 1; app.bestStreak = Math.max(app.bestStreak, app.correctStreak) }
+  else if (g.correct === false) app.correctStreak = 0
   if (isEndless()) settleEndless()
+}
+
+/** 结算这一场的经验值、连续天数与成就，写回存档 */
+function settleGame({ answered, correct }) {
+  const before = app.game
+  const today = dayKey()
+  let g = settleSession(before, { today, sessionXp: app.sessionXp, answered, bestCorrectStreak: app.bestStreak })
+  const fresh = newBadges(g, {
+    today, answered, correct, bestCorrectStreak: app.bestStreak,
+    hour: new Date().getHours(),
+  })
+  g = withBadges(g, fresh)
+  app.game = g
+  saveGame(g)
+  app.gameInfo = {
+    sessionXp: app.sessionXp,
+    answered,
+    correct,
+    levelBefore: levelOf(before.xp),
+    levelAfter: levelOf(g.xp),
+    fresh,
+    streak: g.streak,
+    todayXp: g.todayXp,
+    goal: DAILY_GOAL,
+  }
 }
 
 function finish() {
@@ -1558,6 +1623,7 @@ function finish() {
   app.state = state
   app.report = report
   app.phase = 'done'
+  settleGame({ answered: counted.length, correct: counted.filter((a) => a.correct === true).length })
   mascotOnSessionEnd(report.asked ? Math.round((report.correct / report.asked) * 100) : null)
   saveState({
     mode: 'paper',
@@ -1589,6 +1655,7 @@ function renderDone() {
         <div><b>${r.level}</b>水平</div>
       </div>
     </div>
+    ${xpPanelHTML()}
     <div class="card">
       <b>这份成绩的证据有多硬</b>
       <p class="muted" style="margin:8px 0 0">
@@ -1627,6 +1694,7 @@ function renderEndlessDone() {
     <td>${Math.round((t.correct / Math.max(1, t.asked)) * 100)}%</td></tr>`).join('')
 
   $root.innerHTML = `
+    ${xpPanelHTML()}
     <div class="card">
       <b>这一轮做完了</b>
       <div class="stat">
@@ -1651,6 +1719,90 @@ function renderEndlessDone() {
 
   document.getElementById('again').onclick = () => startEndless()
   document.getElementById('home').onclick = () => { app.phase = 'ready'; render() }
+}
+
+// ---------- 鼓励机制：状态条 / 结算面板 ----------
+function gameStripHTML() {
+  const g = app.game
+  const lv = levelOf(g.xp)
+  const pct = Math.round(lv.pct * 100)
+  const goalPct = Math.min(100, Math.round((g.todayXp / DAILY_GOAL) * 100))
+  const done = g.todayXp >= DAILY_GOAL
+  return `
+    <div class="card gamecard">
+      <div class="grow">
+        <div class="lvbox">
+          <div class="lvnum">${lv.level}</div>
+          <div class="lvtext">
+            <b>等级 ${lv.level}</b>
+            <div class="muted">${lv.into} / ${lv.need} XP 到下一级（累计 ${g.xp}）</div>
+          </div>
+        </div>
+        <div class="xpbar"><i style="width:${pct}%"></i></div>
+      </div>
+      <div class="gside">
+        <div class="goalring" ${done ? 'data-done="1"' : ''}>
+          <svg viewBox="0 0 40 40" width="46" height="46">
+            <circle cx="20" cy="20" r="16" class="ringbg"></circle>
+            <circle cx="20" cy="20" r="16" class="ringfg" pathLength="100" style="stroke-dasharray:${goalPct} 100"></circle>
+          </svg>
+          <span>${goalPct}%</span>
+        </div>
+        <div class="goaltxt">
+          <b>${done ? '今日达成' : `今日 ${g.todayXp}/${DAILY_GOAL}`}</b>
+          <div class="muted">${done ? '明天再来一轮' : '再做几题就够'}</div>
+        </div>
+        <div class="streakbox" title="每天攒够 20 XP 算一天">
+          <span class="flame">🔥</span><b>${g.streak}</b><span class="muted">天连续</span>
+        </div>
+      </div>
+    </div>`
+}
+
+function badgeWallHTML() {
+  const got = app.game.badges
+  const cells = BADGES.map((b) => {
+    const on = Boolean(got[b.id])
+    return `<div class="badge ${on ? 'on' : ''}" title="${escapeHtml(b.desc)}${on ? '（' + got[b.id] + '）' : '（未解锁）'}">
+      <div class="bic">${on ? b.icon : '🔒'}</div>
+      <div class="bname">${b.name}</div>
+    </div>`
+  }).join('')
+  const n = BADGES.filter((b) => got[b.id]).length
+  return `<div class="card">
+    <div class="row" style="justify-content:space-between">
+      <b>成就墙</b><span class="muted">${n}/${BADGES.length}</span>
+    </div>
+    <div class="badges">${cells}</div>
+  </div>`
+}
+
+function xpPanelHTML() {
+  const info = app.gameInfo
+  if (!info) return ''
+  const up = info.levelAfter.level > info.levelBefore.level
+  const fresh = info.fresh || []
+  const goalPct = Math.min(100, Math.round((info.todayXp / info.goal) * 100))
+  return `
+    <div class="card xpcard">
+      <div class="xpline">
+        <div class="xpbig">+${info.sessionXp} XP</div>
+        <div class="muted">本场 ${info.answered} 题，对 ${info.correct} 题</div>
+      </div>
+      <div class="xpbar big"><i style="width:${Math.round(info.levelAfter.pct * 100)}%"></i></div>
+      <div class="muted" style="margin-top:6px">
+        等级 ${info.levelAfter.level}（${info.levelAfter.into}/${info.levelAfter.need} XP）
+        ${up ? `<b class="uplevel">升级了！${info.levelBefore.level} → ${info.levelAfter.level}</b>` : ''}
+      </div>
+      <div class="xpline" style="margin-top:10px">
+        <div>今日目标 <b>${info.todayXp}/${info.goal}</b>（${goalPct}%）</div>
+        <div>连续 <span class="flame">🔥</span><b>${info.streak}</b> 天</div>
+      </div>
+      ${fresh.length ? `<div class="newbadges">
+        <b>新成就</b>
+        ${fresh.map((b) => `<span class="badgepill">${b.icon} ${b.name}</span>`).join('')}
+      </div>` : ''}
+    </div>`
 }
 
 // ---------- 小工具 ----------
