@@ -422,7 +422,10 @@ function loadState(subject) {
 function useBankText(text, name) {
   const res = validateBank(JSON.parse(text))
   if (!res.ok) {
-    alert(`题库「${name}」有问题：\n\n` + res.errors.join('\n'))
+    // 不要用 alert：它会阻塞页面，后续所有 JS（包括自动化脚本）都会卡死
+    app.phase = 'load'
+    const box = document.getElementById('root')
+    if (box) box.innerHTML = `<section class="card"><h2>题库「${escHtml(name)}」没通过校验</h2><p class="muted">改好题库文件后刷新页面。</p><ul class="errlist">${res.errors.slice(0, 12).map((e) => `<li>${escHtml(e)}</li>`).join('')}</ul></section>`
     return
   }
   app.bank = res.bank
