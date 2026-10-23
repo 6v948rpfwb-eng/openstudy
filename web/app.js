@@ -1680,7 +1680,9 @@ function renderPractice() {
         if (correct) cls += ' right'
         else if (c.picked === i) cls += ' wrong'
       } else if (c.picked === i) cls += ' picked'
-      return `<button class="${cls}" data-i="${i}" ${c.graded ? 'disabled' : ''}>${'ABCDEFG'[i]}. ${subify(q.choicesTex && q.choicesTex[i] ? (texMixed(q.choicesTex[i]) ?? renderMathText(ch)) : renderMathText(ch))}</button>`
+      const optImg = q.choiceImgs && q.choiceImgs[i] ? `<img class="optimg" src="${q.choiceImgs[i]}" alt="选项${'ABCDEFG'[i]}">` : ''
+      const optTxt = ch && ch !== '（见图）' ? renderMathText(ch) : ''
+      return `<button class="${cls}" data-i="${i}" ${c.graded ? 'disabled' : ''}>${'ABCDEFG'[i]}. ${subify(optTxt)}${optImg}</button>`
     }).join('')
   } else {
     inputArea = `<textarea id="ans" rows="4" placeholder="写下你的思路"
@@ -1694,7 +1696,7 @@ function renderPractice() {
       feedback = `<div class="feedback ok">
         <b>参考答案</b>
         <div class="sol">${renderMathText(q.answer.reference ?? '（题库没写参考答案）')}</div>
-        ${q.solution ? `<div class="sol" style="margin-top:10px">解析：${renderMathText(q.solution)}</div>` : ''}
+        ${q.solutionImg ? `<div class="sol" style="margin-top:10px"><img class="solimg" src="${q.solutionImg}" alt="解析"></div>` : (q.solution ? `<div class="sol" style="margin-top:10px">解析：${renderMathText(q.solution)}</div>` : '')}
         <div style="margin-top:12px" class="row">
           <span class="muted">自己判：</span>
           <button class="btn ghost" data-self="full">对了</button>
@@ -1707,7 +1709,7 @@ function renderPractice() {
       feedback = `<div class="feedback ${ok ? 'ok' : 'no'}">
         <b>${ok ? '对' : '错'}</b>
         ${c.graded.reason ? `<div class="sol">${renderMathText(c.graded.reason)}</div>` : ''}
-        ${q.solution ? `<div class="sol">解析：${renderMathText(q.solution)}</div>` : ''}
+        ${q.solutionImg ? `<div class="sol"><img class="solimg" src="${q.solutionImg}" alt="解析"></div>` : (q.solution ? `<div class="sol">解析：${renderMathText(q.solution)}</div>` : '')}
       </div>`
     }
   }

@@ -104,6 +104,7 @@ for (const bankPath of bankPaths) {
       return `data:${mime};base64,${readFileSync(file).toString('base64')}`
     }
     for (const q of obj.questions || []) {
+      if (q.solutionImg) q.solutionImg = toDataUri(q.solutionImg)
       if (!q.figure) continue
       q.figure = Array.isArray(q.figure) ? q.figure.map(toDataUri) : toDataUri(q.figure)
     }
