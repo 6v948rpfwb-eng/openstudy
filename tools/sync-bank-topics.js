@@ -17,7 +17,7 @@ const DATA = join(here, '..', 'openstudy-data')
 const KEEP = ['name', 'desc', 'group', 'alias', 'cues', 'state', 'mastered', 'retry', 'stateDetail', 'extraSteps', 'extraChecks']
 
 let touched = 0
-for (const subject of ['physics', 'chemistry', 'technology']) {
+for (const subject of ['physics', 'chemistry', 'technology', 'math']) {
   const topicsFile = join(here, `topics-${subject}.json`)
   const bankFile = join(DATA, `${subject}.bank.json`)
   if (!existsSync(topicsFile) || !existsSync(bankFile)) continue

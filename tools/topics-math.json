@@ -1,0 +1,682 @@
+{
+  "_说明": "数学考点表。字段同 topics-chemistry.json：alias 对《考点索引》的数-NN；cues 是给导入器自动归考点的关键词；graph 给练习页/知识图分块。",
+  "schema": "openstudy.topics/2",
+  "subject": "math",
+  "title": "高中数学",
+  "groups": {
+    "A": {
+      "label": "A 条件 → 方程 → 边界",
+      "steps": [
+        "把题给条件逐条写成等式或不等式（含取值范围）",
+        "把目标量也写成含未知量的式子",
+        "联立消元，得到只含一个未知量的方程",
+        "解出后回代，逐个核对定义域与题给范围"
+      ],
+      "checks": [
+        "定义域是否漏（分母、根号、对数真数）",
+        "等号能否取到（端点是否含）",
+        "是否多解需要舍去"
+      ]
+    },
+    "B": {
+      "label": "B 证据 → 判断",
+      "steps": [
+        "圈出题干中给数据与要求的那句话",
+        "分辨哪个数据是干扰项",
+        "按定义或公式直接算，不凭印象",
+        "把结果代回情境解释一遍"
+      ],
+      "checks": [
+        "数据有没有换单位",
+        "是不是把百分数当成了数值",
+        "结论是否回答了被问的那一量"
+      ]
+    },
+    "C": {
+      "label": "C 触发 → 精确复现",
+      "steps": [
+        "认出这一步考的是哪条定义或公式",
+        "按标准形式写出，不省步",
+        "对答案做一次快速验算"
+      ],
+      "checks": [
+        "符号（正负、共轭、补集）",
+        "定义域与端点",
+        "答案形式是否符合要求（最简、区间、集合）"
+      ]
+    },
+    "D": {
+      "label": "D 骨架 → 成文",
+      "steps": [
+        "写清要证/要求的是什么",
+        "给出中间结论并说明依据（哪条定理、哪个条件）",
+        "把每步连成因果链，结尾回到结论"
+      ],
+      "checks": [
+        "每一步是否都有依据",
+        "是否有该讨论的情形漏掉",
+        "结论句是否完整"
+      ]
+    }
+  },
+  "topics": {
+    "M-01": {
+      "alias": "数-01",
+      "name": "导数几何意义：切线方程、斜率",
+      "group": "A",
+      "cues": [
+        "切线",
+        "导数",
+        "切点",
+        "斜率"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-01·"
+    },
+    "M-02": {
+      "alias": "数-02",
+      "name": "单调性、极值、最值，含参分类讨论",
+      "group": "A",
+      "cues": [
+        "单调",
+        "极值",
+        "最值",
+        "含参",
+        "讨论"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-02·"
+    },
+    "M-03": {
+      "alias": "数-03",
+      "name": "零点问题：零点个数、隐零点、极值点偏移",
+      "group": "A",
+      "cues": [
+        "零点",
+        "隐零点",
+        "极值点偏移",
+        "根的个数"
+      ],
+      "prio": 0.9,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-03·"
+    },
+    "M-04": {
+      "alias": "数-04",
+      "name": "不等式证明：构造函数、放缩、双变量",
+      "group": "D",
+      "cues": [
+        "不等式",
+        "证明",
+        "放缩",
+        "恒成立"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-04·"
+    },
+    "M-05": {
+      "alias": "数-05",
+      "name": "函数性质：奇偶、周期、对称、指对幂图象",
+      "group": "C",
+      "cues": [
+        "奇偶",
+        "周期",
+        "对称",
+        "图象",
+        "指数",
+        "对数"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-05⬜"
+    },
+    "M-06": {
+      "alias": "数-06",
+      "name": "椭圆：定义、离心率、焦点三角形、直线与椭圆",
+      "group": "A",
+      "cues": [
+        "椭圆",
+        "离心率",
+        "焦点"
+      ],
+      "prio": 1,
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "数-06✅"
+    },
+    "M-07": {
+      "alias": "数-07",
+      "name": "双曲线：定义、离心率、渐近线",
+      "group": "A",
+      "cues": [
+        "双曲线",
+        "渐近线",
+        "离心率"
+      ],
+      "prio": 1,
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "数-07✅"
+    },
+    "M-08": {
+      "alias": "数-08",
+      "name": "抛物线：定义、焦点弦、准线",
+      "group": "A",
+      "cues": [
+        "抛物线",
+        "准线",
+        "焦点弦"
+      ],
+      "prio": 0.9,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-08·"
+    },
+    "M-09": {
+      "alias": "数-09",
+      "name": "核心题型：联立方程、弦长/面积、定点/定值、最值",
+      "group": "A",
+      "cues": [
+        "联立",
+        "韦达",
+        "弦长",
+        "面积",
+        "定点",
+        "定值",
+        "最值"
+      ],
+      "prio": 1,
+      "state": "🔴",
+      "mastered": false,
+      "retry": true,
+      "stateDetail": "数-09🔴"
+    },
+    "M-10": {
+      "alias": "数-10",
+      "name": "空间几何体：表面积、体积、三视图",
+      "group": "A",
+      "cues": [
+        "表面积",
+        "体积",
+        "三视图",
+        "棱锥",
+        "棱柱",
+        "球"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-10·"
+    },
+    "M-11": {
+      "alias": "数-11",
+      "name": "点线面关系：平行/垂直证明、异面直线角、线面角、二面角、距离",
+      "group": "D",
+      "cues": [
+        "平行",
+        "垂直",
+        "二面角",
+        "线面角",
+        "异面直线",
+        "距离"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-11·"
+    },
+    "M-12": {
+      "alias": "数-12",
+      "name": "空间向量：建系、坐标运算、法向量求角",
+      "group": "A",
+      "cues": [
+        "空间向量",
+        "法向量",
+        "建系",
+        "坐标"
+      ],
+      "prio": 0.9,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-12·"
+    },
+    "M-13": {
+      "alias": "数-13",
+      "name": "古典概型、互斥/独立事件、条件概率",
+      "group": "A",
+      "cues": [
+        "概率",
+        "互斥",
+        "独立",
+        "条件概率",
+        "古典概型"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-13⬜"
+    },
+    "M-14": {
+      "alias": "数-14",
+      "name": "分布列与期望：二项分布、超几何分布",
+      "group": "A",
+      "cues": [
+        "分布列",
+        "期望",
+        "方差",
+        "二项分布",
+        "超几何"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-14⬜"
+    },
+    "M-15": {
+      "alias": "数-15",
+      "name": "统计案例：线性回归、独立性检验（卡方）、百分位数",
+      "group": "B",
+      "cues": [
+        "回归",
+        "独立性检验",
+        "卡方",
+        "百分位",
+        "相关系数"
+      ],
+      "prio": 0.9,
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "数-15✅"
+    },
+    "M-16": {
+      "alias": "数-16",
+      "name": "应用题：真实情境，重数据分析",
+      "group": "B",
+      "cues": [
+        "实际问题",
+        "数据",
+        "调查",
+        "统计"
+      ],
+      "prio": 0.7,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-16·"
+    },
+    "M-17": {
+      "alias": "数-17",
+      "name": "三角恒等变换：诱导公式、和差角、二倍角",
+      "group": "A",
+      "cues": [
+        "和差角",
+        "二倍角",
+        "诱导公式",
+        "化简",
+        "求值"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-17·"
+    },
+    "M-18": {
+      "alias": "数-18",
+      "name": "图象与性质：周期、单调、最值、平移变换",
+      "group": "A",
+      "cues": [
+        "周期",
+        "单调",
+        "平移",
+        "对称轴",
+        "图象"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-18·"
+    },
+    "M-19": {
+      "alias": "数-19",
+      "name": "解三角形：正弦定理、余弦定理、面积、实际应用",
+      "group": "A",
+      "cues": [
+        "正弦定理",
+        "余弦定理",
+        "解三角形",
+        "面积",
+        "角"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-19·"
+    },
+    "M-20": {
+      "alias": "数-20",
+      "name": "等差/等比：通项、求和、性质",
+      "group": "A",
+      "cues": [
+        "等差",
+        "等比",
+        "通项",
+        "前n项和",
+        "公差",
+        "公比"
+      ],
+      "prio": 1,
+      "state": "🟡",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-20🟡"
+    },
+    "M-21": {
+      "alias": "数-21",
+      "name": "递推数列：累加法、累乘法、构造法",
+      "group": "A",
+      "cues": [
+        "递推",
+        "累加",
+        "累乘",
+        "构造"
+      ],
+      "prio": 0.9,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-21·"
+    },
+    "M-22": {
+      "alias": "数-22",
+      "name": "数列求和：错位相减、裂项相消、分组求和",
+      "group": "A",
+      "cues": [
+        "错位相减",
+        "裂项",
+        "分组求和",
+        "求和"
+      ],
+      "prio": 1,
+      "state": "🟡",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-22🟡"
+    },
+    "M-23": {
+      "alias": "数-23",
+      "name": "数列不等式：放缩、单调性",
+      "group": "A",
+      "cues": [
+        "数列不等式",
+        "放缩",
+        "单调"
+      ],
+      "prio": 0.8,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-23·"
+    },
+    "M-24": {
+      "alias": "数-24",
+      "name": "集合：交并补、不等式解集",
+      "group": "C",
+      "cues": [
+        "集合",
+        "交集",
+        "并集",
+        "补集",
+        "子集"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-24⬜"
+    },
+    "M-25": {
+      "alias": "数-25",
+      "name": "复数：四则运算、模、共轭、几何意义",
+      "group": "C",
+      "cues": [
+        "复数",
+        "共轭",
+        "虚部",
+        "模",
+        "纯虚数"
+      ],
+      "prio": 1,
+      "state": "🟡",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-25🟡"
+    },
+    "M-26": {
+      "alias": "数-26",
+      "name": "平面向量：坐标运算、数量积、模、垂直/平行",
+      "group": "C",
+      "cues": [
+        "向量",
+        "数量积",
+        "夹角",
+        "垂直",
+        "平行",
+        "投影"
+      ],
+      "prio": 1,
+      "state": "✅",
+      "mastered": true,
+      "retry": false,
+      "stateDetail": "数-26✅"
+    },
+    "M-27": {
+      "alias": "数-27",
+      "name": "不等式：一元二次、基本不等式、线性规划",
+      "group": "A",
+      "cues": [
+        "不等式",
+        "基本不等式",
+        "线性规划",
+        "最值"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-27·"
+    },
+    "M-28": {
+      "alias": "数-28",
+      "name": "排列组合/二项式定理：小题高频",
+      "group": "C",
+      "cues": [
+        "排列",
+        "组合",
+        "二项式",
+        "展开式",
+        "系数"
+      ],
+      "prio": 1,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": "数-28·"
+    },
+    "M-99": {
+      "alias": null,
+      "name": "未分类",
+      "group": null,
+      "cues": [],
+      "prio": 0,
+      "state": "⬜",
+      "mastered": false,
+      "retry": false,
+      "stateDetail": ""
+    }
+  },
+  "graph": {
+    "modules": [
+      {
+        "id": "func",
+        "label": "函数与导数",
+        "topics": [
+          "M-01",
+          "M-02",
+          "M-03",
+          "M-04",
+          "M-05"
+        ]
+      },
+      {
+        "id": "conic",
+        "label": "解析几何",
+        "topics": [
+          "M-06",
+          "M-07",
+          "M-08",
+          "M-09"
+        ]
+      },
+      {
+        "id": "solid",
+        "label": "立体几何",
+        "topics": [
+          "M-10",
+          "M-11",
+          "M-12"
+        ]
+      },
+      {
+        "id": "prob",
+        "label": "概率统计",
+        "topics": [
+          "M-13",
+          "M-14",
+          "M-15",
+          "M-16"
+        ]
+      },
+      {
+        "id": "trig",
+        "label": "三角与解三角形",
+        "topics": [
+          "M-17",
+          "M-18",
+          "M-19"
+        ]
+      },
+      {
+        "id": "seq",
+        "label": "数列",
+        "topics": [
+          "M-20",
+          "M-21",
+          "M-22",
+          "M-23"
+        ]
+      },
+      {
+        "id": "basic",
+        "label": "集合·复数·向量·不等式·计数",
+        "topics": [
+          "M-24",
+          "M-25",
+          "M-26",
+          "M-27",
+          "M-28"
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "from": "M-01",
+        "to": "M-02"
+      },
+      {
+        "from": "M-02",
+        "to": "M-03"
+      },
+      {
+        "from": "M-02",
+        "to": "M-04"
+      },
+      {
+        "from": "M-06",
+        "to": "M-09"
+      },
+      {
+        "from": "M-07",
+        "to": "M-09"
+      },
+      {
+        "from": "M-08",
+        "to": "M-09"
+      },
+      {
+        "from": "M-10",
+        "to": "M-11"
+      },
+      {
+        "from": "M-11",
+        "to": "M-12"
+      },
+      {
+        "from": "M-13",
+        "to": "M-14"
+      },
+      {
+        "from": "M-14",
+        "to": "M-15"
+      },
+      {
+        "from": "M-17",
+        "to": "M-18"
+      },
+      {
+        "from": "M-18",
+        "to": "M-19"
+      },
+      {
+        "from": "M-20",
+        "to": "M-21"
+      },
+      {
+        "from": "M-21",
+        "to": "M-22"
+      },
+      {
+        "from": "M-22",
+        "to": "M-23"
+      },
+      {
+        "from": "M-27",
+        "to": "M-02"
+      }
+    ]
+  }
+}

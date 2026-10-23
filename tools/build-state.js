@@ -78,14 +78,14 @@ function judge(items) {
 const rows = parseRows()
 const report = []
 
-for (const subject of ['physics', 'chemistry', 'technology']) {
+for (const subject of ['physics', 'chemistry', 'technology', 'math']) {
   const file = join(here, `topics-${subject}.json`)
   const doc = JSON.parse(readFileSync(file, 'utf8'))
   let changed = 0
   for (const [id, t] of Object.entries(doc.topics)) {
     // 该考点对应的索引编号
     let ids = []
-    if (subject === 'chemistry' || subject === 'technology') ids = t.alias ? [t.alias] : []
+    if (subject === 'chemistry' || subject === 'technology' || subject === 'math') ids = t.alias ? [t.alias] : []
     else ids = PHYS_MAP[id] ?? []
     const items = ids.map((k) => rows.get(k)).filter(Boolean)
     const { state, mastered, retry } = judge(items)
