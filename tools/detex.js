@@ -44,6 +44,12 @@ const LBRACE = '\uE000'
 const RBRACE = '\uE001'
 
 function renderSup(body) {
+  const t = String(body).trim()
+  if (t === '°' || t === '∘' || t === 'circ' || t === '\\circ') return '°'
+  return renderSupRaw(t)
+}
+
+function renderSupRaw(body) {
   const t = body.trim()
   if (/^[0-9+\-nikm]+$/.test(t)) return [...t].map((c) => SUP[c] || c).join('')
   return t.length === 1 ? '^' + t : '^(' + t + ')'
@@ -62,8 +68,31 @@ function renderFrac(a, b) {
   return num(x) && num(y) ? `${x}/${y}` : `(${x})/(${y})`
 }
 
+
+// 核素符号：_{Z}^{A}X / ^{A}_{Z}X / 以及被压平的 z^A X、_1 ^2 H
+// 统一写成「X（质量数 A，质子数 Z）」，避免上下标挤在一起读不出来
+function fixNuclide(s) {
+  const label = (elem, mass, charge) => {
+    const z = /^[a-z]$/.test(charge) ? charge.toUpperCase() : charge
+    return `${elem}（质量数${mass}，质子数${z}）`
+  }
+  // 1) 标准 LaTeX：上在前 ^{A}_{Z}X、下在前 _{Z}^{A}X（元素紧挨着写）
+  s = s.replace(/\^\s*\{([^{}]*)\}\s*_\s*\{([^{}]*)\}\s*([A-Z][a-z]?)(?![a-z])/g,
+    (_, a, z, el) => label(el, a.trim(), z.trim()))
+  s = s.replace(/_\s*\{([^{}]*)\}\s*\^\s*\{([^{}]*)\}\s*([A-Z][a-z]?)(?![a-z])/g,
+    (_, z, a, el) => label(el, a.trim(), z.trim()))
+  // 2) 被压平的写法：前面是「质子数字母 + ^质量数」，如 z^A X
+  // 只有「小写字母当质子数」这种数据集笔误（写成 z^A X）才认，避免把普通公式卷进来
+  s = s.replace(/([a-z])\s*\^\s*\{?([A-Z]|[0-9]{1,3})\}?\s*([A-Z][a-z]?)(?![a-z])/g,
+    (_, z, a, el) => label(el, a, z))
+  // 3) 被压平的写法：以下划线起头，如 _1 ^2 H
+  s = s.replace(/_\s*\{?([0-9]{1,3}|[A-Z])\}?\s*\^\s*\{?([0-9]{1,3}|[A-Z])\}?\s*([A-Z][a-z]?)(?![a-z])/g,
+    (_, z, a, el) => label(el, a, z))
+  return s
+}
+
 export function deTeX(src) {
-  let s = String(src ?? '')
+  let s = fixNuclide(String(src ?? ''))
   s = s.replace(/\uFF3C/g, '\\')            // 全角反斜杠
   s = s.replace(/\\%/g, '%').replace(/\\#/g, '#').replace(/\\&/g, '&').replace(/\\_/g, '_')
   s = s.replace(/\\[{}]/g, (m) => (m === '\\{' ? LBRACE : RBRACE))
@@ -101,9 +130,16 @@ export function deTeX(src) {
   // 上下标（先处理带花括号的，再处理单字符）
   s = s.replace(/\^\{([^{}]*)\}/g, (_, a) => renderSup(a))
   s = s.replace(/_\{([^{}]*)\}/g, (_, a) => renderSub(a))
+  s = s.replace(/\^([0-9]{2,3})(?![0-9])/g, (_, a) => renderSup(a))
+  s = s.replace(/_([0-9]{2,3})(?![0-9])/g, (_, a) => renderSub(a))
   s = s.replace(/\^([0-9a-zA-Z+\-])/g, (_, a) => renderSup(a))
   s = s.replace(/_([0-9a-zA-Z+\-])/g, (_, a) => renderSub(a))
 
+  s = s.replace(/\^\s*\{?\\circ\}?/g, '°')
+  s = s.replace(/\^\s*\{?\\degree\}?/g, '°')
+  s = s.replace(/\^\s*\{?°\}?/g, '°')
+  s = s.replace(/\^\(\s*°\s*\)/g, '°')
+  s = s.replace(/\^\(\s*∘\s*\)/g, '°')
   // 命令名（先吃掉纯间距命令，再处理符号，最后兜底）
   s = s.replace(/\\[,;:! ]/g, '')
   s = s.replace(/\\([A-Za-z]+)\b/g, (m, name) => (name in SYM ? SYM[name] : GREEK[name] ?? ''))
