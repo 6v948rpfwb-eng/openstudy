@@ -1080,6 +1080,21 @@ function nextQuestion() {
   render()
 }
 
+/** 跳到某道题：可以随时前后跳，没作答的题保持空白，交卷时算未作答 */
+function jumpTo(i) {
+  if (!app.paper || i < 0 || i >= app.paper.questions.length) return
+  app.index = i
+  app.current = { input: '', picked: null, selfGrade: null, graded: null }
+  // 回看时把之前的选择还原出来
+  const a = app.answers[i]
+  if (a) {
+    app.current.picked = a.picked ?? null
+    app.current.input = a.input ?? ''
+    app.current.graded = { correct: a.correct }
+  }
+  render()
+}
+
 function renderPractice() {
   const q = app.paper.questions[app.index]
   const total = app.paper.questions.length
@@ -1159,6 +1174,11 @@ function renderPractice() {
         <span class="muted">难度 ${q.difficulty.toFixed(2)} · 预测通过 ${(predictPass(app.state.theta, q.difficulty) * 100).toFixed(0)}%</span>
       </div>
       ${isEndless() ? '' : `<div class="progress"><i style="width:${pct}%"></i></div>`}
+      ${isEndless() ? '' : `<div class="qnav">${app.paper.questions.map((_, i) => {
+        const a = app.answers[i]
+        const st = !a ? '' : (a.correct ? ' ok' : ' bad')
+        return `<button class="qno${i === app.index ? ' cur' : ''}${st}" data-q="${i}">${i + 1}</button>`
+      }).join('')}</div>`}
       <p class="stem" style="margin-top:16px">${renderMathText(q.stem)}</p>
       ${figureHtml}${figureNote}
       ${inputArea}
@@ -1224,6 +1244,9 @@ function renderPractice() {
   })
 
   document.getElementById('submit')?.addEventListener('click', doSubmit)
+  $root.querySelectorAll('[data-q]').forEach((b) => {
+    b.onclick = () => jumpTo(Number(b.dataset.q))
+  })
   document.getElementById('next')?.addEventListener('click', () => {
     if (isEndless()) return drawNextEndless()
     app.index++

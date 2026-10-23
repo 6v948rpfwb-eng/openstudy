@@ -301,6 +301,14 @@ sup, sub { font-size: .72em; line-height: 0; }
   .prow{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;cursor:pointer;transition:.15s}
   .prow:hover{border-color:var(--accent);background:var(--accent-soft)}
   .pname{font-weight:600}
+  .qnav{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .qno{min-width:32px;height:30px;padding:0 8px;border:1px solid var(--line);background:#fff;border-radius:8px;font:inherit;font-size:13px;color:var(--ink);cursor:pointer;transition:.15s}
+  .qno:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .qno.cur{border-color:var(--accent);background:var(--accent);color:#fff;font-weight:600}
+  .qno.ok{border-color:#7bc98a;background:#eefaf0}
+  .qno.bad{border-color:#e6a2a2;background:#fdf0f0}
+  .qno.cur.ok{background:var(--accent);color:#fff}
+  .qno.cur.bad{background:var(--accent);color:#fff}
 </style>
 </head>
 <body>
