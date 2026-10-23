@@ -110,10 +110,10 @@ const BANK_KEYS = BANKS ? Object.keys(BANKS) : []
 const SUBJECT_LABEL = { physics: '物理', chemistry: '化学', technology: '技术', math: '数学', chinese: '语文', english: '英语' }
 
 const SUBJECT_STYLE = {
-  physics: { glyph: '物', name: '物理', bg: 'linear-gradient(160deg,#6a83ff,#4356e0)' },
-  chemistry: { glyph: '化', name: '化学', bg: 'linear-gradient(160deg,#41c08a,#26996a)' },
+  physics: { glyph: '物', name: '物理', bg: 'linear-gradient(160deg,#41c08a,#26996a)' },
+  chemistry: { glyph: '化', name: '化学', bg: 'linear-gradient(160deg,#7b6cf6,#5a49d6)' },
   technology: { glyph: '技', name: '技术', bg: 'linear-gradient(160deg,#f0a44b,#d9842a)' },
-  math: { glyph: '数', name: '数学', bg: 'linear-gradient(160deg,#7b6cf6,#5a49d6)' },
+  math: { glyph: '数', name: '数学', bg: 'linear-gradient(160deg,#6a83ff,#4356e0)' },
   default: { glyph: '科', name: '学科', bg: 'linear-gradient(160deg,#9aa6c4,#77839f)' },
 }
 
