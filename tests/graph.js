@@ -39,5 +39,26 @@ const groups = Object.values(tech.topics).reduce((m, t) => ((m[t.group] = (m[t.g
 ok(Object.keys(groups).every((g) => 'ABCD'.includes(g) || g === 'null'), '技术每个考点都归了组')
 ok(tech.graph.modules.length === 9, '技术 9 块（信息→电子控制）')
 
+
+// ---- 知识图 v2 字段（掌握标准 / 诊断题 / 前置理由）----
+for (const sub of ['physics','chemistry','technology']) {
+  const doc = JSON.parse(readFileSync(new URL(`../tools/data/knowledge-${sub}.json`, import.meta.url), 'utf8'))
+  ok(doc.schema === 'openstudy.knowledge/2', `${sub} 知识图是 v2`)
+  const nodes = Object.entries(doc.nodes)
+  const preOk = nodes.every(([, n]) => (n.prereq || []).every((x) => typeof x === 'object' && x.id && x.strength))
+  ok(preOk, `${sub} 前置边都是 {id,strength,reason} 对象`)
+  const ids = new Set(doc.nodes && Object.keys(doc.nodes))
+  const dangling = nodes.flatMap(([, n]) => (n.prereq || []).filter((x) => !ids.has(x.id)))
+  ok(dangling.length === 0, `${sub} 前置边没有悬空引用`)
+}
+{
+  const phy = JSON.parse(readFileSync(new URL('../tools/data/knowledge-physics.json', import.meta.url), 'utf8'))
+  const all = Object.values(phy.nodes)
+  ok(all.every((n) => (n.mastery || []).length > 0), '物理每个知识点都有掌握标准')
+  ok(all.every((n) => n.diag && n.diag.q && n.diag.a), '物理每个知识点都有诊断题')
+  ok(all.every((n) => (n.desc || '').length > 0), '物理每个知识点都有一句定位')
+  const withReason = Object.values(phy.nodes).flatMap((n) => n.prereq || []).filter((x) => x.reason)
+  ok(withReason.length > 30, '物理前置边大多带理由')
+}
 console.log(pass + ' 项通过' + (bad.length ? `，${bad.length} 项失败：\n- ` + bad.join('\n- ') : ''))
 if (bad.length) process.exit(1)

@@ -416,6 +416,14 @@ function topicDetailHTML(doc, tid, extra = '') {
 // ---------- 方法论视图：按题型（问题导向） ----------
 // 数据来源 tools/data/methods-*.json；每个方法 = 一类题的「触发特征 → 动作序列 → 必查项」
 function methodDocs() { return typeof __METHOD_DOCS__ !== 'undefined' ? __METHOD_DOCS__ : {} }
+/** 前置边在 v2 里是 {id,strength,reason}，v1 里是字符串；统一成对象。 */
+function preOf(node) {
+  return (node.prereq || []).map((x) => (typeof x === 'string'
+    ? { id: x, strength: 'hard', reason: '' }
+    : { id: x.id, strength: x.strength || 'hard', reason: x.reason || '' }))
+}
+function preIds(node) { return preOf(node).map((x) => x.id) }
+
 function knowledgeDocs() { return typeof __KNOWLEDGE_DOCS__ !== 'undefined' ? __KNOWLEDGE_DOCS__ : {} }
 function thinkingDoc() { return typeof __THINKING_DOC__ !== 'undefined' && __THINKING_DOC__ ? __THINKING_DOC__ : null }
 function curSubject() { return (app.bank && app.bank.subject) || app.fw.subject }
@@ -802,7 +810,8 @@ function renderKnowledge() {
       const t = nodes[id]
       return `<button class="kchip ${cls}" data-jump="${fwEsc(id)}">${fwEsc(t ? t.name : id)}</button>`
     }
-    const nexts = Object.entries(nodes).filter(([, x]) => (x.prereq || []).includes(kb.node)).map(([id]) => id)
+    const nexts = Object.entries(nodes).filter(([, x]) => preIds(x).includes(kb.node)).map(([id]) => id)
+    const preList = preOf(n)
     $root.innerHTML = crumbTrail([
       { label: '知识块' },
       { label: (doc.blocks.find((b) => b.id === n.block) || {}).label || n.block, go: () => { kb.node = null; kb.block = n.block; render() } },
@@ -837,8 +846,15 @@ function renderKnowledge() {
           ${qs.length ? `<button class="btn ghost small" id="drill">直接练这 ${Math.min(3, qs.length)} 题</button>` : '<span class="muted">这科还没收这个考点的题</span>'}
         </div>`
       })()}
+      ${(n.mastery || []).length ? `<div class="muted" style="margin-top:12px">做到这些才算会</div>
+        <ul class="mtight mastery">${(n.mastery || []).map((x) => `<li>${renderMathText(x)}</li>`).join('')}</ul>` : ''}
+      ${n.diag && n.diag.q ? `<details class="diagbox">
+        <summary>自测一道（先自己答，再展开）</summary>
+        <div class="diagq">${renderMathText(n.diag.q)}</div>
+        <div class="diaga">${renderMathText(n.diag.a || '')}</div>
+      </details>` : ''}
       <div class="muted" style="margin-top:12px">要先会</div>
-      <div class="kchips">${(n.prereq || []).map((id) => link(id, 'pre')).join('') || '<span class="muted">没有前置</span>'}</div>
+      <div class="kchips">${preList.map((x) => link(x.id, 'pre') + (x.reason ? `<div class="prereason">${fwEsc(x.reason)}</div>` : '')).join('') || '<span class="muted">没有前置</span>'}</div>
       <div class="muted" style="margin-top:10px">学会了才能学</div>
       <div class="kchips">${nexts.map((id) => link(id, 'next')).join('') || '<span class="muted">没有后继</span>'}</div>
     </div>`
@@ -933,7 +949,7 @@ function renderKnowledgeFullMap(doc) {
   let svg = `<svg class="kmap" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`
   doc.blocks.forEach((b, ci) => { svg += `<text class="kmap-col" x="${PAD + ci * COL_W}" y="22">${fwEsc(b.label)}</text>` })
   for (const [id, n] of Object.entries(nodes)) {
-    for (const pre of n.prereq || []) {
+    for (const pre of preIds(n)) {
       const a = pos.get(pre), b = pos.get(id)
       if (!a || !b) continue
       const x1 = a.x + NW, y1 = a.y + NODE_H / 2, x2 = b.x, y2 = b.y + NODE_H / 2
@@ -1951,7 +1967,7 @@ function weakUpstream(topicId, limit = 3) {
   if (!start) return []
   const doc = (knowledgeDocs()[app.bank.subject] || knowledgeDocs()[Object.keys(knowledgeDocs())[0]])
   const seen = new Set([start.id])
-  const queue = (start.prereq || []).slice()
+  const queue = preIds(start)
   const out = []
   let guard = 0
   while (queue.length && guard++ < 200) {
@@ -1960,7 +1976,7 @@ function weakUpstream(topicId, limit = 3) {
     seen.add(id)
     const n = doc.nodes[id]
     if (!n) continue
-    for (const up of (n.prereq || [])) queue.push(up)
+    for (const up of preIds(n)) queue.push(up)
     const st = n.topic ? topicWeakState(n.topic) : null
     if (st) out.push({ id, name: n.name, topic: n.topic, state: st, why: n.why || '' })
     if (out.length >= limit) break

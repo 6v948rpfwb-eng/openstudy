@@ -1,5 +1,5 @@
 {
- "schema": "openstudy.knowledge/1",
+ "schema": "openstudy.knowledge/2",
  "subject": "technology",
  "title": "高中技术 · 知识点图",
  "blocks": [
@@ -62,7 +62,11 @@
    "confusions": [
     "把「数据量大」当成信息量大"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "数据是符号记录；信息是加工后有意义的内容；知识是规律化、可指导决策的认知",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-02": {
    "name": "信息的特征",
@@ -76,7 +80,11 @@
    "confusions": [
     "认为信息可以脱离载体传递"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "载体依附性、时效性、共享性、可加工性、价值性",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-03": {
    "name": "大数据的特征",
@@ -90,7 +98,11 @@
    "confusions": [
     "把「数据多」等同于大数据"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "数据量大、类型多样、速度快、价值密度低",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-04": {
    "name": "人工智能三大流派",
@@ -104,7 +116,11 @@
    "confusions": [
     "把算法程序都叫人工智能"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "符号主义（推理）、联结主义（神经网络）、行为主义（感知-动作）",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-05": {
    "name": "进制转换",
@@ -118,7 +134,11 @@
    "confusions": [
     "按位权展开时把指数算错一位"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "二/八/十六进制与十进制互转：按位权展开、除基取余",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-06": {
    "name": "ASCII 与汉字编码",
@@ -132,7 +152,11 @@
    "confusions": [
     "把 ASCII 码值记成大写与小写相同"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "ASCII 用 7 位表示 128 个字符，'0'=48、'A'=65、'a'=97",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-07": {
    "name": "字符与图像容量计算",
@@ -146,7 +170,11 @@
    "confusions": [
     "忘记除以 8 就从位变成字节"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "存储容量 = 像素数 × 每像素位数 ÷ 8（字节）",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-08": {
    "name": "图像数字化",
@@ -160,7 +188,11 @@
    "confusions": [
     "把分辨率与位深度互换"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "采样决定分辨率，量化决定颜色数（位深度）",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-09": {
    "name": "声音数字化",
@@ -174,7 +206,11 @@
    "confusions": [
     "漏乘声道数"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "采样频率、量化位数、声道数共同决定文件大小",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-10": {
    "name": "视频与帧",
@@ -188,7 +224,11 @@
    "confusions": [
     "把帧率当分辨率"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "视频 = 连续帧 + 帧率，文件大小与帧率、时长成正比",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-11": {
    "name": "文件格式与压缩",
@@ -202,7 +242,11 @@
    "confusions": [
     "认为 JPG 是无损压缩"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "无损压缩可完全还原，有损压缩不可还原",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-12": {
    "name": "数据可视化",
@@ -216,7 +260,11 @@
    "confusions": [
     "用饼图比较趋势"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "柱状图比大小、折线图看趋势、饼图看占比",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-13": {
    "name": "算法的三种基本结构",
@@ -230,7 +278,11 @@
    "confusions": [
     "循环缺少终止条件"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "顺序、选择、循环三种结构可以组合出任何算法",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-14": {
    "name": "流程图符号",
@@ -244,7 +296,11 @@
    "confusions": [
     "把判断框画成矩形"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "圆角矩形=起止、平行四边形=输入输出、矩形=处理、菱形=判断",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-15": {
    "name": "流程图补全",
@@ -258,7 +314,11 @@
    "confusions": [
     "分支条件写反"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "按已有步骤反推缺失框的内容与位置",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-16": {
    "name": "Python 基础语法",
@@ -272,7 +332,11 @@
    "confusions": [
     "混用空格与 Tab 导致缩进错误"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "缩进表示语句块",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-17": {
    "name": "内置函数与字符串方法",
@@ -286,7 +350,11 @@
    "confusions": [
     "认为字符串方法会原地修改"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "len、range、int、str、float 常用",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-18": {
    "name": "列表",
@@ -300,7 +368,11 @@
    "confusions": [
     "切片右端被误当包含"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "列表可变，索引从 0 开始",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-19": {
    "name": "字符串处理",
@@ -314,7 +386,11 @@
    "confusions": [
     "在循环里反复拼接长字符串（效率低）"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "遍历、计数、拼接、查找是四类基本操作",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-20": {
    "name": "队列",
@@ -328,7 +404,11 @@
    "confusions": [
     "把队列当成先进后出"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "先进先出，只在队尾入队、队头出队",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-21": {
    "name": "栈",
@@ -342,7 +422,11 @@
    "confusions": [
     "混淆入栈出栈顺序"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "后进先出，只在栈顶入栈出栈",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-22": {
    "name": "链表",
@@ -356,7 +440,11 @@
    "confusions": [
     "认为链表能随机访问"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "每个结点存数据与指向下一结点的指针",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-23": {
    "name": "树与二叉树",
@@ -370,7 +458,11 @@
    "confusions": [
     "把二叉树的度当成任意"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "树是层次结构，每个结点只有一个前驱",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-24": {
    "name": "二叉树基本操作",
@@ -384,7 +476,11 @@
    "confusions": [
     "遍历顺序写错父子位置"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "遍历：先序（根左右）、中序（左根右）、后序（左右根）",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-25": {
    "name": "排序算法",
@@ -398,7 +494,11 @@
    "confusions": [
     "把冒泡的比较次数算错"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "冒泡、选择、插入是 O(n²)；快排平均 O(n log n)",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-26": {
    "name": "查找与递归",
@@ -412,7 +512,11 @@
    "confusions": [
     "二分查找用在无序表上"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "顺序查找 O(n)，二分查找要求有序、O(log n)",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-27": {
    "name": "算法综合设计",
@@ -426,7 +530,11 @@
    "confusions": [
     "直接写代码不先模拟"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "先理清输入输出，再定数据结构，最后写步骤",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-28": {
    "name": "信息系统的组成",
@@ -440,7 +548,11 @@
    "confusions": [
     "漏掉「用户」这一要素"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "硬件、软件、数据、通信网络、用户五要素",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-29": {
    "name": "传感器、智能终端与执行器",
@@ -454,7 +566,11 @@
    "confusions": [
     "把传感器与执行器功能互换"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "传感器把物理量转为电信号；执行器把控制信号转为动作",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-30": {
    "name": "信息系统的功能与局限",
@@ -468,7 +584,11 @@
    "confusions": [
     "认为系统功能越多越好"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "功能：输入、处理、存储、输出、控制",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-31": {
    "name": "网络基础",
@@ -482,7 +602,11 @@
    "confusions": [
     "把 IP 与域名混为一谈"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "按覆盖范围分局域网、城域网、广域网",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-32": {
    "name": "网络资源共享与传输",
@@ -496,7 +620,11 @@
    "confusions": [
     "把带宽当成时延"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "资源共享包括硬件、软件、数据",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-33": {
    "name": "数据库基础",
@@ -510,7 +638,11 @@
    "confusions": [
     "把主键与外键混淆"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "关系数据库用二维表存储，主键唯一标识记录",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-34": {
    "name": "SQL 查询",
@@ -524,7 +656,11 @@
    "confusions": [
     "WHERE 与 HAVING 用混"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "SELECT … FROM … WHERE … 是最基本结构",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-35": {
    "name": "信息安全与防护",
@@ -538,7 +674,11 @@
    "confusions": [
     "认为装了杀毒软件就绝对安全"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "威胁来源：病毒、木马、钓鱼、撞库",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-36": {
    "name": "信息社会责任",
@@ -552,7 +692,11 @@
    "confusions": [
     "把「网上能搜到」当可自由使用"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "尊重知识产权、保护个人隐私、不传播虚假信息",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-37": {
    "name": "物联网系统搭建",
@@ -566,7 +710,11 @@
    "confusions": [
     "把网关当服务器"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "感知层—网络层—应用层三层结构",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-38": {
    "name": "服务器端程序",
@@ -580,7 +728,11 @@
    "confusions": [
     "认为前端能直接读写数据库"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "接收请求、处理数据、返回响应",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-39": {
    "name": "数据处理实战",
@@ -594,7 +746,11 @@
    "confusions": [
     "跳过清洗直接分析"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "流程：采集→清洗→分析→可视化",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-40": {
    "name": "技术的性质",
@@ -608,7 +764,11 @@
    "confusions": [
     "只讲技术好处不讲风险"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "目的性、创新性、综合性、两面性、专利性",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-41": {
    "name": "技术与人、社会、自然",
@@ -622,7 +782,11 @@
    "confusions": [
     "认为技术进步必然带来好处"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "技术推动社会发展，也带来环境与伦理问题",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-42": {
    "name": "人机关系",
@@ -636,7 +800,11 @@
    "confusions": [
     "只考虑效率忽略安全"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "高效、健康、舒适、安全是四个目标",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-43": {
    "name": "设计的一般原则",
@@ -650,7 +818,11 @@
    "confusions": [
     "认为所有原则同等优先"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "实用、创新、经济、美观、道德、技术规范、可持续发展",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-44": {
    "name": "设计分析",
@@ -664,7 +836,11 @@
    "confusions": [
     "漏掉环境因素"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "从物、人、环境三方面分析",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-45": {
    "name": "材料的性能",
@@ -678,7 +854,11 @@
    "confusions": [
     "只看强度不看韧性"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "强度、硬度、韧性、耐腐蚀性等",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-46": {
    "name": "设计的一般过程",
@@ -692,7 +872,11 @@
    "confusions": [
     "把过程当单向一次完成"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "发现与明确问题→制定方案→制作模型→测试评价→优化",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-47": {
    "name": "技术试验",
@@ -706,7 +890,11 @@
    "confusions": [
     "把试验与检验混为一谈"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "目的：验证性能、发现问题",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-48": {
    "name": "图样表达",
@@ -720,7 +908,11 @@
    "confusions": [
     "三视图方向对应错"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "三视图遵循长对正、高平齐、宽相等",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-49": {
    "name": "尺寸标注",
@@ -734,7 +926,11 @@
    "confusions": [
     "标注重复或漏标定位尺寸"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "尺寸三要素：尺寸界线、尺寸线、尺寸数字",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-50": {
    "name": "设计草图与主要尺寸",
@@ -748,7 +944,11 @@
    "confusions": [
     "只画外形不标尺寸"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "草图要能表达结构与关键尺寸",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-51": {
    "name": "结构",
@@ -762,7 +962,11 @@
    "confusions": [
     "把弯曲受力当拉力"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "结构由构件组成，承受外力并传递",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-52": {
    "name": "结构的稳定性",
@@ -776,7 +980,11 @@
    "confusions": [
     "把稳定性与强度混同"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "稳定性与支撑面大小、重心高低、结构形状有关",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-53": {
    "name": "结构的连接",
@@ -790,7 +998,11 @@
    "confusions": [
     "认为铰连接也能传递弯矩"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "刚连接（焊接、铆接、螺栓）与铰连接",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-54": {
    "name": "流程",
@@ -804,7 +1016,11 @@
    "confusions": [
     "把时序当可有可无"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "流程由若干环节与时序组成",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-55": {
    "name": "流程设计与优化",
@@ -818,7 +1034,11 @@
    "confusions": [
     "优化时漏掉必要的检验环节"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "优化目的：缩短时间、提高效率、降低成本、保证质量",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-56": {
    "name": "系统",
@@ -832,7 +1052,11 @@
    "confusions": [
     "只分析部分不分析联系"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "由相互联系的元素构成，具有整体功能",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-57": {
    "name": "系统分析的原则",
@@ -846,7 +1070,11 @@
    "confusions": [
     "把局部最优当整体最优"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "整体性、科学性、综合性",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-58": {
    "name": "系统的优化",
@@ -860,7 +1088,11 @@
    "confusions": [
     "对可量化问题用经验判断"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "数学模型适用于可用公式表达的目标",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-59": {
    "name": "控制",
@@ -874,7 +1106,11 @@
    "confusions": [
     "把人工控制当闭环"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "控制是按目的改变对象状态",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-60": {
    "name": "控制系统的组成",
@@ -888,7 +1124,11 @@
    "confusions": [
     "漏掉检测装置"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "控制器、执行器、被控对象、检测装置、输入输出",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-61": {
    "name": "控制方式与控制系统框图",
@@ -902,7 +1142,11 @@
    "confusions": [
     "把反馈量当输入量"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "开环：无反馈，简单但易受干扰；闭环：有反馈，抗干扰强",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-62": {
    "name": "干扰因素与反馈",
@@ -916,7 +1160,11 @@
    "confusions": [
     "把干扰与输入混同"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "干扰是除输入外影响被控量的因素",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-63": {
    "name": "电子元器件识别",
@@ -930,7 +1178,11 @@
    "confusions": [
     "把二极管符号方向画反"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "电阻、电容、二极管、三极管、继电器各有图形符号",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-64": {
    "name": "传感器的类别",
@@ -944,7 +1196,11 @@
    "confusions": [
     "把传感器当执行器"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "热敏、光敏、湿敏、力敏、磁敏",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-65": {
    "name": "二极管",
@@ -958,7 +1214,11 @@
    "confusions": [
     "认为反向也能导通"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "单向导电，正向导通压降约 0.7 V",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-66": {
    "name": "三极管",
@@ -972,7 +1232,11 @@
    "confusions": [
     "把 c、e 极接反"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "三个电极：基极 b、集电极 c、发射极 e",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-67": {
    "name": "三极管的开关作用",
@@ -986,7 +1250,11 @@
    "confusions": [
     "把放大状态当开关状态"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "饱和导通相当于开关闭合，截止相当于断开",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-68": {
    "name": "电容",
@@ -1000,7 +1268,11 @@
    "confusions": [
     "认为电容阻交流"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "隔直流通交流，充放电需要时间",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-69": {
    "name": "继电器",
@@ -1014,7 +1286,11 @@
    "confusions": [
     "把线圈与触点电路的电源混接"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "用小电流控制大电流，实现触点开关",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-70": {
    "name": "模拟与数字信号",
@@ -1028,7 +1304,11 @@
    "confusions": [
     "认为数字信号不会失真"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "模拟信号连续变化，数字信号只有高低两个电平",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-71": {
    "name": "门电路",
@@ -1042,7 +1322,11 @@
    "confusions": [
     "与非门漏掉最后取反"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "与门：全 1 出 1；或门：有 1 出 1；非门：取反",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-72": {
    "name": "逻辑关系口诀",
@@ -1056,7 +1340,11 @@
    "confusions": [
     "把与门与或门定义记反"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "与=全真才真，或=有真即真，非=真假相反",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-73": {
    "name": "逻辑电路设计",
@@ -1070,7 +1358,11 @@
    "confusions": [
     "真值表漏组合"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "先写真值表，再化简表达式，最后画电路",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-74": {
    "name": "信号处理电路",
@@ -1084,7 +1376,11 @@
    "confusions": [
     "把滤波当放大"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "常见功能：放大、滤波、整形、转换",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-75": {
    "name": "比较器电路",
@@ -1098,7 +1394,11 @@
    "confusions": [
     "忽略参考电压的设定"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "比较两输入电压高低，输出高或低电平",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-76": {
    "name": "区间控制电路",
@@ -1112,7 +1412,11 @@
    "confusions": [
     "上下限值写反"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "用上下限两次比较实现区间判断",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-77": {
    "name": "反馈与自锁电路",
@@ -1126,7 +1430,11 @@
    "confusions": [
     "把自锁与振荡混同"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "自锁：输出经反馈回到输入维持状态",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-78": {
    "name": "光控翻转电路",
@@ -1140,7 +1448,11 @@
    "confusions": [
     "忽略分压电阻的作用"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "光照变化使比较器输出翻转，配合反馈实现保持",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-79": {
    "name": "焊接与面包板",
@@ -1154,7 +1466,11 @@
    "confusions": [
     "把面包板同列横向当导通"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "焊接顺序：先低后高、先小后大；避免虚焊",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-80": {
    "name": "多用电表测量",
@@ -1168,7 +1484,11 @@
    "confusions": [
     "用电压挡测电阻"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "测二极管用电阻挡，正反向阻值差别大",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-81": {
    "name": "数字集成电路",
@@ -1182,7 +1502,11 @@
    "confusions": [
     "把未用输入端悬空"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "常见 74 系列芯片，注意电源脚与使能脚",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   },
   "Kt-82": {
    "name": "电路仿真",
@@ -1196,7 +1520,11 @@
    "confusions": [
     "仿真通过就不再实测"
    ],
-   "prereq": []
+   "prereq": [],
+   "desc": "仿真可先验证逻辑再搭实物",
+   "mastery": [],
+   "diag": null,
+   "standards": []
   }
  }
 }
