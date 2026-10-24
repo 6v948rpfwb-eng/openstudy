@@ -26,21 +26,14 @@ def log(msg):
         f.write(line + "\n")
 
 
-def open_bg(url):
-    """open -g：打开但不激活 Safari，不抢焦点。"""
-    subprocess.run(["open", "-g", "-a", "Safari", url], check=False)
+import headless  # 无窗口 WKWebView，绝不碰用户的 Safari
 
 
-def js(code, wait=0):
-    if wait:
-        time.sleep(wait)
-    b64 = base64.b64encode(code.encode()).decode()
-    sc = ('tell application "Safari"\n'
-          '  set d to front document\n'
-          f'  do JavaScript "eval(atob(\'{b64}\'))" in d\n'
-          'end tell')
-    p = subprocess.run(["osascript", "-e", sc], capture_output=True, text=True)
-    return p.stdout.strip()
+def js(code, wait=0, url=None):
+    """在后台无窗口浏览器里打开 url 并执行 JS。"""
+    if not url:
+        return ""
+    return headless.render(url, code, wait or 8)
 
 
 JS_QIDS = ('(() => { const html = document.documentElement.innerHTML;'
@@ -64,8 +57,7 @@ def discover(subject, want=2):
     slug = SLUG.get(subject)
     if not slug:
         return []
-    open_bg("https://zujuan.xkw.com/%s/" % slug)
-    raw = js(JS_LIST, 8)
+    raw = js(JS_LIST, 9, "https://zujuan.xkw.com/%s/" % slug)
     try:
         items = json.loads(raw)
     except Exception:
@@ -82,19 +74,17 @@ def discover(subject, want=2):
 
 
 def qids_of(paper_url):
-    open_bg(paper_url)
     m = re.search(r"/(\d+)p\d+\.html", paper_url)
     pre = m.group(1) if m else "13"
-    raw = js(JS_QIDS, 8)
+    raw = js(JS_QIDS, 9, paper_url)
     try:
         return pre, json.loads(raw)
     except Exception:
         return pre, []
 
 
-def answer_url(pre, qid, wait=7):
-    open_bg("https://zujuan.xkw.com/%sq%s.html" % (pre, qid))
-    raw = js(JS_ANS, wait)
+def answer_url(pre, qid, wait=8):
+    raw = js(JS_ANS, wait, "https://zujuan.xkw.com/%sq%s.html" % (pre, qid))
     try:
         u = json.loads(raw)
         return u[-1] if u else None
