@@ -312,5 +312,14 @@ ok(!tidy('设所有碰撞都 是弹性的').includes('都 是'), '汉字之间�
 ok(tidy('在释放处的下方\n与释放处距离为 H 的地方').includes('下方与释放处'), '断行处的汉字直接接上')
 ok(tidy('碰撞后 B 上升的最大高度').includes(' B '), '汉字与字母之间保留一个空格')
 
+
+// ---- 前置诊断（沿先修链往上找没掌握的知识点）----
+ok(typeof A.weakUpstream === 'function', '弱前置诊断函数已导出')
+const upList = A.weakUpstream('P-06', 3)
+ok(Array.isArray(upList) && upList.length > 0, '振动与波能找到上游知识点')
+ok(upList.every((x) => x.name && x.state), '每条上游都带名字与状态')
+ok(/upstreamCardHTML|upstream-card|可能卡在更前面/.test(readFileSync(new URL('../web/app.js', import.meta.url), 'utf8')),
+   '结算页有「可能卡在更前面」卡片')
+
 console.log(`${pass} 项通过` + (bad.length ? `，${bad.length} 项失败：\n- ` + bad.join('\n- ') : ''))
 if (bad.length) process.exit(1)

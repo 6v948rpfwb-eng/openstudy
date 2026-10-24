@@ -1925,6 +1925,80 @@ function finish() {
   render()
 }
 
+
+/** 前置诊断：从某个考点沿先修链往上，找第一个「没测过 / 没掌握」的知识点。 */
+function knowledgeNodeOf(topicId) {
+  const docs = knowledgeDocs()
+  const subj = app.bank ? app.bank.subject : ''
+  const doc = docs[subj] || docs[Object.keys(docs)[0]]
+  if (!doc || !doc.nodes) return null
+  for (const id of Object.keys(doc.nodes)) {
+    const n = doc.nodes[id]
+    if (n.topic === topicId) return Object.assign({ id }, n)
+  }
+  return null
+}
+
+function topicWeakState(tid) {
+  const rec = (app.state && app.state.topics && app.state.topics[tid]) || {}
+  if (!rec.attempts) return 'untested'
+  const mastery = typeof rec.mastery === 'number' ? rec.mastery : rec.correct / Math.max(1, rec.attempts)
+  return mastery < 0.6 ? 'weak' : null
+}
+
+function weakUpstream(topicId, limit = 3) {
+  const start = knowledgeNodeOf(topicId)
+  if (!start) return []
+  const doc = (knowledgeDocs()[app.bank.subject] || knowledgeDocs()[Object.keys(knowledgeDocs())[0]])
+  const seen = new Set([start.id])
+  const queue = (start.prereq || []).slice()
+  const out = []
+  let guard = 0
+  while (queue.length && guard++ < 200) {
+    const id = queue.shift()
+    if (seen.has(id)) continue
+    seen.add(id)
+    const n = doc.nodes[id]
+    if (!n) continue
+    for (const up of (n.prereq || [])) queue.push(up)
+    const st = n.topic ? topicWeakState(n.topic) : null
+    if (st) out.push({ id, name: n.name, topic: n.topic, state: st, why: n.why || '' })
+    if (out.length >= limit) break
+  }
+  return out
+}
+
+function upstreamCardHTML(topicUpdates) {
+  const weakTopics = (topicUpdates || []).filter((t) => t.correct < t.asked)
+  if (!weakTopics.length) return ''
+  const rows = []
+  for (const t of weakTopics) {
+    for (const up of weakUpstream(t.topicId, 2)) {
+      if (rows.some((x) => x.id === up.id)) continue
+      const label = up.state === 'untested' ? '没测过' : '没掌握'
+      rows.push(Object.assign({ from: t.name, label }, up))
+    }
+  }
+  if (!rows.length) return ''
+  const items = rows.slice(0, 4).map((r) => `
+    <li class="uprow">
+      <div class="upmain">
+        <b>${r.name}</b>
+        <span class="upmeta">${r.label}　·　${r.from} 的前置</span>
+        ${r.why ? `<div class="upwhy">${r.why}</div>` : ''}
+      </div>
+      ${r.topic ? `<button class="btn small" data-up="${r.topic}">练这个前置</button>` : ''}
+    </li>`).join('')
+  return `
+    <div class="card upcard">
+      <b>可能卡在更前面</b>
+      <p class="muted" style="margin:6px 0 0">
+        沿着先修链往上找，这几个知识点你还没测过或没掌握。先补它们，比在这道题上反复更快。
+      </p>
+      <ul class="uplist">${items}</ul>
+    </div>`
+}
+
 function renderDone() {
   const r = app.report
   const ind = r.independence ?? { independentAsked: r.asked, independentCorrect: r.correct, repeatAsked: 0, repeatCorrect: 0, discounted: 0 }
@@ -1962,6 +2036,7 @@ function renderDone() {
       <table><thead><tr><th>考点</th><th>对/做</th><th>正确率</th><th>新题正确率</th><th>下次复习</th></tr></thead>
       <tbody>${rows}</tbody></table>
     </div>
+    ${upstreamCardHTML(r.topicUpdates)}
     ${r.needReview.length ? `<div class="card">
       <b>需要补的</b>
       <p class="muted" style="margin:6px 0 0">${r.needReview.map((t) => `<span class="tag due">${t.name}</span>`).join('')}</p>
@@ -1971,6 +2046,9 @@ function renderDone() {
       <button class="btn plain" id="home" style="margin-left:8px">回到首页</button>
     </div>`
 
+  $root.querySelectorAll('[data-up]').forEach((b) => {
+    b.onclick = () => startTopicSession(b.dataset.up, 6)
+  })
   document.getElementById('again').onclick = () => startSession(app.paper.questions.length)
   document.getElementById('home').onclick = () => { app.phase = 'ready'; render() }
 }
@@ -2110,5 +2188,5 @@ render()
 
 // 测试钩子：把纯函数挂到 globalThis，方便 node 里离线断言（不影响页面行为）
 if (typeof globalThis !== 'undefined') {
-  globalThis.__openstudy = { buildAskPrompt, askFromPage, stemToHtml }
+  globalThis.__openstudy = { buildAskPrompt, askFromPage, stemToHtml, weakUpstream, topicWeakState }
 }
