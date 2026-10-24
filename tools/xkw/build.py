@@ -3,7 +3,7 @@
 
 用法: python3 build.py --q /tmp/xk-one.json --a /tmp/xk-a.json --bank openstudy-data/physics.bank.json --subject physics
 """
-import base64, json, os, re, subprocess, sys, urllib.request
+import base64, sys, json, os, re, subprocess, sys, urllib.request
 
 UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15'
 BASE = '/Users/shulizhe/Documents/deepseek-harness/ai/openstudy'
@@ -46,7 +46,7 @@ added = 0
 skipped_noans = 0
 for i, q in enumerate(qdoc['questions']):
     ans = next((r for r in adoc['rows'] if r['index'] == i + 1), None)
-    qid = ans['qid'] if ans else None
+    qid = (ans['qid'] if ans else None) or str(q.get('qid') or '')
     if not qid: continue
     stem = re.sub(r'^\s*\d+[．.]\s*', '', q['text']).split('A．')[0].strip()
     stem = stem[:900]
@@ -67,8 +67,9 @@ for i, q in enumerate(qdoc['questions']):
         name = f'xk-{qid}-fig{j}{ext}'
         if fetch(u, os.path.join(figdir, name)):
             figure = f'figures/{subject}/{name}'; break
+    pending = '--pending' in sys.argv
     letter = (ans or {}).get('letter')
-    if not letter and not (ans or {}).get('img'):
+    if not letter and not (ans or {}).get('img') and not pending:
         skipped_noans += 1
         continue
     idx = 'ABCDEFGH'.index(letter[0]) if letter and len(opts) > 1 else -1
@@ -76,11 +77,15 @@ for i, q in enumerate(qdoc['questions']):
         'id': f'xk-{tag}-{i+1}', 'topic': guess(stem + ''.join(opts)),
         'type': 'choice' if idx >= 0 and idx < len(opts) else 'text',
         'difficulty': 0.55, 'stem': stem, 'choices': opts,
-        'answer': {'value': idx} if idx >= 0 and idx < len(opts) else {'reference': '见解析'},
+        'answer': ({'value': idx} if idx >= 0 and idx < len(opts) else {'reference': '见解析'}),
         'solution': (ans or {}).get('ocr') or '',
         'source': f'{paper_title}·第{i+1}题', 'sourceUrl': f'https://zujuan.xkw.com/13q{qid}.html',
         'solutionOcr': True,
     }
+    if pending and (not letter and not (ans or {}).get('img')):
+        e['answerPending'] = True
+        e['type'] = 'text'
+        e['answer'] = {'reference': '答案待补（组卷网每日额度用完后补）'}
     if figure: e['figure'] = figure
     if any(optimgs): e['choiceImgs'] = optimgs
     if ans and ans.get('img'): e['solutionImg'] = ans['img']
