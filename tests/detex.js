@@ -67,5 +67,12 @@ for (const [src, want] of extra2) {
   ok(squash(got) === squash(want), `表格/残渣：${src} → ${got}`)
 }
 
+// ---- 核素规则不能误伤带上下标的普通公式（α² I₀² 曾被错认成核素）----
+const cQ = out('$Q=\\dfrac{3\\alpha^2 I_0^2\\pi^2 r_2^4}{Rt_0}$')
+ok(!cQ.includes('质量数'), 'alpha^2 I_0^2 不被当成核素：' + cQ)
+ok(cQ.includes('α²') || cQ.includes('a²'), 'alpha 平方保留为上标：' + cQ)
+const cSel = out('$I=\\dfrac{U}{R}$')
+ok(!cSel.includes('质量数'), 'I 与下标不被当成核素：' + cSel)
+
 console.log(`\ndetex：${pass} 项通过，${fail} 项失败`)
 if (fail) process.exit(1)
