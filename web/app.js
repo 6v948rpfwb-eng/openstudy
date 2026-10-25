@@ -1689,13 +1689,16 @@ function renderPractice() {
     inputArea = `<input type="text" id="ans" placeholder="填数值，可带单位" autocomplete="off"
       value="${escapeAttr(c.input)}" ${c.graded ? 'disabled' : ''}>`
   } else if (q.type === 'choice') {
-    inputArea = q.choices.map((ch, i) => {
-      let cls = 'choice'
+    const multi = isMultiChoice(q)
+    const mine = pickedList(c.picked)
+    inputArea = (multi ? `<p class="muted multihint">多选：正确答案不止一个，选几个都行，全对才算对</p>` : '')
+      + q.choices.map((ch, i) => {
+      let cls = 'choice' + (multi ? ' multi' : '')
       if (c.graded) {
         const correct = q.answer.value.includes(i)
         if (correct) cls += ' right'
-        else if (c.picked === i) cls += ' wrong'
-      } else if (c.picked === i) cls += ' picked'
+        else if (mine.includes(i)) cls += ' wrong'
+      } else if (mine.includes(i)) cls += ' picked'
       const optImg = q.choiceImgs && q.choiceImgs[i] ? `<img class="optimg" src="${q.choiceImgs[i]}" alt="选项${'ABCDEFG'[i]}">` : ''
       const optTxt = ch && ch !== '（见图）' ? renderMathText(ch) : ''
       return `<button class="${cls}" data-i="${i}" ${c.graded ? 'disabled' : ''}>${'ABCDEFG'[i]}. ${subify(optTxt)}${optImg}</button>`
@@ -1732,7 +1735,7 @@ function renderPractice() {
 
   const canSubmit = q.type === 'text'
     ? true
-    : c.picked !== null || c.input.trim() !== ''
+    : pickedList(c.picked).length > 0 || c.input.trim() !== ''
 
   // 题目配图：figure 可能是字符串，也可能是字符串数组
   const figList = q.figure ? (Array.isArray(q.figure) ? q.figure : [q.figure]) : []
@@ -1765,6 +1768,7 @@ function renderPractice() {
         return `<button class="qno${i === app.index ? ' cur' : ''}${st}" data-q="${i}">${i + 1}</button>`
       }).join('')}</div>`}
       ${/图/.test(q.stem) && !(q.figures || []).length ? `<p class="muted figwarn">这题原文提到图，但题库里没有配图；文字部分能做的照做，需要读图的可以跳过。</p>` : ''}
+      ${isMultiChoice(q) ? `<div class="tagq">多选题</div>` : ''}
       <div class="stem" style="margin-top:18px">${q.stemTex ? mathThen(q.stemTex, q.stem) : stemToHtml(q.stem)}</div>
       ${figureHtml}${figureNote}
       ${inputArea}
@@ -1830,7 +1834,14 @@ function renderPractice() {
   document.querySelectorAll('.choice').forEach((b) => {
     b.onclick = () => {
       if (app.current.graded) return
-      app.current.picked = Number(b.dataset.i)
+      const qq = app.paper.questions[app.index]
+      const i = Number(b.dataset.i)
+      if (isMultiChoice(qq)) {
+        const cur = pickedList(app.current.picked)
+        app.current.picked = cur.includes(i) ? cur.filter((x) => x !== i) : cur.concat([i]).sort((a, b) => a - b)
+      } else {
+        app.current.picked = i
+      }
       render()
     }
   })
@@ -1860,6 +1871,15 @@ function renderPractice() {
       render()
     }
   })
+}
+
+/** 多选题：答案下标多于一个时自动按多选处理。 */
+function isMultiChoice(q) {
+  return q && q.type === 'choice' && Array.isArray(q.answer && q.answer.value) && q.answer.value.length > 1
+}
+function pickedList(v) {
+  if (Array.isArray(v)) return v
+  return v === null || v === undefined ? [] : [v]
 }
 
 function doSubmit() {

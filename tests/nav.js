@@ -321,5 +321,12 @@ ok(upList.every((x) => x.name && x.state), '每条上游都带名字与状态')
 ok(/upstreamCardHTML|upstream-card|可能卡在更前面/.test(readFileSync(new URL('../web/app.js', import.meta.url), 'utf8')),
    '结算页有「可能卡在更前面」卡片')
 
+// ---- 多选题：不止一个正确选项时要能多选、要标出来 ----
+const appSrc2 = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8')
+ok(/function isMultiChoice/.test(appSrc2), '有多选判定函数')
+ok(/pickedList/.test(appSrc2), '有多选选中集合工具')
+ok(/多选题<\/div>/.test(appSrc2), '题干上方标出「多选题」')
+ok(/多选：正确答案不止一个/.test(appSrc2), '多选有提示文字')
+
 console.log(`${pass} 项通过` + (bad.length ? `，${bad.length} 项失败：\n- ` + bad.join('\n- ') : ''))
 if (bad.length) process.exit(1)
