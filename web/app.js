@@ -1779,6 +1779,7 @@ function renderPractice() {
           ? `<button class="btn" id="next">${isEndless() ? '下一题' : (app.index + 1 === total ? '交卷' : '下一题')}</button>`
             + (isEndless() ? `<button class="btn plain" id="stop" style="margin-left:8px">结束</button>` : '')
           : `<button class="btn" id="submit" ${canSubmit ? '' : 'disabled'}>提交</button>`}
+        ${isEndless() ? '' : `<button class="btn plain" id="submitpaper" style="margin-left:8px">交卷${leftCount() ? `（还剩 ${leftCount()} 题没做）` : ''}</button>`}
       </div>
       <details class="askbox">
         <summary>这题想问</summary>
@@ -1847,6 +1848,13 @@ function renderPractice() {
   })
 
   document.getElementById('submit')?.addEventListener('click', doSubmit)
+  document.getElementById('submitpaper')?.addEventListener('click', () => {
+    if (isEndless()) return
+    const left = leftCount()
+    if (left && !confirm(`还有 ${left} 题没做，确定交卷？`)) return
+    finish()
+    render()
+  })
   const sf = document.getElementById('skipfig')
   if (sf) sf.onclick = () => { markSkipped(app.paper.questions[app.index]); app.index = Math.min(app.index + 1, app.paper.questions.length - 1); app.current = { input: '', picked: null, selfGrade: null, graded: null }; render() }
   $root.querySelectorAll('[data-q]').forEach((b) => {
@@ -1940,6 +1948,12 @@ function settleGame({ answered, correct }) {
     todayXp: g.todayXp,
     goal: DAILY_GOAL,
   }
+}
+
+/** 还没作答的题数（整卷模式用）。 */
+function leftCount() {
+  const qs = (app.paper && app.paper.questions) || []
+  return qs.filter((q, i) => !(app.answers[i] && app.answers[i].graded)).length
 }
 
 function finish() {

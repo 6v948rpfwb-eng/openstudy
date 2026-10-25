@@ -328,5 +328,9 @@ ok(/pickedList/.test(appSrc2), '有多选选中集合工具')
 ok(/多选题<\/div>/.test(appSrc2), '题干上方标出「多选题」')
 ok(/多选：正确答案不止一个/.test(appSrc2), '多选有提示文字')
 
+// ---- 整卷随时可交卷 ----
+ok(/function leftCount/.test(readFileSync(new URL('../web/app.js', import.meta.url), 'utf8')), '有未作答题数统计')
+ok(/id="submitpaper"/.test(readFileSync(new URL('../web/app.js', import.meta.url), 'utf8')), '每道题下面都有交卷按钮')
+
 console.log(`${pass} 项通过` + (bad.length ? `，${bad.length} 项失败：\n- ` + bad.join('\n- ') : ''))
 if (bad.length) process.exit(1)
